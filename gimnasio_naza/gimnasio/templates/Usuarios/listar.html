@@ -1,0 +1,319 @@
+{% extends "body.html" %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    .header-title { color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin: 0;}
+    
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; text-decoration: none;}
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+
+    .btn-hero-outline { background: rgba(255,215,0,0.05); color: #ffd700; border: 1px solid #ffd700; font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; border-radius: 0;}
+    .btn-hero-outline span { transform: skewX(10deg); display: block; }
+    .btn-hero-outline:hover { background: #ffd700; color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+
+    /* AVATARES */
+    .user-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #444; }
+    .user-avatar.activo { border: 2px solid #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.5);}
+    .user-avatar.inactivo { border: 2px solid #ef4444; }
+    .avatar-placeholder { width: 45px; height: 45px; border-radius: 50%; background-color: #111; display: flex; align-items: center; justify-content: center; color: #a0a0a0; font-size: 18px; border: 2px solid #444;}
+    .avatar-placeholder.activo { border: 2px solid #ffd700; color: #ffd700; background-color: rgba(255,215,0,0.1); box-shadow: 0 0 10px rgba(255,215,0,0.5);}
+
+    /* DATATABLES */
+    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { color: #a0a0a0 !important; font-weight: 600; font-size: 12px; text-transform: uppercase;}
+    .dataTables_wrapper .dataTables_filter input { background: #000 !important; border: 1px solid rgba(255,215,0,0.3) !important; color: #fff !important; }
+    table.dataTable, .table-dark-gold { width: 100% !important; border-collapse: separate !important; border-spacing: 0 5px !important; border: none !important;}
+    table.dataTable thead th, .table-dark-gold thead th { background: #000 !important; color: #ffd700 !important; border-bottom: 2px solid #ffd700 !important; border-top: none !important; padding: 15px !important; text-transform: uppercase; font-size: 11px; font-weight: 900; letter-spacing: 1px;}
+    table.dataTable tbody tr { background: rgba(0,0,0,0.5) !important; transition: 0.3s; }
+    table.dataTable tbody tr:hover { background-color: rgba(255, 215, 0, 0.05) !important; border-left: 3px solid #ffd700 !important;}
+    table.dataTable tbody td { padding: 15px !important; border: none !important; vertical-align: middle; color: #fff !important; background-color: transparent !important; font-size: 13px;}
+    .page-item.active .page-link { background-color: #ffd700 !important; border-color: #ffd700 !important; color: #000 !important; font-weight: 900; }
+    .page-item .page-link { background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #fff;}
+
+    /* 1. Elevamos por completo la fila superior que contiene los botones */
+.container-fluid > .d-flex.stagger-1 {
+    position: relative;
+    z-index: 99; /* Asegura que toda la cabecera flote por encima de la tabla */
+}
+
+/* 2. Forzamos al dropdown a comportarse como un elemento flotante absoluto */
+.dropdown-menu {
+    position: absolute !important;
+    z-index: 9999 !important;
+}
+
+/* 3. Permitimos que el desbordamiento vertical sea visible en el contenedor de la tabla */
+.table-responsive {
+    overflow: visible !important; /* Permite que los elementos superiores floten por encima sin ser recortados */
+}
+</style>
+
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/css/responsive.bootstrap4.min.css' %}">
+
+<div style="position: fixed; top: 20%; right: 5%; width: 300px; height: 800px; background: #ffd700; opacity: 0.02; transform: skewX(-30deg); z-index: -1; pointer-events: none;"></div>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 gap-3 stagger-1">
+        <h3 class="header-title"><i class="fas fa-users" style="color: #ffd700; margin-right: 10px;"></i> Listado de Atletas / Usuarios</h3>
+        <div class="d-flex gap-3 flex-wrap">
+            <div class="dropdown" style="position: relative; z-index: 99999 !important;" id="export-dropdown">
+                <button class="btn-hero-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" style="transform: skewX(0); border-radius: 4px;">
+                    <i class="fas fa-file-export me-2"></i> Exportar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark bg-dark border-warning mt-2" style="z-index: 999999 !important;">
+                    <li><a class="dropdown-item fw-bold" href="{% url 'gimnasio:exportar_usuarios_excel' %}"><i class="fas fa-file-excel me-2 text-success"></i> Formato Excel</a></li>
+                    <li><a class="dropdown-item fw-bold" href="{% url 'gimnasio:exportar_usuarios_pdf' %}"><i class="fas fa-file-pdf me-2 text-danger"></i> Formato PDF</a></li>
+                </ul>
+            </div>
+            <a href="{% url 'gimnasio:crear_usuario' %}" class="btn-hero-gold">
+                <span><i class="fas fa-user-plus"></i> Nuevo Atleta</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="card-dash stagger-2">
+        <div class="table-responsive">
+            <table id="tabla-usuarios" class="table-dark-gold display nowrap">
+                <thead>
+                    <tr>
+                        <th>Foto</th>
+                        <th>ID</th>
+                        <th>Documento</th>
+                        <th>T. Doc</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>F. Nacimiento</th>
+                        <th>Teléfono</th>
+                        <th>Correo</th>
+                        <th>Peso(kg)</th>
+                        <th>Altura(m)</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>F. Registro</th>
+                        <th>Género</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in object_list %}
+                    <tr>
+                        <td class="text-center">
+                            {% if u.foto %}
+                                <img src="{{ u.foto.url }}" alt="{{ u.nombre_usuario }}" class="user-avatar {% if u.estado == 'activo' %}activo{% else %}inactivo{% endif %}">
+                            {% else %}
+                                <div class="avatar-placeholder mx-auto {% if u.estado == 'activo' %}activo{% else %}inactivo{% endif %}"><i class="fas fa-user"></i></div>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold" style="color: #6c757d;">#{{ u.id }}</td>
+                        <td class="fw-bold" style="color: #ffd700;">{{ u.documento }}</td>
+                        <td>{{ u.tipo_documento }}</td>
+                        <td class="text-white fw-bold text-uppercase">{{ u.nombre_usuario }}</td>
+                        <td class="text-white fw-bold text-uppercase">{{ u.apellido_usuario }}</td>
+                        <td>{{ u.fecha_nacimiento }}</td>
+                        <td>{{ u.telefono_usuario }}</td>
+                        <td style="color: #a0a0a0;">{{ u.correo_usuario }}</td>
+                        <td class="text-info fw-bold">{{ u.peso_usuario }}</td>
+                        <td class="text-info fw-bold">{{ u.altura_usuario }}</td>
+                        <td class="text-uppercase" style="font-size: 11px; letter-spacing: 1px;">{{ u.rol }}</td>
+                        <td>
+                            {% if u.estado == 'activo' %} <span style="background: rgba(40,167,69,0.1); color: #28a745; border: 1px solid #28a745; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">Activo</span>
+                            {% elif u.estado == 'inactivo' %} <span style="background: rgba(220,53,69,0.1); color: #dc3545; border: 1px solid #dc3545; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">Inactivo</span>
+                            {% else %} <span class="badge bg-secondary">{{ u.estado }}</span> {% endif %}
+                        </td>
+                        <td>{{ u.fecha_registro }}</td>
+                        <td class="text-center">{{ u.genero_usuario }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'gimnasio:editar_usuario' u.id %}" class="btn btn-sm" style="background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid #ffd700; border-radius: 4px; padding: 6px 12px; transition: 0.3s;"><i class="fas fa-edit"></i></a>
+                            <form
+    id="form-{{ u.id }}"
+    action="{% url 'gimnasio:eliminar_usuario' u.id %}"
+    method="post"
+    class="d-inline ms-1">
+
+    {% csrf_token %}
+
+    <button
+        type="button"
+        class="btn btn-sm"
+
+        style="
+            background:
+            {% if u.estado == 'activo' %}
+                rgba(220,53,69,.10);
+                color:#dc3545;
+                border:1px solid #dc3545;
+            {% else %}
+                rgba(40,167,69,.10);
+                color:#28a745;
+                border:1px solid #28a745;
+            {% endif %}
+            border-radius:4px;
+            padding:6px 12px;
+            transition:.3s;"
+
+        onclick="cambiarEstado('{{ u.id }}','{{ u.estado }}')">
+
+        {% if u.estado == "activo" %}
+            <i class="fas fa-user-slash"></i>
+        {% else %}
+            <i class="fas fa-user-check"></i>
+        {% endif %}
+
+    </button>
+
+</form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="16" class="text-center py-5"><i class="fas fa-users-slash fa-3x mb-3" style="color: #ffd700; opacity: 0.2;"></i><br><span class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px;">No hay usuarios registrados</span></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+
+<script src="{% static 'lib/datatables-1.10.20/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/responsive.bootstrap4.min.js' %}"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+
+$(function () {
+
+    $('#tabla-usuarios').DataTable({
+
+        responsive: true,
+        autoWidth: false,
+        pageLength: 10,
+
+        language: {
+            url: "{% static 'lib/datatables-1.10.20/spanish.txt' %}"
+        },
+
+        columnDefs: [
+            {
+                orderable: false,
+                targets: [0,15]
+            }
+        ]
+
+    });
+
+    // Fix dropdown z-index
+    $('#export-dropdown').on('show.bs.dropdown', function() {
+        $(this).css('z-index', '999999');
+        $('.dropdown-menu').css('z-index', '999999');
+    });
+
+});
+
+
+function cambiarEstado(id, estado){
+
+    let titulo = "";
+    let texto = "";
+    let boton = "";
+    let icono = "";
+
+    if(estado === "activo"){
+
+        titulo = "¿Desactivar usuario?";
+        texto = "El usuario dejará de tener acceso al sistema.";
+        boton = "Sí, desactivar";
+        icono = "warning";
+
+    }else{
+
+        titulo = "¿Activar usuario?";
+        texto = "El usuario volverá a tener acceso al sistema.";
+        boton = "Sí, activar";
+        icono = "question";
+
+    }
+
+    Swal.fire({
+
+        title: titulo,
+
+        text: texto,
+
+        icon: icono,
+
+        background: "rgba(10,10,10,.97)",
+
+        color: "#fff",
+
+        confirmButtonColor: "#ffd700",
+
+        cancelButtonColor: "#6c757d",
+
+        confirmButtonText: boton,
+
+        cancelButtonText: "Cancelar",
+
+        showCancelButton: true,
+
+        reverseButtons: true,
+
+        allowOutsideClick:false
+
+    }).then((result)=>{
+
+        if(result.isConfirmed){
+
+            document.getElementById("form-"+id).submit();
+
+        }
+
+    });
+
+}
+
+
+
+{% if messages %}
+
+{% for message in messages %}
+
+Swal.fire({
+
+    title:"Proceso realizado",
+
+    text:"{{ message }}",
+
+    icon:"success",
+
+    timer:1800,
+
+    showConfirmButton:false,
+
+    background:"rgba(10,10,10,.97)",
+
+    color:"#fff",
+
+    customClass:{
+        popup:'border border-warning'
+    }
+
+});
+
+{% endfor %}
+
+{% endif %}
+
+</script>
+
+{% endblock %}

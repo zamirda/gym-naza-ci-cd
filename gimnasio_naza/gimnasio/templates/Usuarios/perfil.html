@@ -1,0 +1,219 @@
+{% extends 'body.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block contenido %}
+<style>
+    /* ========================================================
+       ANIMACIONES Y EFECTOS
+    ======================================================== */
+    .stagger-1 { animatiaon: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    .stagger-3 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.3s; opacity: 0; }
+
+    @keyframes revealBounce { 
+        0% { opacity: 0; transform: translateY(30px) scale(0.97); } 
+        100% { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+
+    @keyframes neonPulse {
+        0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3), 0 0 20px rgba(255, 215, 0, 0.1); }
+        100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.7), 0 0 45px rgba(255, 215, 0, 0.4); }
+    }
+
+    /* ========================================================
+       HERO DEL PERFIL
+    ======================================================== */
+    .profile-hero {
+        position: relative;
+        background: linear-gradient(135deg, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.6) 100%), 
+                    url('{% static "imagen/pexels-pixabay-260352.jpg" %}') center/cover no-repeat;
+        border-radius: 15px;
+        padding: 50px 20px;
+        margin-bottom: 80px; 
+        border: 1px solid rgba(255,215,0,0.15);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        text-align: center;
+        z-index: 1;
+    }
+
+    .profile-hero::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 30px; height: 100%;
+        background: #ffd700; transform: skewX(-15deg);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); z-index: 0;
+    }
+
+    /* AVATAR FLOTANTE */
+    .profile-avatar-container {
+        position: absolute;
+        bottom: -60px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #0a0a0a; 
+        animation: neonPulse 2s infinite alternate;
+        background: #000;
+        transition: 0.3s;
+    }
+
+    .profile-avatar:hover { transform: scale(1.05); }
+
+    .profile-avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ffd700, #b8860b);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid #0a0a0a;
+        color: #000;
+        font-size: 3.5rem;
+        font-weight: 900;
+        animation: neonPulse 2s infinite alternate;
+    }
+
+    /* ========================================================
+       TARJETAS GLASSMORPHISM
+    ======================================================== */
+    .card-dash { 
+        position: relative; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(10px);
+        border-radius: 15px; padding: 25px; box-shadow: 0 15px 30px rgba(0,0,0,0.8); 
+        border: 1px solid rgba(255,215,0,0.1); transition: 0.3s; overflow: hidden; height: 100%;
+        display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+    }
+    
+    .card-dash:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(255,215,0,0.15); border-color: #ffd700; }
+
+    .card-label { font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; color: #a0a0a0; margin-bottom: 5px; }
+    .card-value { font-size: 22px; font-weight: 900; color: #fff; }
+    
+    .highlight-text { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+</style>
+
+<div style="position: fixed; top: 10%; right: 5%; width: 250px; height: 600px; background: #ffd700; opacity: 0.02; transform: skewX(-30deg); z-index: -1; pointer-events: none;"></div>
+
+<div class="container-fluid mt-4" style="max-width: 900px; position: relative; z-index: 2;">
+    
+    <div class="profile-hero stagger-1">
+        <h5 style="color: rgba(255,215,0,0.8); font-size: 12px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;">Módulo de Atleta</h5>
+        <h1 style="color: #fff; font-weight: 900; text-transform: uppercase; margin: 0; position: relative; z-index: 2; letter-spacing: 1px;">Mi <span class="highlight-text">Perfil</span></h1>
+
+        <div class="profile-avatar-container">
+            {% if user.img_usuario %}
+                <img src="{{ user.img_usuario.url }}" class="profile-avatar">
+            {% else %}
+                <div class="profile-avatar-placeholder">
+                    {{ user.username|first|upper }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="text-center mb-5 stagger-2">
+        <h2 style="color: #fff; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px;">{{ request.user.usuario.nombre_usuario }} {{ request.user.usuario.apellido_usuario }}</h2>
+        <p style="color: #a0a0a0; font-weight: 600; letter-spacing: 1px; margin-bottom: 20px;">
+            <i class="fas fa-envelope mr-2" style="color: #ffd700;"></i>{{ request.user.usuario.correo_usuario }}
+        </p>
+        <span style="background: rgba(255,215,0,0.1); color: #ffd700; padding: 6px 20px; border-radius: 30px; border: 1px solid #ffd700; font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 0 10px rgba(255,215,0,0.2);">
+            {{ request.user.usuario.rol_usuario|default:"Atleta Activo" }}
+        </span>
+    </div>
+
+    <h4 class="mb-3 mt-4 stagger-2" style="color: #fff; font-weight: 800; text-transform: uppercase; font-size: 15px; border-left: 3px solid #ffd700; padding-left: 10px;">Ficha Física</h4>
+    <div class="row g-3 mb-4 stagger-2">
+        <div class="col-md-4 col-6">
+            <div class="card-dash" style="border-bottom: 3px solid #ffd700;">
+                <div class="card-label">Peso Corporal</div>
+                <div class="card-value">{{ request.user.usuario.peso_usuario|default:"0" }} <small style="font-size: 14px; color: #a0a0a0; font-weight: 600;">kg</small></div>
+            </div>
+        </div>
+        <div class="col-md-4 col-6">
+            <div class="card-dash" style="border-bottom: 3px solid #ffd700;">
+                <div class="card-label">Estatura</div>
+                <div class="card-value">{{ request.user.usuario.altura_usuario|default:"0" }} <small style="font-size: 14px; color: #a0a0a0; font-weight: 600;">m</small></div>
+            </div>
+        </div>
+        <div class="col-md-4 col-12">
+            <div class="card-dash" style="border-bottom: 3px solid #ffd700;">
+                <div class="card-label">Género</div>
+                <div class="card-value" style="font-size: 18px; margin-top: 5px; text-transform: uppercase;">
+                    {% if request.user.usuario.genero_usuario == 'M' %}Masculino
+                    {% elif request.user.usuario.genero_usuario == 'F' %}Femenino
+                    {% else %}{{ request.user.usuario.genero_usuario|default:"No Registrado" }}{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mb-3 mt-4 stagger-3" style="color: #fff; font-weight: 800; text-transform: uppercase; font-size: 15px; border-left: 3px solid #ffd700; padding-left: 10px;">Credenciales de Cuenta</h4>
+    <div class="row g-3 mb-5 stagger-3">
+        <div class="col-md-6">
+            <div class="card-dash" style="align-items: flex-start; text-align: left;">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-user-circle mr-2" style="color: #ffd700; font-size: 20px;"></i>
+                    <span class="card-label m-0">Usuario (Login)</span>
+                </div>
+                <div class="card-value" style="font-size: 18px; color: #ffd700;">{{ user.username }}</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-dash" style="align-items: flex-start; text-align: left;">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-id-card mr-2" style="color: #ffd700; font-size: 20px;"></i>
+                    <span class="card-label m-0">Documento de Identidad</span>
+                </div>
+                <div class="card-value" style="font-size: 18px;">{{ request.user.usuario.documento|default:"No registrado" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mb-3 mt-4 stagger-3" style="color: #fff; font-weight: 800; text-transform: uppercase; font-size: 15px; border-left: 3px solid #ffd700; padding-left: 10px;">Estado de Membresía</h4>
+    <div class="card-dash stagger-3" style="align-items: flex-start; text-align: left; padding: 30px;">
+        <div class="d-flex justify-content-between w-100 mb-2">
+            <span class="card-label">Progreso del plan activo</span>
+            <span class="card-label" style="color: #ffd700;"><span id="dias-restantes">{{ dias_restantes|default:0 }}</span> días restantes</span>
+        </div>
+        <div id="barra-membresia-container" style="width: 100%; background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,215,0,0.1);">
+            </div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let restantes = Number("{{ dias_restantes|default:0 }}");
+    let totales = Number("{{ dias_totales|default:0 }}");
+    
+    let porcentaje = 0;
+    if (totales > 0) {
+        porcentaje = ((totales - restantes) / totales) * 100;
+    }
+    porcentaje = Math.max(0, Math.min(100, porcentaje));
+
+    const barra = document.createElement('div');
+    barra.style.width = '0%'; // Inicia en 0 para animar
+    barra.style.height = '8px';
+    barra.style.background = 'linear-gradient(90deg, #ffd700, #b8860b)';
+    barra.style.boxShadow = '0 0 15px rgba(255, 215, 0, 0.6)';
+    barra.style.borderRadius = '4px';
+    barra.style.transition = 'width 1.5s cubic-bezier(0.16, 1, 0.3, 1)';
+    
+    let container = document.getElementById('barra-membresia-container');
+    if(container) {
+        container.appendChild(barra);
+        // Animamos la barra después de un pequeño retraso
+        setTimeout(() => {
+            barra.style.width = porcentaje + '%';
+        }, 300);
+    }
+});
+</script>
+{% endblock %}

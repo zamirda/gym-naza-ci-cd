@@ -1,0 +1,265 @@
+{% extends 'body.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    .card-dash { position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.9); border: 1px solid rgba(255,215,0,0.1); margin-bottom: 25px; }
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; padding: 12px 15px; }
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 12px 25px; text-transform: uppercase; transform: skewX(-10deg); }
+</style>
+
+<div class="container mt-4" style="max-width: 800px;">
+    <form method="post" action="." class="card-dash">
+        {% csrf_token %}
+        <div class="header-neon"><h3><i class="fas fa-gavel"></i> {{ titulo }}</h3></div>
+        <div class="card-body p-5">
+            {% for field in form.visible_fields %}
+                <div class="form-group mb-4">
+                    <label style="color: #a0a0a0; font-size: 11px; font-weight: 800; text-transform: uppercase;">{{ field.label }}:</label>
+                    {{ field|add_class:'form-control input-dark' }}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="card-footer border-0 p-5 pt-0 d-flex gap-3">
+            <button type="submit" class="btn-hero-gold"><span>Guardar Sanción</span></button>
+            <a href="{% url 'gimnasio:listar_sanciones_clas' %}" class="btn text-white border-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.querySelector("form");
+
+    const motivo = document.getElementById("id_motivo_sancion");
+    const duracion = document.getElementById("id_duracion_sancion");
+    const fechaInicio = document.getElementById("id_fecha_inicio");
+    const fechaFin = document.getElementById("id_fecha_fin");
+    if (fechaFin) {
+    fechaFin.readOnly = true;
+    fechaFin.style.pointerEvents = "none";
+    fechaFin.style.backgroundColor = "rgba(0,0,0,0.6)";
+    fechaFin.style.cursor = "not-allowed";
+}
+    const usuario = document.getElementById("id_fk_usuario");
+    const tipo = document.getElementById("id_tipo_sancion");
+    const estado = document.getElementById("id_estado");
+
+    // =========================
+    // FECHA INICIO AUTOMÁTICA
+    // =========================
+    let hoy = new Date();
+    let yyyy = hoy.getFullYear();
+    let mm = String(hoy.getMonth() + 1).padStart(2, "0");
+    let dd = String(hoy.getDate()).padStart(2, "0");
+    let fechaHoy = `${yyyy}-${mm}-${dd}`;
+
+    if (fechaInicio) {
+        fechaInicio.value = fechaHoy;
+        fechaInicio.readOnly = true;
+    }
+
+    // =========================
+    // HELPERS
+    // =========================
+    function setValid(el) {
+    el.classList.remove("is-invalid");
+    el.classList.add("is-valid");
+    el.style.borderColor = "#ffd700";
+
+    // 🔥 ELIMINAR MENSAJE DE ERROR
+    let small = el.parentNode.querySelector(".msg-error");
+    if (small) {
+        small.remove();
+    }
+}
+
+function setInvalid(el, msg) {
+    el.classList.remove("is-valid");
+    el.classList.add("is-invalid");
+    el.style.borderColor = "#ff4d4f";
+
+    let small = el.parentNode.querySelector(".msg-error");
+
+    if (!small) {
+        small = document.createElement("small");
+        small.className = "msg-error";
+        small.style.color = "#ff4d4f";
+        small.style.fontWeight = "bold";
+        small.style.display = "block";
+        small.style.marginTop = "5px";
+        el.parentNode.appendChild(small);
+    }
+
+    small.innerText = msg;
+}
+
+    function setInvalid(el, msg) {
+        el.classList.remove("is-valid");
+        el.classList.add("is-invalid");
+        el.style.borderColor = "#ff4d4f";
+
+        let small = el.parentNode.querySelector(".msg-error");
+        if (!small) {
+            small = document.createElement("small");
+            small.className = "msg-error";
+            small.style.color = "#ff4d4f";
+            small.style.fontWeight = "bold";
+            small.style.display = "block";
+            small.style.marginTop = "5px";
+            el.parentNode.appendChild(small);
+        }
+
+        small.innerText = msg;
+    }
+
+    // =========================
+    // MOTIVO
+    // =========================
+    function validarMotivo() {
+        if (!motivo.value.trim()) {
+            setInvalid(motivo, "El motivo es obligatorio.");
+            return false;
+        }
+
+        if (motivo.value.trim().length < 5) {
+            setInvalid(motivo, "Debe tener al menos 5 caracteres.");
+            return false;
+        }
+
+        if (!/^[A-Za-z]/.test(motivo.value.trim())) {
+            setInvalid(motivo, "Debe iniciar con una letra.");
+            return false;
+        }
+
+        setValid(motivo);
+        return true;
+    }
+
+    // =========================
+    // DURACIÓN
+    // =========================
+    function validarDuracion() {
+
+    let valor = parseInt(duracion.value);
+
+    if (!duracion.value) {
+        setInvalid(duracion, "La duración es obligatoria.");
+        return false;
+    }
+
+    if (isNaN(valor)) {
+        setInvalid(duracion, "Debe ser un número válido.");
+        return false;
+    }
+
+    // 🔥 AQUÍ EL CAMBIO IMPORTANTE
+    if (valor <= 1) {
+        setInvalid(duracion, "La duración debe ser mayor a 1 día.");
+        return false;
+    }
+
+    if (valor > 365) {
+        setInvalid(duracion, "No puede ser mayor a 365 días.");
+        return false;
+    }
+
+    setValid(duracion);
+    return true;
+}
+
+    // =========================
+    // FECHA FIN (en tiempo real)
+    // =========================
+    function calcularFechaFin() {
+
+        let dias = parseInt(duracion.value);
+
+        if (!dias || dias <= 0) return;
+
+        let inicio = new Date(fechaHoy);
+        let fin = new Date(inicio);
+        fin.setDate(inicio.getDate() + dias);
+
+        let yyyy = fin.getFullYear();
+        let mm = String(fin.getMonth() + 1).padStart(2, "0");
+        let dd = String(fin.getDate()).padStart(2, "0");
+
+        let fechaFinal = `${yyyy}-${mm}-${dd}`;
+
+        if (fechaFin) {
+            fechaFin.value = fechaFinal;
+        }
+    }
+
+    // =========================
+    // VALIDAR RELACIÓN FECHAS
+    // =========================
+    function validarFechas() {
+
+        if (!fechaFin.value) return false;
+
+        let inicio = new Date(fechaInicio.value);
+        let fin = new Date(fechaFin.value);
+
+        if (fin <= inicio) {
+            setInvalid(fechaFin, "La fecha fin debe ser mayor que inicio.");
+            return false;
+        }
+
+        setValid(fechaFin);
+        return true;
+    }
+
+    // =========================
+    // EVENTOS
+    // =========================
+    if (motivo) {
+        motivo.addEventListener("input", validarMotivo);
+    }
+
+    if (duracion) {
+        duracion.addEventListener("input", function () {
+            validarDuracion();
+            calcularFechaFin();
+        });
+    }
+
+    if (fechaFin) {
+        fechaFin.addEventListener("input", validarFechas);
+    }
+
+    // =========================
+    // SUBMIT VALIDATION
+    // =========================
+    form.addEventListener("submit", function (e) {
+
+        let ok = true;
+
+        if (motivo && !validarMotivo()) ok = false;
+        if (duracion && !validarDuracion()) ok = false;
+        if (fechaFin && !validarFechas()) ok = false;
+
+        if (!ok) {
+            e.preventDefault();
+
+            Swal.fire({
+                icon: "error",
+                title: "Formulario inválido",
+                text: "Corrige los campos marcados",
+                background: "rgba(10,10,10,0.95)",
+                color: "#fff",
+                confirmButtonColor: "#ffd700"
+            });
+        }
+    });
+
+});
+</script>
+{% endblock %}

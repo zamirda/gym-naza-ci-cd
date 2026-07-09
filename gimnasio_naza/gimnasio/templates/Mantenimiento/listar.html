@@ -1,0 +1,233 @@
+{% extends "body.html" %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* ANIMACIONES */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETAS CONTENEDORAS */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); margin-bottom: 25px;
+    }
+    
+    .header-title { color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin: 0;}
+
+    /* BOTONES DORADOS */
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; text-decoration: none;}
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+
+    .btn-hero-outline { background: rgba(255,215,0,0.05); color: #ffd700; border: 1px solid #ffd700; font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; border-radius: 0;}
+    .btn-hero-outline span { transform: skewX(10deg); display: block; }
+    .btn-hero-outline:hover { background: #ffd700; color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+
+    /* TARJETAS RESUMEN Y EQUIPOS */
+    .stat-box { text-align: center; padding: 20px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.6); transition: 0.3s;}
+    .stat-box:hover { border-color: #ffd700; transform: translateY(-5px); box-shadow: 0 10px 20px rgba(255,215,0,0.1);}
+    
+    .equipment-card {
+        border: 1px solid rgba(255,215,0,0.2); border-radius: 15px; padding: 20px;
+        background: rgba(0,0,0,0.6); transition: all 0.3s ease; height: 100%; color: #fff;
+    }
+    .equipment-card:hover { border-color: #ffd700; transform: translateY(-5px); box-shadow: 0 10px 25px rgba(255,215,0,0.15); }
+    .equipment-card img { width: 100px; height: 100px; object-fit: contain; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));}
+    .sin-imagen { width: 100px; height: 100px; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 15px; color: #ffd700; font-size: 0.85rem; border: 1px dashed rgba(255,215,0,0.3);}
+
+    /* DATATABLES OVERRIDES */
+    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { color: #a0a0a0 !important; font-weight: 600; font-size: 12px; text-transform: uppercase;}
+    .dataTables_wrapper .dataTables_filter input { background: #000 !important; border: 1px solid rgba(255,215,0,0.3) !important; color: #fff !important; border-radius: 5px;}
+    .dataTables_wrapper .dataTables_filter input:focus { border-color: #ffd700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.3) !important; outline: none;}
+    
+    table.dataTable, .table-dark-gold { width: 100% !important; border-collapse: separate !important; border-spacing: 0 5px !important; margin-top: 15px !important; border: none !important;}
+    table.dataTable thead th, .table-dark-gold thead th { background: #000 !important; color: #ffd700 !important; border-bottom: 2px solid #ffd700 !important; border-top: none !important; padding: 15px !important; text-transform: uppercase; font-size: 11px; font-weight: 900; letter-spacing: 1px; white-space: nowrap;}
+    table.dataTable tbody tr { background: rgba(0,0,0,0.5) !important; transition: 0.3s; }
+    table.dataTable tbody tr:hover { background-color: rgba(255, 215, 0, 0.05) !important; border-left: 3px solid #ffd700 !important;}
+    table.dataTable tbody td { padding: 15px !important; border: none !important; vertical-align: middle; color: #fff !important; font-size: 13px;}
+    
+    .page-item.active .page-link { background-color: #ffd700 !important; border-color: #ffd700 !important; color: #000 !important; font-weight: 900; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+    .page-item .page-link { background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #fff;}
+
+    [aria-expanded="false"] #toggleIcon { transform: rotate(-90deg); transition: transform 0.3s ease; }
+    [aria-expanded="true"] #toggleIcon { transform: rotate(0deg); transition: transform 0.3s ease; color: #ffd700;}
+</style>
+
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/css/responsive.bootstrap4.min.css' %}">
+
+<div style="position: fixed; top: 20%; right: 5%; width: 300px; height: 800px; background: #ffd700; opacity: 0.02; transform: skewX(-30deg); z-index: -1; pointer-events: none;"></div>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 gap-3 stagger-1" style="position: relative; z-index: 100;">
+        <h3 class="header-title">
+            <i class="ri-tools-fill" style="color: #ffd700; margin-right: 10px;"></i> Listado de Mantenimientos
+        </h3>
+
+        <div class="d-flex gap-3 flex-wrap">
+            <div class="dropdown">
+                <button class="btn-hero-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" style="transform: skewX(0); border-radius: 4px;">
+                    <i class="ri-file-chart-line me-2"></i> Exportar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark bg-dark border-warning mt-2" style="box-shadow: 0 15px 35px rgba(0,0,0,0.9);">
+                    <li><a class="dropdown-item fw-bold" href="{% url 'gimnasio:exportar_mantenimiento_excel' %}"><i class="ri-file-excel-2-line me-2 text-success"></i> Excel</a></li>
+                    <li><a class="dropdown-item fw-bold" href="{% url 'gimnasio:exportar_mantenimiento_pdf' %}"><i class="ri-file-pdf-line me-2 text-danger"></i> PDF</a></li>
+                </ul>
+            </div>
+            <a href="{% url 'gimnasio:crear_mantenimiento' %}" class="btn-hero-gold">
+                <span><i class="ri-add-line me-1"></i> Programar Mantenimiento</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="card-dash stagger-2">
+        <div class="border-bottom pb-4 mb-4" style="border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h6 class="mb-0 text-uppercase fw-bold" style="color: #ffd700; letter-spacing: 1px;">Resumen del Estado</h6>
+                    <small class="text-muted">Indicadores generales de equipamiento</small>
+                </div>
+                <a href="javascript:void(0);" class="text-white" data-bs-toggle="collapse" data-bs-target="#collapseCards" aria-expanded="true" style="text-decoration: none;">
+                    <i class="ri-arrow-down-s-line fs-4" id="toggleIcon"></i>
+                </a>
+            </div>
+
+            <div class="collapse show" id="collapseCards">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-box" style="border-top: 3px solid #3b82f6;">
+                            <h3 style="color: #fff; font-weight: 900; margin-bottom: 5px;">{{ total_mantenimientos }}</h3>
+                            <small class="text-uppercase fw-bold text-muted">Total Mantenimientos</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box" style="border-top: 3px solid #10b981;">
+                            <h3 style="color: #fff; font-weight: 900; margin-bottom: 5px;">{{ completados }}</h3>
+                            <small class="text-uppercase fw-bold" style="color: #10b981;">Completados</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box" style="border-top: 3px solid #f59e0b;">
+                            <h3 style="color: #fff; font-weight: 900; margin-bottom: 5px;">{{ en_proceso }}</h3>
+                            <small class="text-uppercase fw-bold" style="color: #f59e0b;">En Proceso</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box" style="border-top: 3px solid #ef4444;">
+                            <h3 style="color: #fff; font-weight: 900; margin-bottom: 5px;">{{ pendientes }}</h3>
+                            <small class="text-uppercase fw-bold" style="color: #ef4444;">Pendientes</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 cards-container">
+                    {% for mantenimiento in mantenimientos %}
+                    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+                        <div class="equipment-card">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <small class="fw-bold" style="color: #6c757d;">#{{ mantenimiento.id }}</small>
+                                {% if mantenimiento.estado == 'completado' %} <span style="background: rgba(40,167,69,0.1); color: #28a745; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; border: 1px solid #28a745;">Completado</span>
+                                {% elif mantenimiento.estado == 'en_proceso' %} <span style="background: rgba(255,193,7,0.1); color: #ffc107; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; border: 1px solid #ffc107;">En Proceso</span>
+                                {% else %} <span style="background: rgba(220,53,69,0.1); color: #dc3545; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; border: 1px solid #dc3545;">Pendiente</span> {% endif %}
+                            </div>
+
+                            {% if mantenimiento.nombre_elemento.imagen %}
+                                <img src="{{ mantenimiento.nombre_elemento.imagen.url }}" alt="{{ mantenimiento.nombre_elemento }}" class="mx-auto d-block">
+                            {% else %}
+                                <div class="sin-imagen mx-auto"><i class="ri-tools-line" style="font-size:2.5rem;"></i></div>
+                            {% endif %}
+
+                            <h6 class="text-center fw-bold text-uppercase mb-1" style="color: #ffd700;">{{ mantenimiento.nombre_elemento }}</h6>
+                            <p class="text-center mb-3 fw-bold" style="font-size: 12px; color: #a0a0a0;">{{ mantenimiento.get_tipo_mantenimiento_display }}</p>
+                            
+                            <hr style="border-color: rgba(255,255,255,0.1);">
+                            
+                            <div class="d-flex justify-content-between mb-2" style="font-size: 12px;">
+                                <span class="text-muted"><i class="ri-calendar-line text-warning"></i> Fecha:</span>
+                                <span class="fw-bold">{{ mantenimiento.fecha_programada|date:"d/m/Y" }}</span>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block text-center mt-2">{{ mantenimiento.descripcion|truncatechars:45 }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center"><p class="text-muted fw-bold text-uppercase">No hay mantenimientos activos.</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="tabla-mantenimiento" class="table-dark-gold display nowrap">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Elemento</th>
+                        <th>Tipo Mantenimiento</th>
+                        <th>Fecha Programada</th>
+                        <th>Estado</th>
+                        <th>Descripción</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in object_list %}
+                    <tr>
+                        <td class="fw-bold" style="color: #6c757d;">#{{ m.id }}</td>
+                        <td class="text-white fw-bold text-uppercase">{{ m.nombre_elemento }}</td>
+                        <td style="color: #ffd700;">{{ m.tipo_mantenimiento }}</td>
+                        <td>{{ m.fecha_programada }}</td>
+                        <td>
+                            {% if m.estado == 'completado' %} <span style="background: rgba(40,167,69,0.1); color: #28a745; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">Completado</span>
+                            {% elif m.estado == 'en_proceso' %} <span style="background: rgba(255,193,7,0.1); color: #ffc107; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">En Proceso</span>
+                            {% elif m.estado == 'pendiente' %} <span style="background: rgba(220,53,69,0.1); color: #dc3545; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">Pendiente</span>
+                            {% else %} <span class="badge bg-secondary">{{ m.estado }}</span> {% endif %}
+                        </td>
+                        <td class="text-muted" style="font-size: 12px;">{{ m.descripcion|truncatechars:35 }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'gimnasio:editar_mantenimiento' m.id %}" class="btn btn-sm" style="background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid #ffd700; border-radius: 4px; padding: 6px 12px; transition: 0.3s;" title="Editar"><i class="ri-edit-box-line"></i></a>
+                            <a href="{% url 'gimnasio:eliminar_mantenimiento' m.id %}" class="btn btn-sm" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 6px 12px; transition: 0.3s; margin-left: 5px;" title="Eliminar"><i class="ri-delete-bin-line"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-5"><i class="ri-tools-line fa-3x mb-3" style="color: #ffd700; opacity: 0.2;"></i><br><span class="text-muted fw-bold text-uppercase">No hay registros</span></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'lib/datatables-1.10.20/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    $(function () {
+        $('#tabla-mantenimiento').DataTable({
+            responsive: true,
+            autoWidth: false,
+            language: { url: "{% static 'lib/datatables-1.10.20/spanish.txt' %}" },
+            columnDefs: [ { orderable: false, targets: 6 } ]
+        });
+    });
+
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                title: "Notificación", text: "{{ message }}", icon: "success",
+                background: "rgba(10,10,10,0.95)", color: "#fff", confirmButtonColor: "#ffd700",
+                customClass: { popup: 'border border-warning' }
+            });
+        {% endfor %}
+    {% endif %}
+</script>
+{% endblock %}

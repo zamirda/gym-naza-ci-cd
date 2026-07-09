@@ -1,0 +1,973 @@
+{% extends "body.html" %}
+{% load static %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet"
+    href="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/css/responsive.bootstrap4.min.css' %}">
+<style>
+    /* ========================================================
+       ANIMACIONES Y EFECTOS / GEOMÉTRICOS
+    ======================================================== */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    .stagger-3 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.3s; opacity: 0; }
+    .stagger-4 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.4s; opacity: 0; }
+    .stagger-5 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.5s; opacity: 0; }
+
+    @keyframes revealBounce { 
+        0% { opacity: 0; transform: translateY(30px) scale(0.97); } 
+        100% { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+
+    @keyframes neonPulse {
+        0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.2), 0 0 20px rgba(255, 215, 0, 0.1); }
+        100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3); }
+    }
+
+    @keyframes slideShape {
+        0% { transform: skewX(-25deg) translateX(-20px); }
+        100% { transform: skewX(-25deg) translateX(20px); }
+    }
+
+    /* ========================================================
+        BANNER - ESTILO  FITNESS
+    ======================================================== */
+    .hero-banner {
+        position: relative;
+        background: linear-gradient(100deg, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.8) 45%, transparent 100%), 
+                    url('{% static "imagen/pexels-pixabay-260352.jpg" %}') center/cover no-repeat;
+        border-radius: var(--border-radius-card);
+        padding: 50px 40px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(255, 215, 0, 0.1);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.9);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 1;
+    }
+
+    .hero-banner::before {
+        content: ''; position: absolute; right: 25%; top: -20%; width: 60px; height: 150%;
+        background: var(--primary-blue); transform: skewX(-25deg); z-index: 0;
+        animation: neonPulse 2s infinite alternate, slideShape 6s infinite alternate ease-in-out;
+    }
+
+    .hero-banner::after {
+        content: ''; position: absolute; right: -10%; top: 0; width: 40%; height: 100%;
+        background: var(--primary-blue); clip-path: polygon(25% 0, 100% 0, 100% 100%, 0% 100%);
+        opacity: 0.15; mix-blend-mode: overlay; z-index: 0;
+    }
+
+    .hero-text, .hero-action { position: relative; z-index: 10; }
+    .hero-text h1 {
+        font-size: 48px; font-weight: 900; color: #fff; text-transform: uppercase;
+        text-shadow: 4px 4px 0 #000, 0 0 20px rgba(0,0,0,0.8); margin-bottom: 5px; line-height: 1.05; letter-spacing: 1px;
+    }
+    .hero-text span.highlight { color: var(--primary-blue); text-shadow: 2px 2px 0 #000, 0 0 15px var(--primary-light); }
+
+    .btn-hero {
+        background: var(--primary-blue); color: #000; border: none; font-weight: 900; 
+        padding: 14px 28px; font-size: 15px; text-transform: uppercase; 
+        box-shadow: 0 0 20px var(--primary-light); transition: all 0.3s; 
+        display: inline-flex; align-items: center; gap: 10px; transform: skewX(-10deg);
+    }
+    .btn-hero span { transform: skewX(10deg); display: block; }
+    .btn-hero:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 30px var(--primary-blue); background: #fff; }
+
+    /* ========================================================
+       TARJETAS  COMUNES
+    ======================================================== */
+    .card-dash { 
+        position: relative; background-color: var(--bg-surface); 
+        backdrop-filter: var(--card-backdrop); -webkit-backdrop-filter: var(--card-backdrop);
+        border-radius: var(--border-radius-card); padding: 25px; 
+        box-shadow: var(--shadow-main); border: var(--card-border); 
+        transition: var(--transition); overflow: hidden;
+    }
+    
+    
+    
+    .card-dash:hover, .chart-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); border-color: var(--primary-blue); }
+    .card-dash:hover::before, .chart-card:hover::before { width: 25px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); background: #fff; }
+
+    .card-title { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; position: relative; z-index: 2; text-align: center;}
+    .card-subtitle { font-size: 11px; color: var(--primary-blue); background-color: rgba(255, 215, 0, 0.05); padding: 4px 12px; border-radius: var(--border-radius-btn); display: inline-block; margin-bottom: 20px; font-weight: 700; border: 1px solid rgba(255, 215, 0, 0.1); position: relative; z-index: 2;}
+
+    /* ========================================================
+        (TARJETAS RÁPIDAS)
+    ======================================================== */
+    .grid-sparklines { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
+    .sparkline-card { display: flex; align-items: center; justify-content: space-between; padding-left: 35px; }
+    .spark-icon { 
+        width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; 
+        color: #000; font-size: 24px; background: var(--primary-blue); transform: skewX(-15deg);
+        box-shadow: 0 0 15px var(--primary-light); transition: var(--transition); position: relative; z-index: 2;
+    }
+    .spark-icon i { transform: skewX(15deg); }
+    .card-dash:hover .spark-icon { transform: skewX(-15deg) scale(1.1); box-shadow: 0 0 25px var(--primary-blue); background: #fff; }
+    
+    .spark-text { position: relative; z-index: 2; }
+    .spark-text h2 { font-size: 32px; color: #fff; margin-bottom: -2px; font-weight: 900; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+    .spark-text p { font-size: 13px; color: var(--primary-blue); font-weight: 800; text-transform: uppercase; margin: 0; letter-spacing: 1px; }
+
+    .grid-5-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 30px; }
+    .stat-box { text-align: center; padding: 25px 15px 20px 25px; } 
+    .stat-box h3 { font-size: 26px; color: #fff; margin-bottom: 5px; font-weight: 900; position: relative; z-index: 2;}
+    .stat-box p { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin: 0; position: relative; z-index: 2;}
+
+    /* ========================================================
+       GRÁFICAS Y CONTENEDORES (CHART.JS)
+    ======================================================== */
+    .chart-card {
+        position: relative; background-color: var(--bg-surface); 
+        backdrop-filter: var(--card-backdrop); -webkit-backdrop-filter: var(--card-backdrop);
+        border-radius: var(--border-radius-card); padding: 25px 35px; /* Más padding lateral por la figura oblicua */
+        box-shadow: var(--shadow-main); border: var(--card-border); 
+        transition: var(--transition); overflow: hidden;
+        display: flex; flex-direction: column; align-items: center; width: 100%;
+    }
+    
+    .grid-bottom-charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 30px; align-items: stretch; }
+    .chart-container { position: relative; width: 100%; height: 280px; z-index: 2; }
+    .chart-container-small { position: relative; width: 100%; height: 200px; display: flex; justify-content: center; z-index: 2;}
+
+    .donut-inner-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 1;}
+    .donut-inner-text span { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px; font-weight: 600; text-transform: uppercase;}
+    .donut-inner-text h2 { font-size: 28px; color: var(--primary-blue); margin: 0; font-weight: 900; text-shadow: 0 0 10px rgba(255,215,0,0.2);}
+
+    @media (max-width: 1024px) { 
+        .grid-sparklines, .grid-bottom-charts { grid-template-columns: repeat(2, 1fr); } 
+        .hero-banner { flex-direction: column; align-items: flex-start; gap: 30px; } 
+    }
+    @media (max-width: 768px) { 
+        .grid-sparklines, .grid-5-stats, .grid-bottom-charts { grid-template-columns: 1fr; } 
+        .hero-text h1 { font-size: 32px; }
+    }
+
+/*=========================================================
+    REPORTES Y ESTADÍSTICAS - TEMA NAZARETH
+=========================================================*/
+
+.container-xxl{
+    color:#fff;
+}
+
+/*-------------------------
+ TARJETAS ESTADÍSTICAS
+-------------------------*/
+
+.stat-box{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+}
+
+.stat-box-icon{
+    width:70px;
+    height:70px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--primary-blue) !important;
+    color:#000 !important;
+    font-size:28px;
+    transform:skewX(-15deg);
+    border-radius:12px;
+    box-shadow:0 0 18px var(--primary-light);
+    transition:.35s;
+}
+
+.stat-box-icon i{
+    transform:skewX(15deg);
+}
+
+.card-dash:hover .stat-box-icon{
+    background:#fff !important;
+    box-shadow:0 0 30px var(--primary-blue);
+    transform:skewX(-15deg) scale(1.08);
+}
+
+.stat-box h6{
+    color:var(--primary-blue);
+    font-size:13px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin:0;
+}
+
+.stat-box h3{
+    color:#fff;
+    font-size:32px;
+    font-weight:900;
+    margin:0;
+}
+
+.stat-box p{
+    color:var(--text-muted);
+    text-transform:uppercase;
+    font-size:12px;
+    margin:0;
+}
+
+
+/*-------------------------
+ TARJETA MEMBRESÍAS
+-------------------------*/
+
+.card-vencer{
+    background:var(--bg-surface);
+    border:var(--card-border);
+    border-radius:var(--border-radius-card);
+    box-shadow:var(--shadow-main);
+    overflow:hidden;
+    transition:.3s;
+}
+
+.card-vencer:hover{
+    transform:translateY(-5px);
+    border-color:var(--primary-blue);
+    box-shadow:var(--shadow-hover);
+}
+
+.card-vencer .card-header{
+    background:transparent !important;
+    border:none;
+    padding:22px;
+}
+
+.card-vencer h5{
+    color:#fff;
+    font-weight:800;
+    text-transform:uppercase;
+}
+
+.card-vencer h5 i{
+    color:var(--primary-blue);
+}
+
+
+/*-------------------------
+ TABLA
+-------------------------*/
+
+.tabla-vencer{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.tabla-vencer thead{
+    background:rgba(255,215,0,.04);
+}
+
+.tabla-vencer th{
+    color:var(--primary-blue);
+    text-transform:uppercase;
+    font-size:13px;
+    font-weight:800;
+    padding:15px;
+    border-bottom:1px solid rgba(255,215,0,.2);
+}
+
+.tabla-vencer td{
+    color:#fff;
+    padding:14px;
+    border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+.tabla-vencer tbody tr{
+    transition:.3s;
+}
+
+.tabla-vencer tbody tr:hover{
+    background:rgba(255,215,0,.05);
+}
+
+
+/*-------------------------
+ BADGE
+-------------------------*/
+
+.badge-vencer{
+    background:var(--primary-blue);
+    color:#000;
+    padding:6px 14px;
+    border-radius:20px;
+    font-weight:800;
+    box-shadow:0 0 12px rgba(255,215,0,.35);
+}
+
+
+/*-------------------------
+ MANTENIMIENTOS
+-------------------------*/
+
+.titulo-mantenimiento{
+    color:#fff;
+    text-transform:uppercase;
+    font-weight:900;
+    margin-bottom:20px;
+}
+
+.card-mini{
+    background:var(--bg-surface);
+    border:var(--card-border);
+    border-radius:var(--border-radius-card);
+    overflow:hidden;
+    transition:.35s;
+    position:relative;
+    
+    border-radius: 12px;
+    padding: 5px;
+}
+.card-mini .card-body{
+    padding: 5px 5px;
+}
+
+.card-mini::before{
+    content:'';
+    position:absolute;
+    left:-15px;
+    top:0;
+    width:20px;
+    height:140px;
+    background:var(--primary-blue);
+    transform:skewX(-15deg);
+    transition:.35s;
+}
+
+.card-mini:hover{
+    transform:translateY(-5px);
+    border-color:var(--primary-blue);
+    box-shadow:var(--shadow-hover);
+}
+
+.card-mini:hover::before{
+    width:25px;
+    background:#fff;
+}
+
+.icon-card{
+    color:var(--primary-blue);
+    font-size:42px;
+    margin-bottom:15px;
+}
+
+.card-mini h6{
+    color:var(--primary-blue);
+    text-transform:uppercase;
+    font-weight:800;
+}
+
+.card-mini h3{
+    color:#fff;
+    font-size:34px;
+    font-weight:900;
+}
+
+/*=========================================================
+    HISTORIAL DE REPORTES
+=========================================================*/
+
+.card-reportes{
+    background:var(--bg-surface);
+    border:var(--card-border);
+    border-radius:var(--border-radius-card);
+    box-shadow:var(--shadow-main);
+    overflow:hidden;
+    transition:.35s;
+    position:relative;
+}
+
+
+
+.card-reportes:hover{
+    transform:translateY(-5px);
+    border-color:var(--primary-blue);
+    box-shadow:var(--shadow-hover);
+}
+
+.card-reportes:hover::before{
+    width:25px;
+    background:#fff;
+}
+
+.card-reportes .card-header{
+    background:transparent;
+    border:none;
+    padding:22px 30px 10px;
+}
+
+.card-reportes .card-header h5{
+    color:#fff;
+    font-weight:900;
+    text-transform:uppercase;
+    margin:0;
+}
+
+.card-reportes .card-header i{
+    color:var(--primary-blue);
+    margin-right:8px;
+}
+/*=========================
+ TABLA REPORTES
+==========================*/
+
+.tabla-reportes{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.tabla-reportes thead{
+    background:rgba(255,215,0,.05);
+}
+
+.tabla-reportes th{
+    color:var(--primary-blue);
+    text-transform:uppercase;
+    font-size:13px;
+    font-weight:800;
+    padding:16px;
+    border-bottom:1px solid rgba(255,215,0,.20);
+}
+
+.tabla-reportes td{
+    color:#fff;
+    padding:15px;
+    border-bottom:1px solid rgba(255,255,255,.05);
+    vertical-align:middle;
+}
+
+.tabla-reportes tbody tr{
+    transition:.30s;
+}
+
+.tabla-reportes tbody tr:hover{
+    background:rgba(255,215,0,.05);
+}
+/*=========================
+ BADGES
+==========================*/
+
+.badge-pdf{
+    background:#dc3545;
+    color:#fff;
+    padding:6px 14px;
+    border-radius:20px;
+    font-weight:800;
+}
+
+.badge-excel{
+    background:#e0bb06;
+    color:#fff;
+    padding:6px 14px;
+    border-radius:20px;
+    font-weight:800;
+}
+/*-------------------------
+ SCROLL
+-------------------------*/
+
+.responsive-table{
+    overflow-x:auto;
+}
+
+.responsive-table::-webkit-scrollbar{
+    height:8px;
+}
+
+.responsive-table::-webkit-scrollbar-thumb{
+    background:var(--primary-blue);
+    border-radius:10px;
+}
+
+
+/*-------------------------
+ CANVAS
+-------------------------*/
+
+canvas{
+    filter:drop-shadow(0 0 10px rgba(255,215,0,.08));
+}
+</style>
+
+
+    
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    <div class="card-dash mb-4">
+    <div style="text-align: center;">
+        <div class="card-title">Estadísticas del Gimnasio</div>
+        <div class="card-subtitle">
+            Resumen general de reportes, membresías, asistencias, elementos y Usuarios
+        </div>
+    </div>
+
+    <div style="width:100%; height:320px;">
+        <canvas id="chartActivity"></canvas>
+    </div>
+</div>
+    
+
+<div class="grid-5-stats">
+
+<div class="card-dash stat-box">
+<div class="stat-box-icon" style="background:linear-gradient(#ffc107, #ffcf33)">
+<i class="fa-solid fa-users"></i>
+</div>
+<h6>  Usuarios registrados</h6>
+<h3>{{ total_usuarios }}</h3>
+<p>Usuarios</p>
+</div>
+
+<div class="card-dash stat-box">
+<div class="stat-box-icon" style="background:linear-gradient(#ffc107, #ffcf33)">
+<i class="fa-brands fa-rockrms"></i>
+</div>
+<h6>  Membresías activas </h6>
+<h3>{{ membresias_activas }}</h3>
+<p>Membresías</p>
+</div>
+
+<div class="card-dash stat-box">
+<div class="stat-box-icon" style="background:linear-gradient(#ffc107, #ffcf33)">
+<i class="fa-brands fa-elementor"></i>
+</div>
+<h6> Elementos registrados </h6>
+<h3>{{ total_elementos }}</h3>
+<p>Elementos</p>
+</div>
+
+<div class="card-dash stat-box">
+<div class="stat-box-icon" style="background:linear-gradient(#ffc107, #ffcf33)">
+<i class="fa-solid fa-square-poll-vertical"></i>
+</div>
+<h6> Encuestas registradas </h6>
+<h3>{{ total_encuestas }}</h3>
+<p>Encuestas</p>
+</div>
+
+<div class="card-dash stat-box">
+<div class="stat-box-icon" style="background:linear-gradient(#ffc107, #ffcf33)">
+<i class="fa-solid fa-bell"></i>
+</div>
+<h6> Notificaciones registradas </h6>
+<h3>{{ total_notificaciones }}</h3>
+<p>Notificaciones</p>
+</div>
+
+</div>
+
+    <div class="col-md-3"></div>
+
+</div>
+
+
+<div class="card card-vencer mt-4">
+
+    <div class="card-header header-neon border-0">
+        <h5 class="mb-0">
+            <i class="fa-brands fa-slack"></i>
+            Membresías próximas a vencer
+        </h5>
+    </div>
+
+    <div class="card-body">
+        <div class="responsive-table">
+        <table class="tabla-vencer">
+
+            <thead>
+                <tr>
+                    <th><i class="fa-solid fa-user"></i>  Usuario</th>
+                    <th>Inicio</th>
+                    <th>Vence</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for m in membresias_por_vencer %}
+                <tr>
+                    <td>{{ m.fk_usuario }}</td>
+                    <td>{{ m.fecha_inicio }}</td>
+                    <td>
+                        <span class="badge-vencer">
+                            {{ m.fecha_fin }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">No hay membresías por vencer</td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+    </div>
+    </div>
+
+</div>
+<div class="card-reportes mt-4">
+
+    <div class="card-header">
+        <h5>
+            <i class="fas fa-tools"></i>
+            Mantenimientos
+        </h5>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-3">
+
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card card-mini card-pendiente h-100">
+                    <div class="card-body text-center">
+                        <i class="mdi mdi-wrench icon-card"></i>
+                        <h6>Pendientes</h6>
+                        <h3>{{ mant_pendientes }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card card-mini card-proceso h-100">
+                    <div class="card-body text-center">
+                        <i class="mdi mdi-cog icon-card"></i>
+                        <h6>En proceso</h6>
+                        <h3>{{ mant_proceso }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card card-mini card-completado h-100">
+                    <div class="card-body text-center">
+                        <i class="mdi mdi-check-circle icon-card"></i>
+                        <h6>Completados</h6>
+                        <h3>{{ mant_completados }}</h3>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+    <div class="card-reportes mt-4">
+
+    <div class="card-header">
+        <h5>
+            <i class="fas fa-file-alt"></i>
+            Historial de Reportes Generados
+        </h5>
+    </div>
+
+    <div class="card-body">
+
+        <div class="responsive-table">
+
+            <table class="tabla-reportes">
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th>Tipo de Reporte</th>
+                        <th>Archivo</th>
+                        <th>Usuario</th>
+                        <th>Fecha y Hora</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for reporte in object_list %}
+
+                    <tr>
+
+                        <td>{{ forloop.counter }}</td>
+
+                        <td>{{ reporte.get_tipo_reporte_display }}</td>
+
+                        <td>
+
+                            {% if reporte.tipo_archivo == "PDF" %}
+
+                                <span class="badge-pdf">
+                                    PDF
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge-excel">
+                                    EXCEL
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>{{ reporte.fk_usuario }}</td>
+
+                        <td>{{ reporte.fecha_generacion|date:"d/m/Y H:i" }}</td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="5" style="text-align:center;color:#bbb;padding:30px;">
+
+                            <i class="fas fa-folder-open"></i><br><br>
+
+                            Aún no se han generado reportes.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'lib/datatables-1.10.20/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+   
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    // DATOS QUE VIENEN DE DJANGO
+    const labelsEstadisticas = {{ labels_estadisticas|safe }};
+    const datosEstadisticas = {{ datos_estadisticas|safe }};
+
+    // datos garfica
+    const canvas = document.getElementById('chartActivity');
+
+    if(canvas){
+
+        const ctx = canvas.getContext('2d');
+
+        new Chart(ctx, {
+            type: 'bar',
+
+            data: {
+                labels: labelsEstadisticas,
+                datasets: [{
+                    label: 'Cantidad por categoría',
+                    data: datosEstadisticas,
+
+                    backgroundColor: [
+                        '#ffea00cc',
+                        '#ffea00cc',
+                        '#ffea00cc',
+                        '#ffea00cc',
+                        '#ffea00cc'
+                    ],
+
+        borderColor: [
+            '#FFD700',
+            '#F4C430',
+            '#FFC107',
+            '#E6B800',
+            '#FFEA70'
+        ],
+
+        borderWidth: 2,
+        borderRadius: 8,
+        barThickness: 40
+    }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins:{
+                    legend:{
+                        position:'bottom'
+                    }
+                },
+
+                scales:{
+                    y:{
+                        beginAtZero:true
+                    }
+                }
+            }
+        });
+
+    }
+
+});
+
+</script>
+
+
+<script>
+
+    $(document).ready(function() {
+        // Inicializar DataTable
+        $('#tabla-reporte').DataTable({
+            responsive: true,
+            autoWidth: false,
+            language: {
+                url: "{% static 'lib/datatables-1.10.20/spanish.txt' %}"
+            },
+            columnDefs: [
+                { orderable: false, targets: 4 }
+            ]
+        });
+
+        // Mostrar mensajes
+        {% if messages %}
+            {% for message in messages %}
+                Swal.fire({
+                    title: "Correcto",
+                    text: "{{ message }}",
+                    icon: "success",
+                    confirmButtonText: "OK"
+                });
+            {% endfor %}
+        {% endif %}
+
+        // VARIABLES DESDE LA VISTA DE DJANGO
+        const labelsEstadisticas = {{ labels_estadisticas|safe }};
+        const datosEstadisticas = {{ datos_estadisticas|safe }};
+        const diasSemana = {{ dias_semana|safe }};
+        const asistenciasSemana = {{ asistencias_semana|safe }};
+        const rutinasLabels = {{ rutinas_labels|safe }};
+        const rutinasData = {{ rutinas_data|safe }};
+        const pctActivas = {{ porcentaje_activas }};
+        const pctInactivas = {{ porcentaje_inactivas }};
+
+        // Actualizamos el texto central del grafico 
+        const pctElement = document.getElementById('pctActivasText');
+        if (pctElement) {
+            pctElement.innerText = pctActivas + '%';
+        }
+
+        // 2. CONFIGURACION GLOBAL DEL GRAFICO
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+        Chart.defaults.plugins.tooltip.titleFont = { family: 'Poppins', size: 13, weight: '600' };
+        Chart.defaults.plugins.tooltip.bodyFont = { family: 'Poppins', size: 12 };
+        Chart.defaults.plugins.tooltip.padding = 12;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+        
+        function createGradient(ctx, colorStart, colorEnd, height = 200) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, colorStart);
+            gradient.addColorStop(1, colorEnd);
+            return gradient;
+        }
+
+        const progressiveAnimation = {
+            y: {
+                easing: 'easeOutElastic',
+                duration: 1500,
+                from: (ctx) => { if (ctx.type === 'data') { return ctx.chart.scales.y.getPixelForValue(0); } },
+                delay: (ctx) => { return ctx.type === 'data' ? ctx.dataIndex * 150 : 0; }
+            }
+        };
+
+        // GRAFICO PRINCIPAL DE ESTADISTICAS
+        const ctxAct = document.getElementById('chartActivity');
+        if (ctxAct) {
+            const context = ctxAct.getContext('2d');
+            new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels: labelsEstadisticas,
+                    datasets: [{
+                        label: 'Cantidad por Membresias',
+                        data: datosEstadisticas,
+                        backgroundColor: [
+                            createGradient(context, '#5b73e8', 'rgba(91, 115, 232, 0.2)', 300),
+                            createGradient(context, '#ff6b6b', 'rgba(255, 107, 107, 0.2)', 300),
+                            createGradient(context, '#4ecdc4', 'rgba(78, 205, 196, 0.2)', 300),
+                            createGradient(context, '#ffd93d', 'rgba(255, 217, 61, 0.2)', 300),
+                            createGradient(context, '#95e1d3', 'rgba(149, 225, 211, 0.2)', 300)
+                        ],
+                        hoverBackgroundColor: ['#4a62d8', '#ff5555', '#3db8b0', '#ffcd23', '#7dd5c3'],
+                        borderRadius: 8,
+                        barThickness: 24
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: progressiveAnimation,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10, padding: 20 } }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { grid: { borderDash: [5, 5], color: '#eaeff5' }, border: {display: false}, beginAtZero: true }
+                    }
+                }
+            });
+        } else {
+            console.error('Canvas chartActivity no encontrado');
+        }
+
+        
+
+        // GRAFICO  DE RUTINAS
+        const chartProgress = document.getElementById('chartProgress');
+        if (chartProgress) {
+            new Chart(chartProgress, {
+                type: 'pie',
+                data: {
+                    labels: rutinasLabels,
+                    datasets: [{
+                        data: rutinasData,
+                        backgroundColor: ['#5b73e8', '#ff4d4f', '#00cfd5'],
+                        hoverBackgroundColor: ['#4a62d8', '#ff3333', '#00b5bb'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 12
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { animateScale: true, animateRotate: true, duration: 1500, easing: 'easeOutElastic' },
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } } }
+                }
+            });
+        }
+    });
+
+</script>
+
+
+
+{% endblock %}

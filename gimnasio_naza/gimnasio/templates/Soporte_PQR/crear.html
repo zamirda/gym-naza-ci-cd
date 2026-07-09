@@ -1,0 +1,364 @@
+{% extends 'body.html' %}
+{% load widget_tweaks %}
+{% load static %}   
+
+{% block contenido %}
+<style>
+    .card-dash { position: relative; background: rgba(10,10,10,0.95); border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.9); border: 1px solid rgba(255,215,0,0.1); margin-bottom: 25px; overflow: hidden; }
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;}
+    .header-neon h3 { margin: 0; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; color: #fff; letter-spacing: 1px;}
+    .header-neon h3 i { color: #ffd700; }
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; padding: 12px; }
+    .btn-hero-gold { background: #ffd700; color: #000; font-weight: 900; padding: 12px 25px; text-transform: uppercase; border: none; transform: skewX(-10deg); }
+</style>
+
+<div class="container mt-4" style="max-width: 800px;">
+    <form method="post" action="." class="card-dash">
+        {% csrf_token %}
+        <div class="header-neon"><h3><i class="fas fa-edit me-2"></i> {{ titulo }}</h3></div>
+        <div class="card-body p-5">
+            {% for field in form.visible_fields %}
+                <div class="form-group mb-4">
+                    <label style="color: #a0a0a0; font-size: 11px; font-weight: 800; text-transform: uppercase;">
+                        {% if field.name == 'fk_usuario' %}
+                            Usuario:
+                        {% else %}
+                            {{ field.label }}:
+                        {% endif %}
+                    </label>
+                    {% if field.name == 'fk_usuario' %}
+                        <div class="d-flex gap-2">
+                            {{ field|add_class:'form-control input-dark' }}
+                            
+                        </div>
+                    {% else %}
+                        {{ field|add_class:'form-control input-dark' }}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="card-footer border-0 p-5 pt-0 d-flex gap-3">
+            <button type="submit" class="btn-hero-gold"><span>Guardar Registro</span></button>
+            <a href="{% url 'gimnasio:listar_Soporte_PQRS' %}" class="btn text-white border-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+<!-- (Incluir aquí el modalUsuario previamente rediseñado) -->
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'js/validation.js' %}"></script>
+
+<script>
+function crearUsuario() {
+    const modal = document.getElementById("modalUsuario");
+    const inputs = modal.querySelectorAll(".form-control, .form-select");
+    let formularioValido = true;
+
+    inputs.forEach(input => {
+        const esValido = validarCampo(input);
+        if (!esValido) {
+            formularioValido = false;
+        }
+    });
+
+    if (!formularioValido) {
+
+        const primerError = modal.querySelector(".is-invalid");
+        if (primerError) primerError.focus();
+        return; 
+    }
+    let data = {
+        documento: documento.value,
+        nombre: nombre.value,
+        apellido: apellido.value,
+        correo: correo.value,
+        password: password.value,
+        username: username.value,
+        telefono: telefono.value,
+        fecha_nacimiento: fecha_nacimiento.value,
+        peso: peso.value,
+        altura: altura.value,
+        genero: genero.value
+    };
+
+    fetch("{% url 'gimnasio:crear_usuario_ajax' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": '{{csrf_token}}'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.error) {
+            return Swal.fire("Error", data.error, "error");
+        }
+
+        let select = document.querySelector('[name="fk_usuario"]');
+        if (!select.querySelector(`option[value="${data.id}"]`)) {
+            select.add(new Option(data.nombre, data.id, true, true));
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('modalUsuario')).hide();
+
+        document.querySelectorAll('#modalUsuario input').forEach(i => i.value = '');
+        document.querySelectorAll('[id^="error_"]').forEach(e => e.innerText = '');
+
+        Swal.fire("Correcto", "Usuario creado correctamente", "success");
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const descripcion = document.getElementById("id_descripcion");
+    const fechaIngreso = document.getElementById("id_fecha_ingreso");
+
+    // ==============================
+    // CREAR MENSAJES DEBAJO INPUT
+    // ==============================
+
+    function crearMensaje(input) {
+
+        let small = document.createElement("small");
+
+        small.id = "error_" + input.id;
+
+        small.style.display = "block";
+        small.style.marginTop = "5px";
+        small.style.fontSize = "13px";
+
+        input.parentNode.appendChild(small);
+    }
+
+    if (descripcion && !document.getElementById("error_id_descripcion")) {
+        crearMensaje(descripcion);
+    }
+
+    if (fechaIngreso && !document.getElementById("error_id_fecha_ingreso")) {
+        crearMensaje(fechaIngreso);
+    }
+
+    // ==============================
+    // ERROR
+    // ==============================
+
+    function mostrarError(id, mensaje) {
+
+        let input = document.getElementById(id);
+        let error = document.getElementById("error_" + id);
+
+        input.classList.remove("is-valid");
+        input.classList.add("is-invalid");
+
+        error.innerText = mensaje;
+        error.style.color = "#dc3545";
+    }
+
+    // ==============================
+    // VALIDO
+    // ==============================
+
+    function mostrarValido(id, mensaje) {
+
+        let input = document.getElementById(id);
+        let error = document.getElementById("error_" + id);
+
+        input.classList.remove("is-invalid");
+        input.classList.add("is-valid");
+
+        error.innerText = mensaje;
+        error.style.color = "#198754";
+    }
+
+    // =====================================================
+    // VALIDACION DESCRIPCION
+    // =====================================================
+
+    if (descripcion) {
+
+        descripcion.addEventListener("input", function () {
+
+            let texto = descripcion.value.trim();
+
+            if (texto.length < 10) {
+                mostrarError(
+                    "id_descripcion",
+                    "La descripción debe tener mínimo 10 caracteres"
+                );
+                return;
+            }
+
+            if (texto.length > 200) {
+                mostrarError(
+                    "id_descripcion",
+                    "La descripción no debe tener más de 200 caracteres"
+                );
+                return;
+            }
+
+            if (/[{}[\]<>*/\\|°¬¨+=~`%^]/.test(texto)) {
+                mostrarError(
+                    "id_descripcion",
+                    "No se permiten caracteres especiales"
+                );
+                return;
+            }
+
+            if (/(\d)\1{3,}/.test(texto)) {
+                mostrarError(
+                    "id_descripcion",
+                    "No se permiten números repetidos excesivamente"
+                );
+                return;
+            }
+
+            if (/([a-zA-Z])\1{3,}/.test(texto.toLowerCase())) {
+                mostrarError(
+                    "id_descripcion",
+                    "No se permiten letras repetidas excesivamente"
+                );
+                return;
+            }
+
+            let palabras = texto.split(" ");
+
+            for (let palabra of palabras) {
+
+                let palabraLower = palabra.toLowerCase();
+
+                if (/^(ha|ja|je|ji|jo|ju)+$/.test(palabraLower)) {
+                    mostrarError(
+                        "id_descripcion",
+                        "Ingrese una descripción coherente"
+                    );
+                    return;
+                }
+
+                if ([...new Set(palabraLower)].length === 1) {
+                    mostrarError(
+                        "id_descripcion",
+                        "La descripción contiene palabras inválidas"
+                    );
+                    return;
+                }
+
+                if (/^[a-zA-Z0-9]{8,}$/.test(palabra)) {
+
+                    let vocales = (
+                        palabraLower.match(/[aeiou]/g) || []
+                    ).length;
+
+                    let consonantes = (
+                        palabraLower.match(/[bcdfghjklmnpqrstvwxyz]/g) || []
+                    ).length;
+
+                    if (consonantes > vocales * 3) {
+                        mostrarError(
+                            "id_descripcion",
+                            "Ingrese una descripción válida y coherente"
+                        );
+                        return;
+                    }
+
+                    if (vocales > consonantes * 2) {
+                        mostrarError(
+                            "id_descripcion",
+                            "Ingrese una descripción válida y coherente"
+                        );
+                        return;
+                    }
+                }
+
+                if (/^[a-zA-Z0-9]{10,}$/.test(palabra)) {
+
+                    let letras = (
+                        palabra.match(/[a-zA-Z]/g) || []
+                    ).length;
+
+                    let numeros = (
+                        palabra.match(/[0-9]/g) || []
+                    ).length;
+
+                    if (letras >= 5 && numeros >= 2) {
+                        mostrarError(
+                            "id_descripcion",
+                            "Ingrese una descripción coherente y válida"
+                        );
+                        return;
+                    }
+
+                    let patrones = [
+                        'asdf',
+                        'qwerty',
+                        'zxcv',
+                        'hjkl',
+                        'poiuy',
+                        'lkjh'
+                    ];
+
+                    for (let patron of patrones) {
+
+                        if (palabraLower.includes(patron)) {
+                            mostrarError(
+                                "id_descripcion",
+                                "La descripción contiene texto inválido"
+                            );
+                            return;
+                        }
+                    }
+                }
+            }
+
+            mostrarValido(
+                "id_descripcion",
+                "Descripción válida"
+            );
+
+        });
+
+    }
+
+    // =====================================================
+    // VALIDACION FECHA
+    // =====================================================
+
+    if (fechaIngreso) {
+
+        fechaIngreso.addEventListener("change", function () {
+
+            let fechaSeleccionada = new Date(fechaIngreso.value);
+
+            let hoy = new Date();
+
+            hoy.setHours(0,0,0,0);
+
+            if (fechaSeleccionada < hoy) {
+
+                mostrarError(
+                    "id_fecha_ingreso",
+                    "La fecha no puede ser anterior a hoy"
+                );
+
+                return;
+            }
+
+            mostrarValido(
+                "id_fecha_ingreso",
+                "Fecha válida"
+            );
+
+        });
+
+    }
+
+});
+</script>
+
+
+{% endblock %}

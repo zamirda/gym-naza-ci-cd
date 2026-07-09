@@ -1,0 +1,31 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+  <div id="qr-reader" style="width: 600px"></div>
+  <div id="resultado" style="color: red;"></div>
+  <script>
+    let lista = []
+    function onScanSuccess(decodedText, decodedResult) {
+      if (lista.includes(decodedText)) {
+        console.log('El codigo ya fue escaneado')
+      } else {
+        lista.push(decodedText)
+        fetch('/gimnasio/registrar_asistencia_qr/',{
+            'method': 'POST',
+            'headers': {
+                'Content-Type' : 'application/json',
+                'X-CSRFToken':'{{csrf_token }}',
+            },
+            'body': JSON.stringify({'codigo':decodedText})
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById('resultado').innerText = data.mensaje
+          })
+      }
+    }
+    var html5QrcodeScanner = new Html5QrcodeScanner('qr-reader', { fps: 3, qrbox: 260 })
+    html5QrcodeScanner.render(onScanSuccess)
+  </script>
+{% endblock %}

@@ -1,0 +1,280 @@
+    {% extends "body.html" %}
+    {% load static %}
+
+    {% block contenido %}
+    <style>
+        /* ANIMACIONES DEL DASHBOARD */
+        .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+        .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+        .stagger-3 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.3s; opacity: 0; }
+
+        @keyframes revealBounce { 
+            0% { opacity: 0; transform: translateY(30px) scale(0.97); } 
+            100% { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+
+        /* TARJETAS ESTILO DASHBOARD */
+        .card-dash { 
+            position: relative; background: rgba(10, 10, 10, 0.6); 
+            backdrop-filter: blur(18px); border-radius: 15px; padding: 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.9); border: 1px solid rgba(255,215,0,0.1); 
+            transition: 0.3s; overflow: hidden; margin-bottom: 25px;
+        }
+
+        .card-dash, .card-dash * {
+            text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+        }
+
+        .header-title { color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; position: relative; z-index: 2; margin: 0;}
+        
+        /* BOTONES HERO DORADOS */
+        .btn-hero-gold {
+            background: #ffd700; color: #000; border: none; font-weight: 900; 
+            padding: 10px 20px; font-size: 13px; text-transform: uppercase; 
+            box-shadow: 0 0 15px rgba(255,215,0,0.3); transition: all 0.3s; 
+            display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg);
+            position: relative; z-index: 2; text-decoration: none; cursor: pointer;
+        }
+        .btn-hero-gold span { transform: skewX(10deg); display: block; }
+        .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+
+        .btn-hero-outline {
+            background: rgba(255,215,0,0.05); color: #ffd700; border: 1px solid #ffd700; font-weight: 900; 
+            padding: 10px 20px; font-size: 13px; text-transform: uppercase; 
+            transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg);
+            position: relative; z-index: 2; border-radius: 0;
+        }
+        .btn-hero-outline span { transform: skewX(10deg); display: block; }
+        .btn-hero-outline:hover { background: #ffd700; color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+
+        /* DATATABLES NEÓN */
+        .dataTables_wrapper { position: relative; z-index: 2; }
+        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { color: #eeeef0 !important; font-weight: 600; font-size: 12px; text-transform: uppercase;}
+        .dataTables_wrapper .dataTables_filter input { background: #000; border: 1px solid rgba(255,215,0,0.3); color: #fff; border-radius: 5px; padding: 5px 10px; margin-left: 10px; }
+        .dataTables_wrapper .dataTables_filter input:focus { outline: none; border-color: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.3);}
+        
+        .table-dark-gold { width: 100%; color: #fff; border-collapse: separate; border-spacing: 0 5px; margin-top: 15px;}
+        .table-dark-gold thead th { background: #000 !important; color: #ffd700 !important; border-bottom: 2px solid #ffd700 !important; border-top: none !important; padding: 15px; text-transform: uppercase; font-size: 12px; font-weight: 900; letter-spacing: 1px;}
+        .table-dark-gold tbody tr { background: rgba(0,0,0,0.5) !important; transition: 0.3s; }
+        .table-dark-gold tbody tr:hover { background: rgba(255, 215, 0, 0.05) !important; border-left: 3px solid #ffd700; transform: scale(1.01);}
+        .table-dark-gold td { padding: 15px; border: none !important; vertical-align: middle; }
+        
+        .page-item.active .page-link { background-color: #ffd700; border-color: #ffd700; color: #000 !important; font-weight: 900; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+        .page-item .page-link { background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #fff; font-weight: 700;}
+        .page-item .page-link:hover { background-color: rgba(255,215,0,0.2); color: #ffd700; }
+
+        /* CHARTS CONTENEDORES */
+        .chart-container-box { position: relative; height: 250px; width: 100%; z-index: 2;}
+    </style>
+
+    <div style="position: fixed; top: 20%; right: 5%; width: 300px; height: 800px; background: #ffd700; opacity: 0.02; transform: skewX(-30deg); z-index: -1; pointer-events: none;"></div>
+
+    <div class="container-fluid mt-4">
+
+        <!-- ===================== GRAFICAS LADO A LADO ===================== -->
+        <div class="row mb-4 g-4 stagger-1">
+            <!-- GRÁFICA DE BARRAS -->
+            <div class="col-12 col-lg-8">
+                <div class="card-dash h-100 m-0">
+                    <div class="d-flex justify-content-between align-items-center mb-4" style="position: relative; z-index: 2;">
+                        <h6 class="header-title" style="font-size: 14px;"><i class="fas fa-chart-bar" style="color: #ffd700;"></i> Estadísticas de Membresías</h6>
+                    </div>
+                    <div class="chart-container-box">
+                        <canvas id="chartActivity"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRÁFICA DONUT -->
+            <div class="col-12 col-lg-4">
+                <div class="card-dash h-100 m-0 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-4" style="position: relative; z-index: 2;">
+                        <h6 class="header-title" style="font-size: 14px;"><i class="fas fa-chart-pie" style="color: #ffd700;"></i> Estado Actual</h6>
+                        <span style="background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid #ffd700; padding: 3px 10px; border-radius: 20px; font-weight: 900; font-size: 11px;">
+                            TOTAL: {{ total_membresias }}
+                        </span>
+                    </div>
+                    <div class="chart-container-box flex-grow-1">
+                        <canvas id="membresiaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== TABLA ===================== -->
+        <div class="card-dash stagger-2">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 gap-3">
+                <h5 class="header-title"><i class="fas fa-address-card"></i> Listado de Membresías</h5>
+                
+                <div class="d-flex flex-wrap gap-3">
+                    <div class="dropdown" style="position: relative; z-index: 10;">
+                        <button class="btn-hero-outline dropdown-toggle" data-bs-toggle="dropdown">
+                            <span><i class="fas fa-file-export me-2"></i> Exportar</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark bg-dark border-warning mt-2">
+                            <li><a class="dropdown-item fw-bold" href="{% url 'gimnasio:exportar_membresia_excel' %}"><i class="fas fa-file-excel me-2 text-success"></i> Formato Excel</a></li>
+                            <li><a class="dropdown-item fw-bold" href="{% url 'gimnasio:exportar_membresia_pdf' %}"><i class="fas fa-file-pdf me-2 text-danger"></i> Formato PDF</a></li>
+                        </ul>
+                    </div>
+                    
+                    <a href="{{ crear_url }}" class="btn-hero-gold">
+                        <span><i class="fas fa-plus"></i> Nueva Membresía</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="tabla-membresia" class="table table-dark-gold">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Inicio</th>
+                            <th>Vencimiento</th>
+                            <th>Atleta</th>
+                            <th>Estado</th>
+                            <th>QR</th>
+                            <th>Documento</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for membresia in object_list %}
+                        <tr>
+                            <td class="fw-bold" style="color: #6c757d;">#{{ membresia.id }}</td>
+                            <td class="text-white fw-bold">{{ membresia.fecha_inicio|date:"Y-m-d" }}</td>
+                            <td style="color: #ffd700; font-weight: 800;">{{ membresia.fecha_fin|date:"Y-m-d" }}</td>
+                            <td>
+                                <div class="text-white fw-bold text-uppercase" style="font-size: 14px;">{{ membresia.fk_usuario.nombre_usuario }} {{ membresia.fk_usuario.apellido_usuario }}</div>
+                            </td>
+                            <td>
+                                {% if membresia.estado == 'activo' %}
+                                    <span style="background: rgba(40,167,69,0.1); color: #28a745; border: 1px solid #28a745; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">Activa</span>
+                                {% else %}
+                                    <span style="background: rgba(220,53,69,0.1); color: #dc3545; border: 1px solid #dc3545; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">Inactiva</span>
+                                {% endif %}
+                            </td>
+                            <td><span style="color: #eeeef0; font-size: 12px;"><i class="fas fa-qrcode"></i> {{ membresia.qr_code|truncatechars:10 }}</span></td>
+                            <td class="fw-bold" style="color: #eeeef0;">{{ membresia.fk_usuario.documento }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'gimnasio:editar_membresia' membresia.id %}" class="btn btn-sm" style="background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid #ffd700; border-radius: 4px; padding: 6px 12px; transition: 0.3s;"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'gimnasio:eliminar_membresia' membresia.id %}" class="btn btn-sm" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 6px 12px; transition: 0.3s; margin-left: 5px;"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="8" class="text-center py-5"><i class="fas fa-id-card-alt fa-3x mb-3" style="color: #ffd700; opacity: 0.2;"></i><br><span class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px;">No hay membresías registradas</span></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block css %}
+    <link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/css/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/css/responsive.bootstrap4.min.css' %}">
+    {% endblock %}
+
+    {% block js %}
+    <script src="{% static 'lib/datatables-1.10.20/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'lib/datatables-1.10.20/js/dataTables.bootstrap4.min.js' %}"></script>
+    <script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/dataTables.responsive.min.js' %}"></script>
+    <script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/responsive.bootstrap4.min.js' %}"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+    /* ===================== DATATABLE ===================== */
+    $(function () {
+        $('#tabla-membresia').DataTable({
+            responsive: true,
+            autoWidth: false,
+            pageLength: 10,
+            language: { url: "{% static 'lib/datatables-1.10.20/spanish.txt' %}" },
+            columnDefs: [ { orderable: false, targets: 7 } ]
+        });
+    });
+
+    /* ===================== CHART.JS ESTILO NEÓN ===================== */
+    Chart.defaults.color = '#eeeef0';
+    Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(10, 10, 10, 0.95)';
+    Chart.defaults.plugins.tooltip.titleFont = { family: 'Poppins', size: 13, weight: '800' };
+    Chart.defaults.plugins.tooltip.bodyFont = { family: 'Poppins', size: 12 };
+    Chart.defaults.plugins.tooltip.borderColor = '#ffd700';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+
+    function createGradient(ctx, colorStart, colorEnd, height = 200) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, colorStart);
+        gradient.addColorStop(1, colorEnd);
+        return gradient;
+    }
+
+    /* GRÁFICO DONUT */
+    (function () {
+        const ctx = document.getElementById('membresiaChart');
+        if (!ctx) return;
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [{
+                    data: {{ chart_data|safe }},
+                    backgroundColor: ['#ffd700', 'rgba(255,255,255,0.05)'], // DORADO Y GRIS OSCURO
+                    borderWidth: 0,
+                    hoverOffset: 5
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '75%',
+                plugins: { legend: { position: 'bottom', labels: { color: '#fff', font: {family: 'Poppins', size: 11} } } }
+            }
+        });
+    })();
+
+    /* GRÁFICO BARRAS MENSUAL (REEMPLAZO AZUL POR DORADO) */
+    (function () {
+        const ctxActivity = document.getElementById('chartActivity').getContext('2d');
+        if (!ctxActivity) return;
+        new Chart(ctxActivity, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_labels_mensual|safe }},
+                datasets: [{
+                    label: 'Membresías Activas',
+                    data: {{ chart_data_mensual|safe }},
+                    backgroundColor: createGradient(ctxActivity, '#ffd700', 'rgba(255,215,0,0.05)', 250), // DEGRADADO DORADO
+                    borderColor: '#ffd700',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    })();
+
+    /* ALERTAS SWEETALERT OSCURAS */
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                title: "Notificación",
+                text: "{{ message }}",
+                icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}",
+                background: "rgba(10,10,10,0.95)",
+                color: "#ffffff",
+                confirmButtonColor: "#ffd700",
+                customClass: { popup: 'border border-warning' }
+            });
+        {% endfor %}
+    {% endif %}
+    </script>
+    {% endblock %}

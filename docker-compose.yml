@@ -1,0 +1,21 @@
+services:
+  web:
+    build: .
+    container_name: gimnasio_naza_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=config.settings
+    volumes:
+      # Persiste el archivo db.sqlite3 fuera del contenedor
+      - sqlite_data:/app/gimnasio_naza/data
+      # Persiste archivos subidos por los usuarios (fotos, QR, etc.)
+      - media_data:/app/gimnasio_naza/media
+
+volumes:
+  sqlite_data:
+  media_data:

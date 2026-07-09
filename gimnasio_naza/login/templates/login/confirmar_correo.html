@@ -1,0 +1,54 @@
+{% load static %}
+{% load widget_tweaks %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Acceso | Gimnasio Nazareth</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+
+<div class="container">
+    <div class="form-section">
+        
+        <div class="icon-header">
+            <i class="ri-lock-password-line"></i>
+        </div>
+
+        <h2>¿OLVIDASTE TU CONTRASEÑA?</h2>
+        <h1>RECUPERAR</h1>
+        
+        <p style="color=white">Dinos tu correo electrónico y te enviaremos un enlace para restablecer tu acceso.</p>
+
+        <form method="post" autocomplete="off">
+            {% csrf_token %}
+            
+            <div class="input-group">
+                <label for="{{ form.email.id_for_label }}">CORREO ELECTRÓNICO</label>
+                {% render_field form.email class="form-control" placeholder="ejemplo@correo.com" %}
+                
+                {% if form.email.errors %}
+                <div class="error-msg-custom">
+                    {{ form.email.errors|striptags }}
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="submit">
+                ENVIAR ENLACE DE RECUPERACIÓN
+            </button>
+        </form>
+
+        <div class="login-text">
+            <a href="{% url 'login:login' %}">
+                <i class="ri-arrow-left-s-line"></i> Volver al inicio de sesión
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

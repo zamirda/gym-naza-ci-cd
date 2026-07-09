@@ -1,0 +1,436 @@
+{% extends 'body.html' %}
+{% load widget_tweaks %}
+
+{% block contenido %}
+<style>
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    .card-dark-form { background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); border-radius: 15px; border: 1px solid rgba(255,215,0,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; max-width: 1000px; margin: 0 auto;}
+    .header-neon { background: rgba(0,0,0,0.5); border-left: 4px solid #ffd700; padding: 25px 30px; border-radius: 15px 15px 0 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .header-neon h3 { margin: 0; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; color: #fff;}
+
+    .form-label-custom { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #a0a0a0; font-weight: 800; margin-bottom: 8px; }
+    .input-dark { background: rgba(0,0,0,0.5) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; transition: 0.3s; padding: 10px 15px;}
+    .input-dark:focus { background: rgba(0,0,0,0.8) !important; border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important; outline: none;}
+    .input-dark::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer;}
+    
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 12px 25px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; text-decoration: none; cursor: pointer;}
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+</style>
+
+<div class="container mt-4 mb-5 stagger-1">
+    <div class="card-dark-form">
+        <div class="header-neon">
+            <h3><i class="fas fa-user-astronaut me-2" style="color: #ffd700;"></i> {{ titulo }}</h3>
+        </div>
+        
+        <div class="card-body p-4 p-md-5">
+            <form method="POST" enctype="multipart/form-data" autocomplete="off" novalidate>
+                {% csrf_token %}
+
+                <!-- Errores Globales -->
+                {% if form.errors or user_form.errors %}
+                <div class="alert mb-4" style="background: rgba(255,77,79,0.1); border: 1px solid #ff4d4f; color: #fff; border-radius: 8px;">
+                    <h6 class="fw-bold" style="color: #ff4d4f;"><i class="fas fa-ban me-2"></i> Error de Validación</h6>
+                    <ul class="mb-0">
+                        {% for field in form %} {% for error in field.errors %} <li style="font-size: 13px;">{{ field.label }}: {{ error }}</li> {% endfor %} {% endfor %}
+                        {% for field in user_form %} {% for error in field.errors %} <li style="font-size: 13px;">{{ field.label }}: {{ error }}</li> {% endfor %} {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- DATOS DE ACCESO -->
+                    <h6 class="fw-bold text-uppercase mb-4 pb-2"
+                        style="color:#ffd700;border-bottom:1px solid rgba(255,255,255,.1);font-size:14px;letter-spacing:1px;">
+                        <i class="fas fa-lock me-2"></i> Credenciales de Acceso
+                    </h6>
+
+                    <div class="row mb-5">
+
+                        {% for field in user_form.visible_fields %}
+
+                            <div class="col-12 col-lg-6 mb-3">
+
+                                <label class="form-label-custom">{{ field.label }}</label>
+
+                                {% if field.name == "password" %}
+
+                                    <div class="input-group">
+
+                                        {% render_field field class="form-control input-dark" id="password-field" %}
+
+                                        <button
+                                            type="button"
+                                            id="toggle-password"
+                                            class="btn"
+                                            style="background:#ffd700;color:#000;">
+
+                                            <i id="eye-icon" class="fas fa-eye"></i>
+
+                                        </button>
+
+                                    </div>
+
+                                    <small id="password-feedback" style="display:none;"></small>
+
+                                {% else %}
+
+                                    {% render_field field class="form-control input-dark" %}
+
+                                {% endif %}
+
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1 fw-bold" style="color:#ff4d4f!important;">
+                                        {{ field.errors|striptags }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="invalid-feedback fw-bold" style="color:#ff4d4f;"></div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                <!-- DATOS PERSONALES -->
+                <h6 class="fw-bold text-uppercase mb-4 pb-2" style="color: #ffd700; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 14px; letter-spacing: 1px;"><i class="fas fa-id-card me-2"></i> Perfil Personal y Físico</h6>
+                <div class="row mb-4">
+                    {% for field in form.visible_fields %}
+                        <div class="col-12 col-md-6 mb-3">
+                            <label class="form-label-custom">{{ field.label }}</label>
+                            {% render_field field class="form-control input-dark" %}
+                            {% if field.errors %}<div class="text-danger small mt-1 fw-bold" style="color:#ff4d4f!important;">{{ field.errors|striptags }}</div>{% endif %}
+                            <div class="invalid-feedback fw-bold" style="color:#ff4d4f;"></div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-4 pt-4 border-top" style="border-color: rgba(255,255,255,0.1) !important; display: flex; gap: 15px;">
+                    <button type="submit" class="btn-hero-gold"><span><i class="fas fa-save"></i> Guardar Registro</span></button>
+                    <a href="{% url 'gimnasio:listar_usuario' %}" class="btn fw-bold px-4 py-2" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase; font-size: 13px; transform: skewX(-10deg); display: inline-flex; text-decoration: none;">
+                        <span style="transform: skewX(10deg);"><i class="fas fa-times me-2"></i> Cancelar</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const boton = document.getElementById('toggle-password');
+
+    if (boton) {
+
+        boton.addEventListener('click', function () {
+
+            const passwordInput = document.getElementById('password-field');
+            const IconEye = document.getElementById('eye-icon');
+
+            if (passwordInput.type === 'password') {
+
+                passwordInput.type = 'text';
+                IconEye.classList.replace('fa-eye', 'fa-eye-slash');
+
+            } else {
+
+                passwordInput.type = 'password';
+                IconEye.classList.replace('fa-eye-slash', 'fa-eye');
+
+            }
+
+        });
+
+    }
+
+  const passwordInput = document.getElementById('password-field');
+  const IconEye = document.getElementById('eye-icon');
+
+  if (passwordInput.type === 'password'){
+    passwordInput.type = 'text';
+    IconEye.classList.remove('fa-eye')
+    IconEye.classList.add('fa-eye-slash');
+  }else{
+    passwordInput.type = 'password';
+    IconEye.classList.remove('fa-eye-slash');
+    IconEye.classList.add('fa-eye')
+  }
+})
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ─── Utilidades ───────────────────────────────────────────────
+    function setError(field, msg) {
+        field.classList.remove('is-valid');
+        field.classList.add('is-invalid');
+        let fb = field.parentNode.querySelector('.invalid-feedback');
+        if (!fb) {
+            fb = document.createElement('div');
+            fb.className = 'invalid-feedback';
+            field.parentNode.appendChild(fb);
+        }
+        fb.textContent = msg;
+    }
+
+    function setOk(field) {
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+        const fb = field.parentNode.querySelector('.invalid-feedback');
+        if (fb) fb.textContent = '';
+    }
+
+    // ─── Regex base ───────────────────────────────────────────────
+    const soloLetras = /^[A-Za-záéíóúÁÉÍÓÚñÑ]+$/;
+
+    // ─── Nombres y Apellidos ──────────────────────────────────────
+    function validarNombreApellido(field, etiqueta) {
+        const valor = field.value.trim();
+
+        if (!valor) {
+            setError(field, `${etiqueta} es obligatorio.`);
+            return false;
+        }
+
+        const palabras = valor.split(/\s+/).filter(Boolean);
+
+        for (const p of palabras) {
+            // Solo letras y tildes
+            if (!soloLetras.test(p)) {
+                setError(field, `${etiqueta} solo puede contener letras y espacios.`);
+                return false;
+            }
+            // Mínimo 2 letras por palabra
+            if (p.length < 2) {
+                setError(field, `Cada palabra de ${etiqueta.toLowerCase()} debe tener al menos 2 letras.`);
+                return false;
+            }
+            // Ninguna letra repetida más de 2 veces seguidas (3+ = inválido)
+            if (/(.)\1{2,}/.test(p)) {
+                setError(field, `"${p}" no es válido: ninguna letra puede repetirse más de 2 veces seguidas.`);
+                return false;
+            }
+        }
+
+        // Misma palabra repetida consecutivamente ("Juan Juan")
+        for (let i = 0; i < palabras.length - 1; i++) {
+            if (palabras[i].toLowerCase() === palabras[i + 1].toLowerCase()) {
+                setError(field, `${etiqueta} no puede tener la misma palabra repetida consecutivamente.`);
+                return false;
+            }
+        }
+
+        setOk(field);
+        return true;
+    }
+
+    const campoNombre   = document.querySelector('[name="nombre_usuario"]');
+    const campoApellido = document.querySelector('[name="apellido_usuario"]');
+
+    if (campoNombre) {
+        campoNombre.addEventListener('input', () => validarNombreApellido(campoNombre, 'Nombre'));
+        campoNombre.addEventListener('blur',  () => validarNombreApellido(campoNombre, 'Nombre'));
+    }
+    if (campoApellido) {
+        campoApellido.addEventListener('input', () => validarNombreApellido(campoApellido, 'Apellido'));
+        campoApellido.addEventListener('blur',  () => validarNombreApellido(campoApellido, 'Apellido'));
+    }
+
+    // ─── Fecha de nacimiento ───────────────────────────────────────
+    const campoFecha = document.querySelector('[name="fecha_nacimiento"]');
+
+    function validarFecha(field) {
+        const valor = field.value;
+        if (!valor) {
+            setError(field, 'La fecha de nacimiento es obligatoria.');
+            return false;
+        }
+
+        const hoy        = new Date();
+        const nacimiento = new Date(valor + 'T00:00:00');
+
+        if (nacimiento >= hoy) {
+            setError(field, 'La fecha de nacimiento debe ser una fecha pasada.');
+            return false;
+        }
+
+        let edad = hoy.getFullYear() - nacimiento.getFullYear();
+        const m  = hoy.getMonth() - nacimiento.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) edad--;
+
+        if (edad < 16) {
+            setError(field, `Debe tener al menos 16 años (actualmente tiene ${edad}).`);
+            return false;
+        }
+
+        setOk(field);
+        return true;
+    }
+
+    if (campoFecha) {
+        // Bloquear fechas futuras en el selector nativo
+        const hoy = new Date();
+        campoFecha.setAttribute('max', hoy.toISOString().split('T')[0]);
+        campoFecha.addEventListener('change', () => validarFecha(campoFecha));
+        campoFecha.addEventListener('blur',   () => validarFecha(campoFecha));
+    }
+
+    // ─── Documento ────────────────────────────────────────────────
+    const campoDoc = document.querySelector('[name="documento"]');
+    if (campoDoc) {
+        campoDoc.addEventListener('input', function () {
+            if (!/^[0-9]{7,10}$/.test(this.value.trim()))
+                setError(this, 'El documento debe tener entre 7 y 10 dígitos numéricos.');
+            else
+                setOk(this);
+        });
+    }
+
+    // ─── Teléfono ─────────────────────────────────────────────────
+    const campoTel = document.querySelector('[name="telefono_usuario"]');
+    if (campoTel) {
+        campoTel.addEventListener('input', function () {
+            if (!/^3[0-9]{9}$/.test(this.value.trim()))
+                setError(this, 'El teléfono debe iniciar en 3 y tener exactamente 10 dígitos.');
+            else
+                setOk(this);
+        });
+    }
+
+    // ─── Correo ───────────────────────────────────────────────────
+    const campoCorreo = document.querySelector('[name="correo_usuario"]');
+    if (campoCorreo) {
+        campoCorreo.addEventListener('input', function () {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value.trim()))
+                setError(this, 'Ingrese un correo electrónico válido.');
+            else
+                setOk(this);
+        });
+    }
+
+    // ─── Peso ─────────────────────────────────────────────────────
+    const campoPeso = document.querySelector('[name="peso_usuario"]');
+    if (campoPeso) {
+        campoPeso.addEventListener('input', function () {
+            const v = parseFloat(this.value);
+            if (isNaN(v) || v < 30 || v > 150)
+                setError(this, 'El peso debe estar entre 30 y 150 kg.');
+            else
+                setOk(this);
+        });
+    }
+
+    // ─── Altura ───────────────────────────────────────────────────
+    const campoAltura = document.querySelector('[name="altura_usuario"]');
+    if (campoAltura) {
+        campoAltura.addEventListener('input', function () {
+            const v = parseFloat(this.value);
+            if (isNaN(v) || v < 100 || v > 230)
+                setError(this, 'La altura debe estar entre 100 y 230 cm.');
+            else
+                setOk(this);
+        });
+    }
+
+    // ─── Submit: validar todo antes de enviar ─────────────────────
+    document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+
+            let valido = true;
+
+            if (campoNombre   && !validarNombreApellido(campoNombre,   'Nombre'))   valido = false;
+            if (campoApellido && !validarNombreApellido(campoApellido, 'Apellido')) valido = false;
+
+            // Validación cruzada: nombre + apellido deben sumar al menos 2 palabras en total
+            if (campoNombre && campoApellido) {
+                const pNombre   = campoNombre.value.trim().split(/\s+/).filter(Boolean);
+                const pApellido = campoApellido.value.trim().split(/\s+/).filter(Boolean);
+                if ((pNombre.length + pApellido.length) < 2) {
+                    setError(campoNombre, 'El nombre y apellido deben sumar al menos 2 palabras en total.');
+                    valido = false;
+                }
+            }
+
+            if (campoFecha && !validarFecha(campoFecha)) valido = false;
+
+            if (!form.checkValidity() || !valido) {
+                event.preventDefault();
+                event.stopPropagation();
+                Swal.fire({
+                    title: 'Formulario incompleto',
+                    text: 'Revise los campos marcados en rojo antes de continuar.',
+                    icon: 'error',
+                });
+            }
+
+            form.classList.add('was-validated');
+
+        }, false);
+    });
+
+});
+const passwordField = document.getElementById('password-field');
+const passwordFeedback = document.getElementById('password-feedback');
+
+if (passwordField) {
+
+    passwordField.addEventListener('input', function () {
+
+        const valor = this.value;
+
+        // Ocultar mensaje cuando está vacío
+        if (valor.trim() === '') {
+
+            passwordFeedback.style.display = 'none';
+
+            this.classList.remove('is-valid');
+            this.classList.remove('is-invalid');
+
+            return;
+        }
+
+        let mensaje = '';
+
+        if (valor.length < 7) {
+            mensaje = 'Mínimo 7 caracteres';
+        }
+        else if (!/[A-Z]/.test(valor)) {
+            mensaje = 'Debe contener una letra mayúscula';
+        }
+        else if (!/[a-z]/.test(valor)) {
+            mensaje = 'Debe contener una letra minúscula';
+        }
+        else if (!/[!@#$%^&*(),.?":{}|<>]/.test(valor)) {
+            mensaje = 'Debe contener un carácter especial';
+        }
+
+        if (mensaje !== '') {
+
+            passwordFeedback.style.display = 'block';
+            passwordFeedback.className = 'small mt-2 text-danger';
+            passwordFeedback.innerHTML =  mensaje;
+
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+
+        } else {
+
+            passwordFeedback.style.display = 'block';
+            passwordFeedback.className = 'small mt-2 text-success';
+            passwordFeedback.innerHTML = ' Contraseña segura';
+
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        }
+
+    });
+
+}
+</script>
+
+{% endblock %}

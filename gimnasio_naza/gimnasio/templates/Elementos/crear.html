@@ -1,0 +1,316 @@
+{% extends 'body.html' %}
+{% load widget_tweaks %}
+
+{% block contenido %}
+<style>
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETA FORMULARIO */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); transition: 0.3s; overflow: hidden; margin-bottom: 25px;
+    }
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: #ffd700; transform: skewX(-15deg); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); z-index: 0;
+    }
+
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;}
+    .header-neon h3 { margin: 0; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; color: #fff; letter-spacing: 1px;}
+    .header-neon h3 i { color: #ffd700; }
+
+    /* INPUTS OSCUROS */
+    .form-label-custom { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #a0a0a0; font-weight: 800; margin-bottom: 8px; position: relative; z-index: 2;}
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; transition: 0.3s; padding: 12px 15px; font-family: 'Poppins', sans-serif; position: relative; z-index: 2;}
+    .input-dark:focus { background: #000 !important; border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important; outline: none;}
+    .input-dark::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer;}
+    
+    /* GRUPO PESO (KG/LB) Y WRAPPER CATEGORIA */
+    .peso-group { display: flex !important; flex-wrap: nowrap !important; width: 100%; }
+    .peso-group .form-control { flex: 1 1 auto; border-radius: 6px 0 0 6px !important; min-width: 0; }
+    .peso-group .select-unidad { width: 80px !important; flex-shrink: 0 !important; border-left: 0 !important; border-radius: 0 6px 6px 0 !important; background: rgba(255,215,0,0.1) !important; color: #ffd700 !important; border-color: rgba(255,255,255,0.1) !important; font-weight: 900; text-align: center;}
+    .campo-unidad-peso { display: none !important; }
+
+    .nombre_categoria-wrapper { display: flex; align-items: center; gap: 8px; width: 100%; }
+    .nombre_categoria-wrapper select { flex: 1; min-width: 0; }
+    .nombre_categoria-wrapper button { flex-shrink: 0; width: 48px; height: 48px; border-radius: 6px; }
+
+    /* PREVIEW IMAGEN */
+    #preview-container {
+        width: 120px; height: 120px; border: 2px dashed rgba(255,215,0,0.4); border-radius: 10px;
+        overflow: hidden; display: flex; align-items: center; justify-content: center;
+        background: rgba(0,0,0,0.5); flex-shrink: 0;
+    }
+    #preview-img { display: none; width: 100%; height: 100%; object-fit: cover; }
+    #preview-placeholder { font-size: 11px; text-align: center; color: #ffd700; text-transform: uppercase; font-weight: 800;}
+
+    /* BOTONES HERO */
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 12px 25px; font-size: 13px; text-transform: uppercase; box-shadow: 0 0 15px rgba(255,215,0,0.3); transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); position: relative; z-index: 2; text-decoration: none; cursor: pointer; }
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+
+    .modal-dark .modal-content { background: #0a0a0a; border: 1px solid #ffd700; color: #fff; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+</style>
+
+<div class="container mt-4" style="max-width: 1000px;">
+    <form method="POST" action="." enctype="multipart/form-data" class="card-dash stagger-1">
+        {% csrf_token %}
+        <div class="header-neon">
+            <h3><i class="fas fa-edit"></i> {{ titulo }}</h3>
+        </div>
+
+        <div class="card-body p-4 p-md-5" style="position: relative; z-index: 2;">
+            <!-- ERRORES -->
+            {% if form.errors %}
+            <div class="alert mb-4" style="background: rgba(255,77,79,0.1); border: 1px solid #ff4d4f; color: #fff; border-radius: 8px;">
+                <h6 class="fw-bold" style="color: #ff4d4f;"><i class="ri-error-warning-line me-2"></i> ¡Atención!</h6>
+                <ul class="mb-0">
+                    {% for field in form %} {% for error in field.errors %} <li style="font-size: 13px;">{{ field.label }}: {{ error }}</li> {% endfor %} {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="row g-4 stagger-2">
+                {% for field in form.visible_fields %}
+                    {% if field.name == 'imagen' %}
+                        <div class="col-md-12 mb-2">
+                            <label class="form-label-custom">{{ field.label }}:</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <div id="preview-container">
+                                    <img id="preview-img" src="#" alt="Preview">
+                                    <span id="preview-placeholder"><i class="ri-image-line" style="font-size:30px; display:block;"></i> Sin imagen</span>
+                                </div>
+                                <div class="w-100">
+                                    {% render_field field class="form-control input-dark w-100" id="id_imagen" %}
+                                    <small class="text-muted fw-bold d-block mt-2">Formatos permitidos: JPG, PNG, WEBP</small>
+                                </div>
+                            </div>
+                            {% for error in field.errors %}<div class="text-danger small mt-1 fw-bold" style="color: #ff4d4f !important;">{{ error }}</div>{% endfor %}
+                        </div>
+
+                    {% elif field.name == 'nombre_categoria' %}
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label-custom">{{ field.label }}:</label>
+                            <div class="nombre_categoria-wrapper">
+                                {% render_field field class="form-select input-dark" %}
+                                <button type="button" class="btn" style="background: rgba(255, 215, 0, 0.1); color: #ffd700; border: 1px solid #ffd700; padding: 0; display:flex; justify-content:center; align-items:center;" data-bs-toggle="modal" data-bs-target="#modalnombre_categoria">
+                                    <i class="ri-add-line fs-5"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback fw-bold" style="color: #ff4d4f; font-size: 11px;"></div>
+                        </div>
+
+                    {% elif field.name == 'unidad_peso' %}
+                        <div class="col-md-6 mb-2 campo-unidad-peso">
+                            {% render_field field class="form-select input-dark" %}
+                        </div>
+
+                    {% else %}
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label-custom">{{ field.label }}:</label>
+                            {% render_field field class="form-control input-dark w-100" %}
+                            {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                            <div class="invalid-feedback fw-bold" style="color: #ff4d4f; font-size: 11px; margin-top: 5px;"></div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card-footer border-0 p-4 p-md-5 pt-0 d-flex gap-3" style="background: transparent; position: relative; z-index: 2;">
+            <button type="submit" class="btn-hero-gold"><span><i class="ri-save-line me-1"></i> Guardar Elemento</span></button>
+            <a href="{% url 'gimnasio:listar_elementos' %}" class="btn fw-bold px-4 py-2" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase; font-size: 13px; transform: skewX(-10deg); display: inline-flex; text-decoration: none;">
+                <span style="transform: skewX(10deg);"><i class="ri-close-line me-1"></i> Cancelar</span>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- MODAL CATEGORÍA OSCURO -->
+<div class="modal fade modal-dark" id="modalnombre_categoria" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0" style="background: #000; border-bottom: 1px solid rgba(255,215,0,0.2) !important; padding: 20px 30px;">
+                <h5 class="fw-bold text-uppercase m-0" style="color: #ffd700; font-size: 16px; letter-spacing: 1px;"><i class="ri-price-tag-3-line me-2"></i> Crear Categoría</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 p-md-5">
+                <div class="mb-4">
+                    <label class="form-label-custom">Nombre Categoría:</label>
+                    <input
+                        type="text"
+                        id="nombre_categoria"
+                        class="form-control input-dark"
+                        maxlength="100"
+                        placeholder="Ingrese el nombre de la categoría">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label-custom">Descripción:</label>
+                    <textarea id="descripcion" class="form-control input-dark" rows="3" maxlength="250" placeholder="Describe brevemente..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4" style="background: rgba(0,0,0,0.5);">
+                <button type="button" class="btn fw-bold px-4" style="background: rgba(255,255,255,0.05); color: #fff; text-transform: uppercase; font-size: 12px; border: 1px solid rgba(255,255,255,0.1);" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-hero-gold px-4" onclick="crearnombre_categoria()" style="transform: skewX(0);"><span><i class="ri-save-line me-1"></i> Guardar</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // =====================================================
+    // FECHA INGRESO Y PREVIEW DE IMAGEN
+    // =====================================================
+    const fechaIngreso = document.querySelector('[name="fecha_ingreso"]');
+    if (fechaIngreso) {
+        const hoy = new Date();
+        const fechaActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+        fechaIngreso.min = fechaActual; fechaIngreso.max = fechaActual;
+        fechaIngreso.addEventListener('change', function () {
+            if (this.value === '') { setError(this, 'La fecha es obligatoria'); return; }
+            if (this.value !== fechaActual) { setError(this, 'Solo se permite la fecha actual'); } else { setSuccess(this); }
+        });
+        fechaIngreso.dispatchEvent(new Event('change'));
+    }
+
+    document.getElementById("id_imagen").addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                document.getElementById("preview-img").src = ev.target.result;
+                document.getElementById("preview-img").style.display = "block";
+                document.getElementById("preview-placeholder").style.display = "none";
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // =====================================================
+    // CREAR CATEGORÍA AJAX
+    // =====================================================
+    function crearnombre_categoria() {
+        let data = { nombre_nombre_categoria: document.getElementById("nombre_nombre_categoria").value, descripcion: document.getElementById("descripcion").value };
+        if (!data.nombre_nombre_categoria || !data.descripcion) { Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "warning", title: "Error", text: "Todos los campos son obligatorios", confirmButtonColor: "#ffd700"}); return; }
+
+        fetch("{% url 'gimnasio:crear_nombre_categoria_ajax' %}", {
+            method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" }, body: JSON.stringify(data)
+        }).then(response => response.json()).then(data => {
+            if (data.error) { Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "error", title: "Error", text: data.error}); return; }
+            document.getElementById("id_nombre_categoria").value = data.nombre;
+            select.add(new Option(data.nombre, data.id, true, true));
+            bootstrap.Modal.getInstance(document.getElementById('modalnombre_categoria')).hide();
+            Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "success", title: "Correcto", text: "Categoría creada exitosamente", confirmButtonColor: "#ffd700"});
+        });
+    }
+
+    // =====================================================
+    // VALIDACIONES VISUALES JS (ESTILO OSCURO)
+    // =====================================================
+    document.addEventListener('DOMContentLoaded', function () {
+        function setError(field, message) {
+            field.classList.remove('is-valid'); field.classList.add('is-invalid'); field.style.borderColor = '#ff4d4f';
+            const container = field.closest('.col-md-6') || field.parentNode;
+            let feedback = container.querySelector('.invalid-feedback');
+            if (feedback) feedback.textContent = message;
+        }
+
+        function setSuccess(field) {
+            field.classList.remove('is-invalid'); field.classList.add('is-valid'); field.style.borderColor = '#28a745';
+            const container = field.closest('.col-md-6') || field.parentNode;
+            let feedback = container.querySelector('.invalid-feedback');
+            if (feedback) feedback.textContent = '';
+        }
+
+        const serial = document.querySelector('[name="serial"]');
+        if (serial) {
+            serial.setAttribute('maxlength', '12');
+            serial.addEventListener('input', function () {
+                this.value = this.value.replace(/[^A-Za-z0-9]/g, '');
+                let valor = this.value.trim();
+                if (valor === '') { setError(this, 'El serial es obligatorio'); } else if (valor.length < 4) { setError(this, 'Debe tener mínimo 4 caracteres'); } else { setSuccess(this); }
+            });
+        }
+
+        const marca = document.querySelector('[name="marca"]');
+        if (marca) {
+            marca.addEventListener('input', function () {
+                this.value = this.value.replace(/[^A-Za-záéíóúÁÉÍÓÚñÑ ]/g, '');
+                let valor = this.value.trim();
+                if (valor === '') { setError(this, 'La marca es obligatoria'); } else if (valor.length < 2) { setError(this, 'Mínimo 2 letras'); } else { setSuccess(this); }
+            });
+        }
+
+        const nombre = document.querySelector('[name="nombre_elemento"]');
+        if (nombre) {
+            nombre.addEventListener('input', function () {
+                this.value = this.value.replace(/[^A-Za-záéíóúÁÉÍÓÚñÑ ]/g, '');
+                let valor = this.value.trim();
+                if (valor === '') { setError(this, 'El nombre es obligatorio'); } else if (valor.length < 2) { setError(this, 'Mínimo 2 letras'); } else { setSuccess(this); }
+            });
+        }
+
+        // PESO CON SELECTOR KG/LB DINÁMICO
+        const peso = document.querySelector('[name="peso_elemento"]');
+        const campoOculto = document.querySelector('[name="unidad_peso"]');
+        if (peso && campoOculto) {
+            const unidadPeso = document.createElement('select');
+            unidadPeso.className = 'form-select select-unidad';
+            unidadPeso.innerHTML = `<option value="kg" selected>kg</option><option value="lb">lb</option>`;
+            if (campoOculto.value) { unidadPeso.value = campoOculto.value; }
+
+            const conversion = document.createElement('small');
+            conversion.className = 'd-block mt-1 fw-bold'; conversion.style.color = '#ffd700'; conversion.style.fontSize = '11px';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'input-group peso-group';
+
+            peso.parentNode.insertBefore(wrapper, peso);
+            wrapper.appendChild(peso); wrapper.appendChild(unidadPeso);
+            wrapper.parentNode.insertBefore(conversion, wrapper.nextSibling);
+
+            unidadPeso.addEventListener('change', function () { campoOculto.value = this.value; validarPeso(); });
+
+            const limites = { kg: { min: 0.5, max: 500, texto: 'kg' }, lb: { min: 1, max: 1100, texto: 'lb' } };
+            function validarPeso() {
+                const valor = parseFloat(peso.value); const unidad = unidadPeso.value; const datos = limites[unidad];
+                if (peso.value === '') { setError(peso, 'El peso es obligatorio'); conversion.textContent = ''; return; }
+                if (isNaN(valor)) { setError(peso, 'Ingrese un número válido'); conversion.textContent = ''; return; }
+                if (valor < datos.min || valor > datos.max) { setError(peso, `Entre ${datos.min} y ${datos.max} ${datos.texto}`); conversion.textContent = ''; return; }
+                conversion.textContent = unidad === 'kg' ? `≈ ${(valor * 2.20462).toFixed(2)} lb` : `≈ ${(valor * 0.453592).toFixed(2)} kg`;
+                setSuccess(peso);
+            }
+            peso.addEventListener('input', validarPeso); peso.addEventListener('blur', validarPeso);
+        }
+
+        const nombre_categoria = document.querySelector('[name="nombre_categoria"]');
+        if (nombre_categoria) { nombre_categoria.addEventListener('change', function () { if (this.value === '') { setError(this, 'Seleccione categoría'); } else { setSuccess(this); } }); }
+
+        const formulario = document.querySelector('form');
+        formulario.addEventListener('submit', function (e) {
+            if (serial) serial.dispatchEvent(new Event('input'));
+            if (marca) marca.dispatchEvent(new Event('input'));
+            if (nombre) nombre.dispatchEvent(new Event('input'));
+            if (peso) peso.dispatchEvent(new Event('input'));
+            if (formulario.querySelectorAll('.is-invalid').length > 0) {
+                e.preventDefault();
+                Swal.fire({ title: 'Formulario inválido', text: 'Corrige los campos marcados en rojo', icon: 'error', background: "rgba(10,10,10,0.95)", color: "#fff", confirmButtonColor: "#ffd700" });
+            }
+        });
+    });
+</script>
+
+{% if form.errors %}
+<script>
+    {% for field, errors in form.errors.items %}
+        {% for error in errors %} Swal.fire({ title: "Error", text: "{{ error }}", icon: "error", background: "rgba(10,10,10,0.95)", color: "#fff", confirmButtonColor: "#ffd700" }); {% endfor %}
+    {% endfor %}
+</script>
+{% endif %}
+{% endblock %}

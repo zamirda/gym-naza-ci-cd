@@ -1,0 +1,60 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* Estilos Premium */
+    .card-dash { position: relative; background: rgba(10,10,10,0.95); border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.9); border: 1px solid rgba(255,215,0,0.1); margin-bottom: 25px; overflow: hidden; }
+    .header-neon { background: rgba(0,0,0,0.5); padding: 20px 25px; border-bottom: 1px solid rgba(255,215,0,0.1); color: #ffd700; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+    .table-neon { width: 100%; color: #fff; border-collapse: separate; border-spacing: 0; }
+    .table-neon th { background: rgba(255,255,255,0.03); padding: 15px; font-size: 11px; text-transform: uppercase; color: #ffd700; border-bottom: 1px solid rgba(255,215,0,0.2); }
+    .table-neon td { padding: 15px; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .badge-estado { padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 10px; text-transform: uppercase; }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="card-dash">
+        <div class="header-neon">
+            <i class="fas fa-comments-toggle me-2"></i> Peticiones, Quejas, Reclamos y Sugerencias (PQRS)
+        </div>
+        <div class="table-responsive">
+            <table class="table-neon">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Clasificación</th>
+                        <th>Descripción</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pqrs in lista_pqr %}
+                    <tr>
+                        <td class="fw-bold" style="color: #6c757d;">#PQRS-{{ pqrs.id }}</td>
+                        <td>
+                            <span style="color: #fff; text-transform: capitalize; font-weight: 600;">{{ pqrs.get_tipo_display }}</span>
+                        </td>
+                        <td style="color: #a0a0a0;">{{ pqrs.descripcion }}</td>
+                        <td style="color: #a0a0a0;">{{ pqrs.fecha_ingreso|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if pqrs.estado == 'pendiente' %}
+                                <span class="badge-estado" style="background: rgba(255,193,7,0.1); color: #ffc107; border: 1px solid #ffc107;">Pendiente</span>
+                            {% elif pqrs.estado == 'en_proceso' %}
+                                <span class="badge-estado" style="background: rgba(23,162,184,0.1); color: #17a2b8; border: 1px solid #17a2b8;">En Proceso</span>
+                            {% else %}
+                                <span class="badge-estado" style="background: rgba(40,167,69,0.1); color: #28a745; border: 1px solid #28a745;">Solucionada</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">No tienes PQRS registradas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

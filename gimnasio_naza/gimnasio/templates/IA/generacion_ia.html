@@ -1,0 +1,90 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    .ia-card {
+        background-color: var(--bg-white);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-card);
+        padding: 30px;
+        box-shadow: var(--shadow-main);
+        transition: var(--transition);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    .ia-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--primary-blue);
+    }
+    .ia-card.featured::before {
+        content: 'RECOMENDADO';
+        position: absolute;
+        top: 15px;
+        right: -35px;
+        background: var(--primary-blue);
+        color: #000;
+        padding: 5px 40px;
+        font-weight: 800;
+        font-size: 0.75rem;
+        transform: rotate(45deg);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .ia-title { color: #fff; font-weight: 800; font-size: 1.5rem; margin-bottom: 15px; }
+    .ia-metric { color: var(--primary-blue); font-size: 0.9rem; font-weight: 600; margin-bottom: 20px; }
+    .ia-content p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
+    .disclaimer-box { background: rgba(255, 215, 0, 0.05); border-left: 4px solid var(--primary-blue); padding: 15px; border-radius: 4px; margin-top: 30px; }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="text-center mb-5">
+        <h1 style="color: #fff; font-weight: 800;">Análisis Completado <i class="fas fa-brain" style="color: var(--primary-blue);"></i></h1>
+        <p style="color: var(--text-muted);">Basado en tu IMC de <strong>{{ planes.metricas.imc }}</strong> y una frecuencia proyectada de <strong>{{ planes.metricas.asistencia_proyectada }} días/semana</strong>, nuestro motor sugiere estos caminos:</p>
+    </div>
+
+    <form method="post" action=".">
+        {% csrf_token %}
+        <div class="row g-4">
+            
+            <div class="col-md-6">
+                <div class="ia-card">
+                    <h2 class="ia-title">{{ planes.opcion_1.titulo }}</h2>
+                    <div class="ia-metric"><i class="fas fa-dumbbell"></i> Enfoque: {{ planes.opcion_1.enfoque_rutina }}</div>
+                    <div class="ia-content">
+                        <p><strong>Rutina:</strong> {{ planes.opcion_1.rutina_ejemplo }}</p>
+                        <hr style="border-color: var(--border-color);">
+                        <p><strong>Meta Diaria:</strong> <i class="fas fa-fire" style="color: #ff4d4f;"></i> {{ planes.opcion_1.nutricion_objetivo }}</p>
+                        <p><strong>Macros:</strong> {{ planes.opcion_1.macros_sugeridos }}</p>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <button type="submit" name="opcion_elegida" value="opcion_1" class="btn btn-outline-primary w-100" style="border-color: var(--primary-blue); color: var(--primary-blue); border-radius: var(--border-radius-btn); font-weight: 700; background: transparent; padding: 10px 0;">ELEGIR ESTE PLAN</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="ia-card featured">
+                    <h2 class="ia-title">{{ planes.opcion_2.titulo }}</h2>
+                    <div class="ia-metric"><i class="fas fa-bolt"></i> Enfoque: {{ planes.opcion_2.enfoque_rutina }}</div>
+                    <div class="ia-content">
+                        <p><strong>Rutina:</strong> {{ planes.opcion_2.rutina_ejemplo }}</p>
+                        <hr style="border-color: var(--border-color);">
+                        <p><strong>Meta Diaria:</strong> <i class="fas fa-fire" style="color: #ff4d4f;"></i> {{ planes.opcion_2.nutricion_objetivo }}</p>
+                        <p><strong>Macros:</strong> {{ planes.opcion_2.macros_sugeridos }}</p>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <button type="submit" name="opcion_elegida" value="opcion_2" class="btn btn-outline-primary w-100" style="border-color: var(--primary-blue); color: var(--primary-blue); border-radius: var(--border-radius-btn); font-weight: 700; background: transparent; padding: 10px 0;">ELEGIR ESTE PLAN</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+    <div class="disclaimer-box">
+        <p style="color: #fff; font-size: 0.85rem; margin: 0;">{{ planes.Advertencia }}</p>
+    </div>
+</div>
+{% endblock %}

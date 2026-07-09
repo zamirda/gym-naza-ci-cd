@@ -1,0 +1,257 @@
+{% extends 'body.html' %}
+{% block contenido %}
+
+<style>
+.step {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.swal2-container {
+    z-index: 99999 !important;
+}
+</style>
+
+<div class="container mt-4">
+
+    <h3 class="mb-4">Crear Rutina (Wizard Pro)</h3>
+
+    <!-- CSRF TOKEN -->
+    {% csrf_token %}
+
+    <!-- PROGRESS -->
+    <div class="progress mb-4">
+        <div id="barra" class="progress-bar bg-success" style="width:25%"></div>
+    </div>
+
+    <!-- PASO 1 -->
+    <div class="step" id="step1">
+        <h5 class="mb-3">Datos de Usuario</h5>
+
+        <div class="row">
+            <div class="col-md-6 mb-2">
+                <input id="username" placeholder="Username" class="form-control">
+            </div>
+            <div class="col-md-6 mb-2">
+                <input id="password" type="password" placeholder="Password" class="form-control">
+            </div>
+
+            <div class="col-md-4 mb-2">
+                <input id="documento" placeholder="Documento" class="form-control">
+            </div>
+            <div class="col-md-4 mb-2">
+                <input id="nombre" placeholder="Nombre" class="form-control">
+            </div>
+            <div class="col-md-4 mb-2">
+                <input id="apellido" placeholder="Apellido" class="form-control">
+            </div>
+
+            <div class="col-md-4 mb-2">
+                <input type="date" id="fecha_nacimiento" class="form-control">
+            </div>
+            <div class="col-md-4 mb-2">
+                <input id="telefono" placeholder="Teléfono" class="form-control">
+            </div>
+            <div class="col-md-4 mb-2">
+                <input id="correo" placeholder="Correo" class="form-control">
+            </div>
+
+            <div class="col-md-4 mb-2">
+                <input id="peso_usuario" placeholder="Peso (kg)" class="form-control">
+            </div>
+            <div class="col-md-4 mb-2">
+                <input id="altura_usuario" placeholder="Altura (m)" class="form-control">
+            </div>
+            <div class="col-md-4 mb-2">
+                <select id="genero" class="form-control">
+                    <option value="">Seleccione género</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn btn-primary mt-3" onclick="next(1)">Siguiente</button>
+    </div>
+
+    <!-- PASO 2 -->
+    <div class="step d-none" id="step2">
+        <h5 class="mb-3">Nutrición</h5>
+
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <select id="nivel_actividad" class="form-control">
+                    <option value="">Nivel actividad</option>
+                    <option value="bajo">Bajo</option>
+                    <option value="medio">Medio</option>
+                    <option value="alto">Alto</option>
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-2">
+                <select id="tipo_objetivo" class="form-control">
+                    <option value="">Objetivo</option>
+                    <option value="perder_peso">Perder peso</option>
+                    <option value="mantener">Mantener</option>
+                    <option value="ganar_masa">Ganar masa</option>
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-2">
+                <select id="tipo_dieta" class="form-control">
+                    <option value="">Tipo dieta</option>
+                    <option value="keto">Keto</option>
+                    <option value="balanceada">Balanceada</option>
+                    <option value="hiperproteica">Hiperproteica</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn btn-secondary mt-3" onclick="back(2)">Atrás</button>
+        <button class="btn btn-primary mt-3" onclick="next(2)">Siguiente</button>
+    </div>
+
+    <!-- PASO 3 -->
+    <div class="step d-none" id="step3">
+        <h5 class="mb-3">Masa Corporal</h5>
+
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <input id="peso" placeholder="Peso (kg)" class="form-control">
+            </div>
+            <div class="col-md-4 mb-2">
+                <input id="altura" placeholder="Altura (m)" class="form-control">
+            </div>
+            <div class="col-md-4 mb-2">
+                <input type="date" id="fecha" class="form-control">
+            </div>
+        </div>
+
+        <button class="btn btn-secondary mt-3" onclick="back(3)">Atrás</button>
+        <button class="btn btn-primary mt-3" onclick="next(3)">Siguiente</button>
+    </div>
+
+    <!-- PASO 4 -->
+    <div class="step d-none" id="step4">
+        <h5 class="mb-3">Rutina</h5>
+
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <select id="tipo" class="form-control">
+                    <option value="">Tipo</option>
+                    <option value="FUERZA">Fuerza</option>
+                    <option value="CARDIO">Cardio</option>
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-2">
+                <input id="dias" type="number" placeholder="Días" class="form-control">
+            </div>
+
+            <div class="col-md-4 mb-2">
+                <select id="distribucion" class="form-control">
+                    <option value="">Distribución</option>
+                    <option value="SUPERIOR">Superior</option>
+                    <option value="INFERIOR">Inferior</option>
+                    <option value="COMPLETA">Completa</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn btn-secondary mt-3" onclick="back(4)">Atrás</button>
+        <button class="btn btn-success mt-3" onclick="guardar()">Guardar Todo</button>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script>
+
+let data = {};
+
+function validar(campos){
+    for (let campo of campos){
+        if (!campo.value){
+            Swal.fire("Error", "Completa todos los campos", "error");
+            return false;
+        }
+    }
+    return true;
+}
+
+function next(step){
+
+    if(step === 1){
+        if(!validar([username, password, documento, nombre, apellido])) return;
+
+        data.username = username.value;
+        data.password = password.value;
+        data.documento = documento.value;
+        data.nombre = nombre.value;
+        data.apellido = apellido.value;
+        data.fecha_nacimiento = fecha_nacimiento.value;
+        data.telefono = telefono.value;
+        data.correo = correo.value;
+        data.peso_usuario = parseFloat(peso_usuario.value);
+        data.altura_usuario = parseFloat(altura_usuario.value);
+        data.genero = genero.value;
+    }
+
+    if(step === 2){
+        data.nivel_actividad = nivel_actividad.value;
+        data.tipo_objetivo = tipo_objetivo.value;
+        data.tipo_dieta = tipo_dieta.value;
+    }
+
+    if(step === 3){
+        data.peso_cliente = parseFloat(peso.value);
+        data.altura_cliente = parseFloat(altura.value);
+        data.fecha_control = fecha.value;
+    }
+
+    document.getElementById("step"+step).classList.add("d-none");
+    document.getElementById("step"+(step+1)).classList.remove("d-none");
+
+    document.getElementById("barra").style.width = (step+1)*25 + "%";
+}
+
+function back(step){
+    document.getElementById("step"+step).classList.add("d-none");
+    document.getElementById("step"+(step-1)).classList.remove("d-none");
+    document.getElementById("barra").style.width = (step-1)*25 + "%";
+}
+
+function guardar(){
+
+    data.tipo = tipo.value;
+    data.dias = parseInt(dias.value);
+    data.distribucion = distribucion.value;
+
+    fetch("{% url 'crear_rutina_wizard' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(res => {
+        if(res.error){
+            Swal.fire("Error", res.error, "error");
+        }else{
+            Swal.fire("OK", "Guardado completo", "success")
+            .then(()=> location.reload());
+        }
+    })
+    .catch(()=>{
+        Swal.fire("Error", "Error en la petición", "error");
+    });
+}
+
+</script>
+{% endblock %}

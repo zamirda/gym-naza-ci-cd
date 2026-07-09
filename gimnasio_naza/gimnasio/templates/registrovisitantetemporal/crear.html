@@ -1,0 +1,138 @@
+{% extends 'body.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    .card-dash { position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.9); border: 1px solid rgba(255,215,0,0.1); margin-bottom: 25px; }
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; padding: 12px 15px; }
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 12px 25px; text-transform: uppercase; transform: skewX(-10deg); }
+    .modal-content { background: #0a0a0a; border: 1px solid #ffd700; color: #fff; }
+</style>
+
+<div class="container mt-4" style="max-width: 800px;">
+    <form method="post" action="." class="card-dash">
+        {% csrf_token %}
+        <div class="header-neon"><h3><i class="fas fa-user-plus"></i> {{ titulo }}</h3></div>
+        <div class="card-body p-5">
+            {% for field in form.visible_fields %}
+                <div class="form-group mb-4">
+                    <label style="color: #a0a0a0; font-size: 11px; font-weight: 800; text-transform: uppercase;">{{ field.label }}:</label>
+                    {% if field.name == 'fk_usuario' %}
+                        <div class="d-flex gap-2">
+                            {{ field|add_class:'form-control input-dark' }}
+                            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalUsuario">+</button>
+                        </div>
+                    {% else %}
+                        {{ field|add_class:'form-control input-dark' }}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="card-footer border-0 p-5 pt-0 d-flex gap-3">
+            <button type="submit" class="btn-hero-gold"><span>Guardar Registro</span></button>
+            <a href="{% url 'gimnasio:listar_registrovisitante' %}" class="btn text-white border-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+<!-- Incluir aquí el mismo modal de usuario oscuro de tus módulos anteriores -->
+{% endblock %}
+{% block js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const formulario = document.querySelector("form");
+
+    const nombre = document.getElementById("id_nombre");
+    const cedula = document.getElementById("id_cedula");
+
+    crearMensaje(nombre);
+    crearMensaje(cedula);
+
+    function crearMensaje(input){
+        const mensaje = document.createElement("small");
+        mensaje.classList.add("text-danger");
+        mensaje.style.display = "block";
+        mensaje.style.marginTop = "5px";
+        input.parentNode.appendChild(mensaje);
+    }
+
+    function mostrarError(input, mensaje){
+        input.style.border = "2px solid #dc3545";
+        input.nextElementSibling.textContent = mensaje;
+    }
+
+    function mostrarCorrecto(input){
+        input.style.border = "2px solid #28a745";
+        input.nextElementSibling.textContent = "";
+    }
+
+    // VALIDACIÓN NOMBRE
+    nombre.addEventListener("input", function(){
+
+        let valor = this.value.trim();
+
+        if(valor.length === 0){
+            mostrarError(this,"El nombre es obligatorio.");
+            return;
+        }
+
+        if(valor.length < 3){
+            mostrarError(this,"Debe tener mínimo 3 caracteres.");
+            return;
+        }
+
+        if(!/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/.test(valor)){
+            mostrarError(this,"Solo se permiten letras y espacios.");
+            return;
+        }
+
+        mostrarCorrecto(this);
+
+    });
+
+    // VALIDACIÓN CÉDULA
+    cedula.addEventListener("input", function(){
+
+        this.value = this.value.replace(/\D/g,'');
+
+        let valor = this.value;
+
+        if(valor.length === 0){
+            mostrarError(this,"La cédula es obligatoria.");
+            return;
+        }
+
+        if(valor.length < 6){
+            mostrarError(this,"Debe tener mínimo 6 dígitos.");
+            return;
+        }
+
+        if(valor.length > 12){
+            mostrarError(this,"Máximo 12 dígitos.");
+            return;
+        }
+
+        mostrarCorrecto(this);
+
+    });
+
+    // VALIDAR ANTES DE ENVIAR
+    formulario.addEventListener("submit", function(e){
+
+        nombre.dispatchEvent(new Event("input"));
+        cedula.dispatchEvent(new Event("input"));
+
+        if(
+            nombre.nextElementSibling.textContent !== "" ||
+            cedula.nextElementSibling.textContent !== ""
+        ){
+            e.preventDefault();
+        }
+
+    });
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* ANIMACIONES */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETAS PREMIUM */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); margin-bottom: 25px;
+    }
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: #ffd700; transform: skewX(-15deg); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+    }
+
+    .card-header-neon { background: rgba(0,0,0,0.5); padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #ffd700; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* BOTONES */
+    .btn-backup {
+        background: #ffd700; color: #000; border: none; border-radius: 8px;
+        padding: 12px 20px; width: 100%; font-weight: 900; text-transform: uppercase;
+        transition: 0.3s; cursor: pointer;
+    }
+    .btn-backup:hover { background: #fff; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+
+    /* ZONA DROP */
+    #zona-carga {
+        border: 2px dashed #ffd700 !important; background-color: rgba(255,215,0,0.05) !important;
+        border-radius: 10px; cursor: pointer; padding: 2rem; transition: 0.3s;
+    }
+    #zona-carga:hover { background-color: rgba(255,215,0,0.1) !important; }
+
+    /* BADGES ESTADO */
+    .badge-conectado { background: rgba(40,167,69,0.1); color: #28a745; border: 1px solid #28a745; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 12px; }
+    .badge-desconectado { background: rgba(220,53,69,0.1); color: #dc3545; border: 1px solid #dc3545; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 12px; }
+</style>
+
+<div class="container-fluid mt-4">
+    <h2 class="text-white fw-bold mb-4 stagger-1" style="text-transform: uppercase; letter-spacing: 1px;">
+        <i class="fas fa-database" style="color: #ffd700; margin-right: 10px;"></i> Respaldo y Restauración
+    </h2>
+
+    <!-- ESTADO CONEXIÓN -->
+    <div class="row justify-content-center mb-4 stagger-1">
+        <div class="col-md-8">
+            <div class="card-dash text-center">
+                <div class="card-header-neon mb-3">Estado de Conexión MySQL</div>
+                {% if mysql_conectado %}
+                    <span class="badge-conectado"><i class="fas fa-check-circle me-1"></i> Conectado correctamente</span>
+                {% else %}
+                    <span class="badge-desconectado"><i class="fas fa-times-circle me-1"></i> No se puede conectar</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ACCIONES -->
+    <div class="row justify-content-center stagger-2">
+        <div class="col-md-5 mb-4">
+            <div class="card-dash">
+                <div class="card-header-neon mb-3">Descargar Respaldo</div>
+                <div class="text-center py-3">
+                    <i class="fas fa-file-download fa-3x mb-3" style="color: #ffd700;"></i>
+                    <p class="text-white fw-bold">Descarga un respaldo completo (SQL)</p>
+                    {% if mysql_conectado %}
+                        <form method="post" action="{% url 'gimnasio:backup' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="accion" value="backup_completo">
+                            <button type="submit" class="btn-backup"><i class="fas fa-download me-2"></i>Descargar</button>
+                        </form>
+                    {% else %}
+                        <button class="btn-backup" disabled style="background:#444; color:#aaa;">No disponible</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5 mb-4">
+            <div class="card-dash">
+                <div class="card-header-neon mb-3">Restaurar Base de Datos</div>
+                <div class="text-center py-3">
+                    <i class="fas fa-upload fa-3x mb-3" style="color: #ffd700;"></i>
+                    <p class="text-white fw-bold">Restaura desde un archivo .sql</p>
+                    {% if mysql_conectado %}
+                        <div id="zona-carga">
+                            <input type="file" id="archivo-respaldo" accept=".sql" style="display: none;">
+                            <i class="fas fa-cloud-upload-alt fa-2x text-white"></i>
+                            <p class="text-white fw-bold mt-2">Arrastra archivo aquí</p>
+                        </div>
+                    {% else %}
+                        <div class="p-3 border border-danger rounded text-danger">MySQL No Conectado</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if mysql_conectado %}
+<script>
+    const zonaC = document.getElementById('zona-carga');
+    const archivoInput = document.getElementById('archivo-respaldo');
+
+    zonaC.addEventListener('click', () => archivoInput.click());
+    
+    // Lógica de subida AJAX (manteniendo tu funcionalidad original)
+    function subirArchivo(archivo) {
+        if (!archivo.name.endsWith('.sql')) { alert('Archivo no válido'); return; }
+        const formData = new FormData();
+        formData.append('archivo', archivo);
+
+        fetch('{% url "gimnasio:restaurar_datos" %}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.exito) { alert('✓ ' + data.mensaje); location.reload(); } 
+            else { alert('✗ Error: ' + data.error); }
+        });
+    }
+    archivoInput.addEventListener('change', (e) => { if (e.target.files.length > 0) subirArchivo(e.target.files[0]); });
+</script>
+{% endif %}
+{% endblock %}

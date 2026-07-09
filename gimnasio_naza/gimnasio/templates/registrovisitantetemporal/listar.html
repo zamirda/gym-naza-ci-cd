@@ -1,0 +1,175 @@
+{% extends "body.html" %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* Estilos Premium: Fondo Negro/Oscuro y Dorado Neón */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); margin-bottom: 25px;
+    }
+    .card-title { font-size: 15px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 20px;}
+    
+    /* Stat Boxes Estilo Dorado */
+    .stat-box { text-align: center; padding: 25px 15px; border-radius: 12px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,215,0,0.2); }
+    .stat-box-icon { width: 55px; height: 55px; border-radius: 16px; display: flex; justify-content: center; align-items: center; color: #000; font-size: 22px; margin: 0 auto 15px; background: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.4); }
+    .stat-box h3 { font-size: 24px; color: #fff; margin-bottom: 5px; font-weight: 900; }
+    .stat-box p { font-size: 12px; color: #ffd700; text-transform: uppercase; font-weight: 800; margin: 0; }
+
+    .chart-container { width: 100%; height: 300px; position: relative; }
+</style>
+<div class="d-flex justify-content-end mb-3">
+    <a href="{% url 'gimnasio:crear_registrovisitante' %}" class="btn btn-warning">
+        <i class="fas fa-plus"></i> Agregar Registro de Visitante
+    </a>
+</div>
+<div class="container-fluid mt-4 stagger-1">
+    
+    <!-- Gráfica Principal Estilo Oscuro -->
+    <div class="card-dash mb-4">
+        <div class="card-title">Estadísticas del Gimnasio</div>
+        <div class="chart-container">
+            <canvas id="chartActivity"></canvas>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Estadísticas Dorado/Negro -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-box-icon"><i class="fas fa-users"></i></div>
+                <h3>{{ total_usuarios }}</h3><p>Usuarios</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-box-icon"><i class="fas fa-crown"></i></div>
+                <h3>{{ membresias_activas }}</h3><p>Membresías</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-box-icon"><i class="fas fa-dumbbell"></i></div>
+                <h3>{{ total_elementos }}</h3><p>Elementos</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-box-icon"><i class="fas fa-poll"></i></div>
+                <h3>{{ total_encuestas }}</h3><p>Encuestas</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const ctx = document.getElementById("chartActivity").getContext("2d");
+
+    // Información enviada desde la vista de Django
+    const detalleVisitantes = {{ detalle_visitantes|safe }};
+
+    new Chart(ctx, {
+        type: "bar",
+
+        data: {
+            labels: {{ labels_estadisticas|safe }},
+            datasets: [{
+                label: "Visitantes",
+                data: {{ datos_estadisticas|safe }},
+                backgroundColor: "#ffd700",
+                borderColor: "#b8860b",
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "#ffffff"
+                    }
+                },
+
+                tooltip: {
+                    backgroundColor: "#111111",
+                    titleColor: "#ffd700",
+                    bodyColor: "#ffffff",
+                    borderColor: "#ffd700",
+                    borderWidth: 1,
+                    displayColors: false,
+
+                    callbacks: {
+
+                        title: function(context) {
+                            return "Fecha: " + context[0].label;
+                        },
+
+                        label: function(context) {
+                            return "Visitantes registrados: " + context.raw;
+                        },
+
+                        afterBody: function(context) {
+
+                            const fecha = context[0].label;
+                            const personas = detalleVisitantes[fecha];
+
+                            if (!personas || personas.length === 0) {
+                                return [];
+                            }
+
+                            let texto = [];
+                            texto.push("");
+                            texto.push("Visitantes:");
+
+                            personas.forEach(function(persona, index) {
+                                texto.push((index + 1) + ". " + persona);
+                            });
+
+                            return texto;
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    ticks: {
+                        color: "#ffffff"
+                    },
+                    grid: {
+                        color: "rgba(255,255,255,0.1)"
+                    }
+                },
+
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: "#ffffff",
+                        precision: 0
+                    },
+                    grid: {
+                        color: "rgba(255,255,255,0.1)"
+                    }
+                }
+            }
+        }
+    });
+
+});
+</script>
+{% endblock %}

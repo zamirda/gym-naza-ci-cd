@@ -1,0 +1,214 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* ANIMACIONES */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETA DASHBOARD */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); margin-bottom: 25px;
+    }
+    .header-title { color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+    
+    /* BOTONES DORADOS */
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; text-decoration: none;}
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+
+    /* DATATABLES OVERRIDES */
+    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { color: #a0a0a0 !important; font-weight: 600; font-size: 12px; text-transform: uppercase;}
+    .dataTables_wrapper .dataTables_filter input { background: #000 !important; border: 1px solid rgba(255,215,0,0.3) !important; color: #fff !important; border-radius: 5px;}
+    .dataTables_wrapper .dataTables_filter input:focus { border-color: #ffd700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.3) !important; outline: none;}
+    
+    table.dataTable, .table-dark-gold { width: 100% !important; border-collapse: separate !important; border-spacing: 0 5px !important; margin-top: 15px !important; border: none !important;}
+    table.dataTable thead th, .table-dark-gold thead th { 
+        background: #000 !important; color: #ffd700 !important; border-bottom: 2px solid #ffd700 !important; border-top: none !important; 
+        padding: 15px !important; text-transform: uppercase; font-size: 12px; font-weight: 900; letter-spacing: 1px;
+    }
+    table.dataTable tbody tr.main-row { background: rgba(0,0,0,0.5) !important; transition: 0.3s; cursor: pointer; }
+    table.dataTable tbody tr.main-row:hover { background-color: rgba(255, 215, 0, 0.05) !important; border-left: 3px solid #ffd700 !important;}
+    table.dataTable tbody td { padding: 15px !important; border: none !important; vertical-align: middle; color: #fff !important;}
+    
+    .page-item.active .page-link { background-color: #ffd700 !important; border-color: #ffd700 !important; color: #000 !important; font-weight: 900; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+    .page-item .page-link { background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #fff;}
+    .page-item .page-link:hover { background-color: rgba(255,215,0,0.2); color: #ffd700; }
+
+    /* FILA DESPLEGABLE OSCURA */
+    .collapse-row td { padding: 0 !important; }
+    .expandable-content { background: #0a0a0a; border-left: 3px solid #ffd700; padding: 20px; box-shadow: inset 0 5px 15px rgba(0,0,0,0.5); }
+    .stats-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+</style>
+
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/css/responsive.bootstrap4.min.css' %}">
+
+<div style="position: fixed; top: 20%; right: 5%; width: 300px; height: 800px; background: #ffd700; opacity: 0.02; transform: skewX(-30deg); z-index: -1; pointer-events: none;"></div>
+
+<div class="container-fluid mt-4">
+    <!-- CABECERA -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 gap-3 stagger-1">
+        <h3 class="header-title"><i class="fas fa-weight" style="color: #ffd700; margin-right: 10px;"></i> Registro de Masa Corporal (IMC)</h3>
+    </div>
+
+    <div class="card-dash stagger-2">
+        <div class="table-responsive">
+            <table class="table-dark-gold" id="tabla-masas-musculares">
+                <thead>
+                    <tr>
+                        <th>Atleta</th>
+                        <th class="text-center">IMC</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center">Fecha</th>
+                        <th class="text-center">Acciones</th>
+                        <th class="text-center">Gráfica</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in object_list %}
+                    <!-- FILA PRINCIPAL -->
+                    <tr class="main-row">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div style="width: 35px; height: 35px; background: rgba(255,215,0,0.1); color: #ffd700; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px; border: 1px solid #ffd700;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span class="fw-bold text-uppercase" style="font-size: 13px;">{{ m.fk_Nutricion.fk_Usuario.nombre_usuario }} {{ m.fk_Nutricion.fk_Usuario.apellido_usuario }}</span>
+                            </div>
+                        </td>
+                        <td class="text-center fw-bold" style="color: #ffd700; font-size: 16px;">{{ m.imc }}</td>
+                        <td class="text-center">
+                            {% if m.estado_imc == 'Normal' %}
+                                <span style="background: rgba(40,167,69,0.1); color: #28a745; border: 1px solid #28a745; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Normal</span>
+                            {% elif m.estado_imc == 'Sobrepeso' %}
+                                <span style="background: rgba(255,193,7,0.1); color: #ffc107; border: 1px solid #ffc107; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Sobrepeso</span>
+                            {% elif m.estado_imc == 'Obesidad' %}
+                                <span style="background: rgba(220,53,69,0.1); color: #dc3545; border: 1px solid #dc3545; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase;">Obesidad</span>
+                            {% else %}
+                                <span style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase;">{{ m.estado_imc }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center" style="color: #a0a0a0; font-weight: 600;">{{ m.fecha_control }}</td>
+                        
+                        <!-- BOTONES DE ACCIÓN (AHORA VISIBLES DIRECTAMENTE EN LA TABLA) -->
+                        <td class="text-center">
+                            <a href="{% url 'gimnasio:editar_masa_corporal' m.id %}" class="btn btn-sm" style="background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid #ffd700; border-radius: 4px; padding: 6px 12px; transition: 0.3s;" title="Editar"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'gimnasio:eliminar_masa_corporal' m.id %}" class="btn btn-sm" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 6px 12px; transition: 0.3s; margin-left: 5px;" title="Eliminar"><i class="fas fa-trash"></i></a>
+                        </td>
+                        
+                        <td class="text-center pe-4">
+                            <button class="btn btn-sm btn-icon" style="color: #ffd700; background: transparent; border: none;" data-bs-toggle="collapse" data-bs-target="#collapse{{ m.id }}"><i class="fas fa-chevron-down fs-5"></i></button>
+                        </td>
+                    </tr>
+
+                    <!-- FILA DESPLEGABLE (GRÁFICA Y RESUMEN) -->
+                    <tr class="collapse-row">
+                        <td colspan="6" class="p-0 border-0">
+                            <div class="collapse" id="collapse{{ m.id }}">
+                                <div class="expandable-content">
+                                    <div class="row align-items-center">
+                                        <!-- Gráfica -->
+                                        <div class="col-lg-7 mb-3 mb-lg-0">
+                                            <div style="background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid rgba(255,215,0,0.1); padding: 15px; height: 280px; display: flex; justify-content: center; align-items: center;">
+                                                <div style="height: 250px; width: 100%; display: flex; justify-content: center;">
+                                                    <canvas id="chart{{ m.id }}"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Resumen Físico -->
+                                        <div class="col-lg-5">
+                                            <div class="ps-lg-3 text-center text-lg-start">
+                                                <h4 class="fw-bold mb-4" style="color: #ffd700; text-transform: uppercase; font-size: 16px;"><i class="fas fa-chart-line me-2"></i> Resumen de Medición</h4>
+                                                <div class="d-flex justify-content-around stats-box mb-4">
+                                                    <div class="text-center">
+                                                        <p class="text-muted small mb-1 text-uppercase fw-bold">Peso</p>
+                                                        <span class="h4 fw-bold text-white">{{ m.peso_cliente }} <small style="color: #ffd700; font-size: 14px;">kg</small></span>
+                                                    </div>
+                                                    <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                                                    <div class="text-center">
+                                                        <p class="text-muted small mb-1 text-uppercase fw-bold">Altura</p>
+                                                        <span class="h4 fw-bold text-white">{{ m.altura_cliente }} <small style="color: #ffd700; font-size: 14px;">m</small></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'lib/datatables-1.10.20/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    $(function () {
+        $('#tabla-masas-musculares').DataTable({
+            responsive: true,
+            autoWidth: false,
+            language: { url: "{% static 'lib/datatables-1.10.20/spanish.txt' %}" },
+            columnDefs: [ { orderable: false, targets: [4, 5] } ] // Quitamos el filtro a la columna de Acciones y Gráfica
+        });
+    });
+
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                title: "Confirmado", text: "{{ message }}", icon: "success",
+                background: "rgba(10,10,10,0.95)", color: "#fff", confirmButtonColor: "#ffd700",
+                customClass: { popup: 'border border-warning' }
+            });
+        {% endfor %}
+    {% endif %}
+
+    // Evitar que el clic en los botones dispare el Collapse
+    document.querySelectorAll('.main-row a, .main-row button').forEach((el) => {
+      el.addEventListener('click', (e) => e.stopPropagation())
+    });
+
+    // Renderizar Gráficas Doughnut
+    {% for m in object_list %}
+    new Chart(document.getElementById('chart{{ m.id }}'), {
+        type: 'doughnut',
+        data: {
+            labels: ['IMC', 'Restante'],
+            datasets: [{
+                data: [{{ m.imc | safe }}, 40 - {{ m.imc | safe }}], // Asumiendo 40 como IMC límite para el gráfico visual
+                backgroundColor: [
+                    {% if m.estado_imc == 'Normal' %} '#28a745',
+                    {% elif m.estado_imc == 'Sobrepeso' %} '#ffc107',
+                    {% elif m.estado_imc == 'Obesidad' %} '#dc3545',
+                    {% else %} '#ffd700', {% endif %}
+                    'rgba(255,255,255,0.05)'
+                ],
+                borderWidth: 0,
+                hoverOffset: 5
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '75%',
+            plugins: { legend: { display: false } },
+            animation: { animateRotate: true, duration: 1500 }
+        }
+    });
+    {% endfor %}
+</script>
+{% endblock %}

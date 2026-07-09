@@ -1,0 +1,1253 @@
+{% extends 'body.html' %}
+{% load static widget_tweaks %}
+
+{% block contenido %}
+<style>
+    /* ANIMACIONES */
+    .stagger-1, .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    .stagger-1 { animation-delay: 0.1s; } .stagger-2 { animation-delay: 0.2s; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* COMPONENTES CORE */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); overflow: hidden; margin-bottom: 25px;
+    }
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: #ffd700; transform: skewX(-15deg); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+    }
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .header-neon h3 { margin: 0; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; color: #fff; letter-spacing: 1px; }
+    .header-neon h3 i { color: #ffd700; }
+
+    /* FORMULARIOS */
+    .form-label-custom { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #a0a0a0; font-weight: 800; margin-bottom: 8px; }
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; padding: 12px 15px; transition: 0.3s; }
+    .input-dark:focus { background: #000 !important; border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important; outline: none; }
+    .input-dark::-webkit-calendar-picker-indicator { filter: invert(1); }
+    
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 12px 25px; font-size: 13px; text-transform: uppercase; box-shadow: 0 0 15px rgba(255,215,0,0.3); transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); text-decoration: none; }
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000; }
+
+    /* MODALES Y ALERTAS */
+    .modal-dark .modal-content { background: #0a0a0a; border: 1px solid #ffd700; color: #fff; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+    .alert-amber { background: rgba(255, 215, 0, 0.05); border-left: 4px solid #ffd700; border-radius: 8px; padding: 20px; border: 1px solid rgba(255,215,0,0.1); }
+    .btn-add-cat { background: rgba(255, 215, 0, 0.1); color: #ffd700; border: 1px solid #ffd700; padding: 12px 14px; border-radius: 6px; transition: 0.3s; }
+    .btn-add-cat:hover { background: #ffd700; color: #000; box-shadow: 0 0 15px rgba(255,215,0,0.4); }
+
+    /* Z-INDEX PARA MODALES APILADOS */
+    #modalCategoria, #modalCategoria.show { z-index: 9999 !important; }
+    .backdrop-cat.show { z-index: 9998 !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+    #modalCategoria .modal-dialog { z-index: 10000 !important; }
+</style>
+
+<div class="container mt-4" style="max-width: 800px;">
+    <form method="POST" action="." enctype="multipart/form-data" class="card-dash stagger-1" id="mantenimientoForm">
+        {% csrf_token %}
+        <div class="header-neon"><h3><i class="ri-tools-fill"></i> {{ titulo }}</h3></div>
+        <div class="card-body p-4 p-md-5" style="position: relative; z-index: 2;">
+            {% if form.errors %}
+            <div class="alert mb-4" style="background: rgba(255,77,79,0.1); border: 1px solid #ff4d4f; color: #fff;">
+                <h6 class="fw-bold" style="color: #ff4d4f;"><i class="ri-error-warning-line me-2"></i> Verifica los campos.</h6>
+                <ul class="mb-0 small">{% for field in form %}{% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}{% endfor %}</ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% for field in form.visible_fields %}
+        <div class="form-group mb-4 stagger-2">
+            <label class="form-label-custom">
+                {% if field.name == 'nombre_elemento' %} Equipo Asociado {% else %} {{ field.label }} {% endif %}
+            </label>
+
+            {% if field.name == 'nombre_elemento' %}
+            <div class="d-flex align-items-center gap-2">
+                {{ field|add_class:'form-select input-dark' }}
+                <button type="button" class="btn" style="background: rgba(255, 215, 0, 0.1); color: #ffd700; border: 1px solid #ffd700; padding: 12px 18px; border-radius: 6px; transition: 0.3s;" onclick="abrirWizardEquipo()" title="Seleccionar Equipo por Categoría">
+                    <i class="ri-filter-3-line"></i>
+                </button>
+            </div>
+            {% else %}
+                {{ field|add_class:'form-control input-dark' }}
+            {% endif %}
+
+            {% if elemento_pre %}
+            <div class="alert-amber mb-4 stagger-2">
+                <h6 class="fw-bold text-uppercase mb-3" style="color: #ffd700; font-size: 12px;"><i class="ri-information-line me-1"></i> Equipo Seleccionado</h6>
+                <div class="row small">
+                    <div class="col-md-3"> <small class="text-muted d-block fw-bold">Elemento</small> <strong class="text-white">{{ elemento_pre.nombre_elemento }}</strong> </div>
+                    <div class="col-md-3"> <small class="text-muted d-block fw-bold">Serial</small> <strong class="text-white">{{ elemento_pre.serial }}</strong> </div>
+                    <div class="col-md-3"> <small class="text-muted d-block fw-bold">Peso</small> <strong class="text-white">{{ elemento_pre.peso_elemento }} {{ elemento_pre.unidad_peso }}</strong> </div>
+                    <div class="col-md-3"> <small class="text-muted d-block fw-bold">Categoría</small> <strong class="text-white">{{ elemento_pre.nombre_categoria.get_nombre_categoria_display }}</strong> </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card-footer border-0 p-4 p-md-5 pt-0 d-flex gap-3" style="background: transparent; position: relative; z-index: 2;">
+        <button type="submit" class="btn-hero-gold"><span><i class="ri-save-line me-1"></i> Guardar</span></button>
+        <a href="{% url 'gimnasio:listar_mantenimiento' %}" class="btn fw-bold px-4 py-2" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase; font-size: 13px; transform: skewX(-10deg); display: inline-flex; text-decoration: none;">
+            <span style="transform: skewX(10deg);"><i class="ri-close-line me-1"></i> Cancelar</span>
+        </a>
+    </div>
+  </form>
+      <div class="modal fade" id="modalWizard" tabindex="-1">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+          <div class="modal-content modal-dark">
+
+              <div class="modal-header">
+                  <h5 class="modal-title">
+                      <i class="ri-add-circle-line text-warning"></i>
+                      Registrar nuevo equipo
+                  </h5>
+
+                  <button class="btn-close btn-close-white"
+                          data-bs-dismiss="modal"></button>
+              </div>
+
+              <div class="modal-body">
+
+                  <div class="d-flex justify-content-center mb-4">
+
+                      <div class="wizard-indicator active mx-2">
+                          1️⃣ Categoría
+                      </div>
+
+                      <div class="wizard-indicator mx-2">
+                          2️⃣ Elemento
+                      </div>
+
+                  </div>
+
+                  <!-- PASO 1 -->
+                    <div id="step1" class="wizard-step">
+
+                        <h5 class="text-warning mb-4">
+                            Paso 1 - Crear categoría
+                        </h5>
+
+                        <div class="mb-3">
+                            <label class="form-label-custom">
+                                Nombre de la categoría
+                            </label>
+
+                            <input
+                                type="text"
+                                id="nombreCategoria"
+                                class="form-control input-dark"
+                                placeholder="Ingrese el nombre de la categoría">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label-custom">
+                                Descripción
+                            </label>
+
+                            <textarea
+                                id="descripcionCategoria"
+                                rows="4"
+                                class="form-control input-dark"
+                                placeholder="Descripción de la categoría"></textarea>
+                        </div>
+
+                    </div>
+
+                  <!-- PASO 2 -->
+                  <div id="step2" class="wizard-step" style="display:none;">
+
+                      <h5 class="text-warning mb-4">
+                          Paso 2 - Datos del equipo
+                      </h5>
+
+                      <div class="row">
+
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label-custom">Serial</label>
+                              <input type="text" id="serial" class="form-control input-dark">
+                          </div>
+
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label-custom">Marca</label>
+                              <input type="text" id="marca" class="form-control input-dark">
+                          </div>
+
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label-custom">Nombre del elemento</label>
+                              <input type="text" id="nombre" class="form-control input-dark">
+                          </div>
+
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label-custom">Peso</label>
+                              <input type="number" step="0.01" id="peso" class="form-control input-dark">
+                          </div>
+
+                          <div class="col-md-6 mb-3">
+                                <label class="form-label-custom">Unidad de peso</label>
+
+                                <select id="unidad_peso" class="form-select input-dark">
+                                    <option value="kg">kg</option>
+                                    <option value="lb">lb</option>
+                                </select>
+                            </div>
+
+                          <div class="col-md-6 mb-3">
+                              <label class="form-label-custom">Estado</label>
+                              <select id="estado" class="form-select input-dark">
+                                  <option value="activo">Activo</option>
+                                  <option value="inactivo">Inactivo</option>
+                              </select>
+                          </div>
+
+                          <div class="col-md-6 mb-3">
+                                <label class="form-label-custom">
+                                    Fecha de compra
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="fecha_compra"
+                                    class="form-control input-dark">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label-custom">
+                                    Categoría creada
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="categoriaCreada"
+                                    class="form-control input-dark"
+                                    readonly>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label-custom">
+                                    Cantidad
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="cantidad"
+                                    class="form-control input-dark"
+                                    value="1"
+                                    min="1">
+                            </div>
+
+                          <div class="col-12 mb-3">
+                              <label class="form-label-custom">Imagen</label>
+                              <input type="file" id="foto" class="form-control input-dark">
+                          </div>
+
+                      </div>
+
+                  </div>
+                      <div class="modal-footer">
+
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            id="btnAnterior"
+                            style="display:none;">
+                            Anterior
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-warning"
+                            id="btnSiguiente">
+                            Siguiente
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-success"
+                            id="btnGuardarElemento"
+                            style="display:none;">
+                            Guardar Equipo
+                        </button>
+
+                    </div>
+              </div>
+          </div>
+
+                  
+      </div>
+  </div>
+
+</div>
+
+
+<!-- MODAL: CATEGORÍA -->
+<div class="modal fade modal-dark" id="modalCategoria" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0" style="background: #000; border-bottom: 1px solid rgba(255,215,0,0.2) !important; padding: 20px 30px;">
+                <h5 class="fw-bold text-uppercase m-0" style="color: #ffd700; font-size: 16px;"><i class="ri-price-tag-3-line me-2"></i> Crear Categoría</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 p-md-5">
+                <div class="mb-4">
+                    <label class="form-label-custom">Nombre</label>
+                    <select id="cat_nombre" class="form-select input-dark">
+                        <option value="">-- Selecciona --</option>
+                        <option value="maquinas">Máquinas</option><option value="mancuernas">Mancuernas</option>
+                        <option value="discos">Discos</option><option value="barras">Barras</option>
+                    </select>
+                    <small class="text-danger fw-bold mt-1" id="error_cat_nombre"></small>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label-custom">Descripción</label>
+                    <textarea id="cat_descripcion" class="form-control input-dark" rows="3" placeholder="Descripción..."></textarea>
+                    <small class="text-danger fw-bold mt-1" id="error_cat_desc"></small>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4" style="background: rgba(0,0,0,0.5);">
+                <button class="btn fw-bold px-4" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);" id="btnCancelarCategoria">Cancelar</button>
+                <button class="btn btn-hero-gold px-4" onclick="crearCategoria()" id="btnGuardarCat" style="transform:none"><span><i class="ri-save-line me-1"></i> Guardar</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+=======
+
+<!-- ══════════════════════════════════════════════
+     MODAL: WIZARD SELECCIONAR EQUIPO POR CATEGORÍA
+══════════════════════════════════════════════ -->
+<div class="modal fade modal-dark" id="modalWizardEquipo" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0" style="background: #000; border-bottom: 1px solid rgba(255,215,0,0.2) !important; padding: 20px 30px;">
+        <h5 class="fw-bold text-uppercase m-0" style="color: #ffd700; font-size: 16px; letter-spacing: 1px;"><i class="ri-filter-3-line me-2"></i> Seleccionar Equipo</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-4 p-md-5">
+        <div class="d-flex justify-content-center align-items-center mb-5 gap-3">
+          <span class="wizard-step active" id="wizardBadge1">1. Categoría</span>
+          <i class="fas fa-arrow-right" style="color: #333;"></i>
+          <span class="wizard-step inactive" id="wizardBadge2">2. Elementos</span>
+        </div>
+
+        <!-- PASO 1: SELECCIONAR CATEGORÍA -->
+        <div id="wizardPaso1">
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="ri-price-tag-3-line me-2" style="color: #ffd700;"></i> Seleccionar Categoría</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-12">
+              <select id="wizardCategoria" class="form-select input-dark">
+                <option value="">-- Seleccione una categoría --</option>
+                <option value="maquinas">Máquinas</option>
+                <option value="mancuernas">Mancuernas</option>
+                <option value="discos">Discos</option>
+                <option value="accesorios">Accesorios</option>
+                <option value="barras">Barras</option>
+              </select>
+              <small class="text-danger fw-bold mt-1" id="error_wizard_categoria" style="color: #ff4d4f !important;"></small>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASO 2: SELECCIONAR ELEMENTO -->
+        <div id="wizardPaso2" style="display:none;">
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="ri-box-3-line me-2" style="color: #ffd700;"></i> Seleccionar Elemento</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-12">
+              <div class="d-flex align-items-center gap-2">
+                <select id="wizardElemento" class="form-select input-dark" style="flex: 1;">
+                  <option value="">-- Seleccione un elemento --</option>
+                </select>
+                <button type="button" class="btn" style="background: rgba(255, 215, 0, 0.1); color: #ffd700; border: 1px solid #ffd700; padding: 12px 18px; border-radius: 6px; transition: 0.3s;" onclick="abrirFormularioCrearElemento()" title="Crear Nuevo Elemento">
+                  <i class="ri-add-line"></i>
+                </button>
+              </div>
+              <small class="text-danger fw-bold mt-1" id="error_wizard_elemento" style="color: #ff4d4f !important;"></small>
+            </div>
+          </div>
+          
+          <div id="infoElementoSeleccionado" class="alert-amber" style="display: none;">
+            <div class="row">
+              <div class="col-md-4 mb-2">
+                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 10px;">Serial</small>
+                <strong class="text-white" id="infoSerial">-</strong>
+              </div>
+              <div class="col-md-4 mb-2">
+                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 10px;">Marca</small>
+                <strong class="text-white" id="infoMarca">-</strong>
+              </div>
+              <div class="col-md-4 mb-2">
+                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 10px;">Peso</small>
+                <strong class="text-white" id="infoPeso">-</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASO 3: CREAR NUEVO ELEMENTO -->
+        <div id="wizardPaso3" style="display:none;">
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="ri-add-line me-2" style="color: #ffd700;"></i> Crear Nuevo Elemento</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <input type="text" id="nuevoSerial" class="form-control input-dark" placeholder="Serial">
+              <small class="text-danger fw-bold mt-1" id="error_nuevo_serial" style="color: #ff4d4f !important;"></small>
+            </div>
+            <div class="col-md-6">
+              <input type="text" id="nuevaMarca" class="form-control input-dark" placeholder="Marca">
+              <small class="text-danger fw-bold mt-1" id="error_nueva_marca" style="color: #ff4d4f !important;"></small>
+            </div>
+            <div class="col-md-6">
+              <input type="text" id="nuevoNombre" class="form-control input-dark" placeholder="Nombre Elemento">
+              <small class="text-danger fw-bold mt-1" id="error_nuevo_nombre" style="color: #ff4d4f !important;"></small>
+            </div>
+            <div class="col-md-6">
+              <input type="number" id="nuevoPeso" class="form-control input-dark" placeholder="Peso (kg)">
+              <small class="text-danger fw-bold mt-1" id="error_nuevo_peso" style="color: #ff4d4f !important;"></small>
+            </div>
+            <div class="col-md-6">
+              <select id="nuevoEstado" class="form-select input-dark">
+                <option value="M">Activo</option>
+                <option value="F">Inactivo</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <input type="number" id="nuevaCantidad" class="form-control input-dark" placeholder="Cantidad">
+              <small class="text-danger fw-bold mt-1" id="error_nueva_cantidad" style="color: #ff4d4f !important;"></small>
+            </div>
+            <div class="col-md-6">
+              <input type="file" id="nuevaFoto" class="form-control input-dark">
+              <small class="text-danger fw-bold mt-1" id="error_nueva_foto" style="color: #ff4d4f !important;"></small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 p-4" style="background: rgba(0,0,0,0.5);">
+        <button class="btn fw-bold px-4" style="background: rgba(255,255,255,0.05); color: #fff; text-transform: uppercase; font-size: 12px; border: 1px solid rgba(255,255,255,0.1); display: none;" onclick="wizardPrev()" id="wizardBtnPrev">Volver</button>
+        <button class="btn btn-hero-gold px-4" id="wizardBtnNext" onclick="wizardNext()"><span>Continuar <i class="fas fa-arrow-right"></i></span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+=======
+<!-- ══════════════════════════════════════════════
+     MODAL: WIZARD SELECCIONAR EQUIPO POR CATEGORÍA
+══════════════════════════════════════════════ -->
+<div class="modal fade modal-dark" id="modalWizardEquipo" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0" style="background: #000; border-bottom: 1px solid rgba(255,215,0,0.2) !important; padding: 20px 30px;">
+        <h5 class="fw-bold text-uppercase m-0" style="color: #ffd700; font-size: 16px; letter-spacing: 1px;"><i class="ri-filter-3-line me-2"></i> Seleccionar Equipo</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-4 p-md-5">
+        <div class="d-flex justify-content-center align-items-center mb-5 gap-3">
+          <span class="wizard-step active" id="wizardBadge1">1. Categoría</span>
+          <i class="fas fa-arrow-right" style="color: #333;"></i>
+          <span class="wizard-step inactive" id="wizardBadge2">2. Elementos</span>
+        </div>
+
+        <!-- PASO 1: SELECCIONAR CATEGORÍA -->
+        <div id="wizardPaso1">
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="ri-price-tag-3-line me-2" style="color: #ffd700;"></i> Seleccionar Categoría</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-12">
+              <select id="wizardCategoria" class="form-select input-dark">
+                <option value="">-- Seleccione una categoría --</option>
+                <option value="maquinas">Máquinas</option>
+                <option value="mancuernas">Mancuernas</option>
+                <option value="discos">Discos</option>
+                <option value="accesorios">Accesorios</option>
+                <option value="barras">Barras</option>
+              </select>
+              <small class="text-danger fw-bold mt-1" id="error_wizard_categoria" style="color: #ff4d4f !important;"></small>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASO 2: SELECCIONAR ELEMENTO -->
+        <div id="wizardPaso2" style="display:none;">
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="ri-box-3-line me-2" style="color: #ffd700;"></i> Seleccionar Elemento</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-12">
+              <div class="d-flex align-items-center gap-2">
+                <select id="wizardElemento" class="form-select input-dark" style="flex: 1;">
+                  <option value="">-- Seleccione un elemento --</option>
+                </select>
+                <button type="button" class="btn" style="background: rgba(255, 215, 0, 0.1); color: #ffd700; border: 1px solid #ffd700; padding: 12px 18px; border-radius: 6px; transition: 0.3s;" onclick="abrirFormularioCrearElemento()" title="Crear Nuevo Elemento">
+                  <i class="ri-add-line"></i>
+                </button>
+              </div>
+              <small class="text-danger fw-bold mt-1" id="error_wizard_elemento" style="color: #ff4d4f !important;"></small>
+            </div>
+          </div>
+          
+          <div id="infoElementoSeleccionado" class="alert-amber" style="display: none;">
+            <div class="row">
+              <div class="col-md-4 mb-2">
+                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 10px;">Serial</small>
+                <strong class="text-white" id="infoSerial">-</strong>
+              </div>
+              <div class="col-md-4 mb-2">
+                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 10px;">Marca</small>
+                <strong class="text-white" id="infoMarca">-</strong>
+              </div>
+              <div class="col-md-4 mb-2">
+                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 10px;">Peso</small>
+                <strong class="text-white" id="infoPeso">-</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASO 3: CREAR NUEVO ELEMENTO -->
+        <div id="wizardPaso3" style="display:none;">
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="ri-add-line me-2" style="color: #ffd700;"></i> Crear Nuevo Elemento</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <input type="text" id="nuevoSerial" class="form-control input-dark" placeholder="Serial">
+              <small class="text-danger fw-bold mt-1" id="error_nuevo_serial" style="color: #ff4d4f !important;"></small>
+            </div>
+            <div class="col-md-6">
+              <input type="text" id="nuevaMarca" class="form-control input-dark" placeholder="Marca">
+              <small class="text-danger fw-bold mt-1" id="error_nueva_marca" style="color: #ff4d4f !important;"></small>
+            </div>
+            <div class="col-md-6">
+              <input type="text" id="nuevoNombre" class="form-control input-dark" placeholder="Nombre Elemento">
+              <small class="text-danger fw-bold mt-1" id="error_nuevo_nombre" style="color: #ff4d4f !important;"></small>
+            </div>
+            <div class="col-md-6">
+              <input type="number" id="nuevoPeso" class="form-control input-dark" placeholder="Peso (kg)">
+              <small class="text-danger fw-bold mt-1" id="error_nuevo_peso" style="color: #ff4d4f !important;"></small>
+            </div>
+            <div class="col-md-6">
+              <select id="nuevoEstado" class="form-select input-dark">
+                <option value="M">Activo</option>
+                <option value="F">Inactivo</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <input type="number" id="nuevaCantidad" class="form-control input-dark" placeholder="Cantidad">
+              <small class="text-danger fw-bold mt-1" id="error_nueva_cantidad" style="color: #ff4d4f !important;"></small>
+            </div>
+            <div class="col-md-6">
+              <input type="file" id="nuevaFoto" class="form-control input-dark">
+              <small class="text-danger fw-bold mt-1" id="error_nueva_foto" style="color: #ff4d4f !important;"></small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 p-4" style="background: rgba(0,0,0,0.5);">
+        <button class="btn fw-bold px-4" style="background: rgba(255,255,255,0.05); color: #fff; text-transform: uppercase; font-size: 12px; border: 1px solid rgba(255,255,255,0.1); display: none;" onclick="wizardPrev()" id="wizardBtnPrev">Volver</button>
+        <button class="btn btn-hero-gold px-4" id="wizardBtnNext" onclick="wizardNext()"><span>Continuar <i class="fas fa-arrow-right"></i></span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/validation.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    let paso = 1;
+    let categoriaCreada = null;
+
+    const btnSiguiente = document.getElementById("btnSiguiente");
+    const btnAnterior = document.getElementById("btnAnterior");
+    const btnGuardarElemento = document.getElementById("btnGuardarElemento");
+
+    const txtNombreCategoria = document.getElementById("nombreCategoria");
+    const txtDescripcionCategoria = document.getElementById("descripcionCategoria");
+    const txtCategoriaCreada = document.getElementById("categoriaCreada");
+    const txtSerial = document.getElementById("serial");
+    const txtMarca = document.getElementById("marca");
+    const txtNombre = document.getElementById("nombre");
+    const txtPeso = document.getElementById("peso");
+    const txtUnidad = document.getElementById("unidad_peso");
+    const txtEstado = document.getElementById("estado");
+    const txtFecha = document.getElementById("fecha_compra");
+    const txtCantidad = document.getElementById("cantidad");
+    const txtFoto = document.getElementById("foto");
+
+    if (!btnSiguiente) return;
+
+    function mostrarPaso(numero){
+
+        document.querySelectorAll(".wizard-step").forEach(step=>{
+            step.style.display="none";
+        });
+
+        document.getElementById("step"+numero).style.display="block";
+
+        paso = numero;
+
+        // Botón anterior
+        btnAnterior.style.display = (paso === 1) ? "none" : "inline-block";
+
+        // Solo existen 2 pasos
+        if(paso === 1){
+
+            btnSiguiente.style.display = "inline-block";
+            btnGuardarElemento.style.display = "none";
+
+        }else{
+
+            btnSiguiente.style.display = "none";
+            btnGuardarElemento.style.display = "inline-block";
+
+        }
+
+        document.querySelectorAll(".wizard-indicator").forEach((item,index)=>{
+
+            if(index + 1 <= paso){
+
+                item.classList.add("active");
+
+            }else{
+
+                item.classList.remove("active");
+
+            }
+
+        });
+
+    }
+
+    btnSiguiente.addEventListener("click", function () {
+
+        if (paso !== 1) return;
+
+        if (
+            txtNombreCategoria.value.trim() === "" ||
+            txtDescripcionCategoria.value.trim() === ""
+        ) {
+
+            Swal.fire({
+                icon: "warning",
+                title: "Campos obligatorios",
+                text: "Debe ingresar el nombre y la descripción de la categoría."
+            });
+
+            return;
+        }
+
+        fetch("{% url 'gimnasio:crear_categoria_ajax' %}", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+            },
+
+            body: JSON.stringify({
+
+                nombre_categoria: txtNombreCategoria.value,
+                descripcion: txtDescripcionCategoria.value
+
+            })
+
+        })
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            if (data.error) {
+
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: data.error
+                });
+
+                return;
+            }
+
+            categoriaCreada = data.id;
+
+            txtCategoriaCreada.value = data.nombre;
+
+            mostrarPaso(2);
+
+        })
+
+        .catch(error => {
+
+            console.error(error);
+
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "No fue posible crear la categoría."
+            });
+
+        });
+
+    });
+
+
+    btnAnterior.addEventListener("click",function(){
+
+        if(paso === 2){
+
+            mostrarPaso(1);
+
+        }
+
+    });
+    btnGuardarElemento.addEventListener("click", function () {
+
+    let datos = new FormData();
+
+    datos.append("serial", txtSerial.value);
+    datos.append("marca", txtMarca.value);
+    datos.append("nombre", txtNombre.value);
+    datos.append("peso", txtPeso.value);
+    datos.append("unidad_peso", txtUnidad.value);
+    datos.append("estado", txtEstado.value);
+    datos.append("fecha_compra", txtFecha.value);
+    datos.append("categoria", categoriaCreada);
+    datos.append("cantidad", txtCantidad.value);
+
+    if (txtFoto.files.length > 0) {
+        datos.append("foto", txtFoto.files[0]);
+    }
+
+    fetch("{% url 'gimnasio:crear_elemento_ajax' %}", {
+
+        method: "POST",
+
+    async function crearCategoria() {
+        const nombre = getVal('cat_nombre'), desc = getVal('cat_descripcion');
+        if (!nombre || !desc) return Swal.fire({...swalConfig, icon: "warning", title: "Campos obligatorios"});
+        modalEl('btnGuardarCat').disabled = true;
+        try {
+            const data = await ajaxPost("{% url 'gimnasio:crear_categoria_ajax' %}", JSON.stringify({ nombre_categoria: nombre, descripcion: desc }));
+            if (data.error) throw new Error(data.error);
+            const selectCat = modalEl('categoria');
+            selectCat.add(new Option(data.nombre, data.id, true, true));
+            Swal.fire({...swalConfig, icon: "success", title: "Categoría creada", timer: 1500, showConfirmButton: false});
+            mCat.hide();
+        } catch (e) { Swal.fire({...swalConfig, icon: "error", title: "Error", text: e.message}); }
+        modalEl('btnGuardarCat').disabled = false;
+    }
+=======
+  }
+
+  // ─── WIZARD SELECCIONAR EQUIPO POR CATEGORÍA ─────────────────────
+  let wizardPaso = 1;
+  let wizardCategoriaSeleccionada = '';
+
+  function abrirWizardEquipo() {
+    wizardPaso = 1;
+    wizardCategoriaSeleccionada = '';
+    document.getElementById('wizardCategoria').value = '';
+    document.getElementById('wizardElemento').innerHTML = '<option value="">-- Seleccione un elemento --</option>';
+    document.getElementById('infoElementoSeleccionado').style.display = 'none';
+    
+    // Limpiar formulario de crear elemento
+    document.getElementById('nuevoSerial').value = '';
+    document.getElementById('nuevaMarca').value = '';
+    document.getElementById('nuevoNombre').value = '';
+    document.getElementById('nuevoPeso').value = '';
+    document.getElementById('nuevoEstado').value = 'M';
+    document.getElementById('nuevaCantidad').value = '';
+    document.getElementById('nuevaFoto').value = '';
+    
+    // Limpiar errores
+    document.getElementById('error_wizard_categoria').innerText = '';
+    document.getElementById('error_wizard_elemento').innerText = '';
+    document.querySelectorAll('[id^="error_nuevo_"]').forEach(e => e.innerText = '');
+    
+    mostrarWizardPaso();
+    new bootstrap.Modal(document.getElementById('modalWizardEquipo')).show();
+  }
+
+  function mostrarWizardPaso() {
+    for (let i = 1; i <= 3; i++) {
+      const pasoEl = document.getElementById('wizardPaso' + i);
+      if (pasoEl) {
+        pasoEl.style.display = (i === wizardPaso) ? 'block' : 'none';
+      }
+    }
+    
+    // Actualizar badges (solo mostramos 2 badges en el header)
+    document.getElementById('wizardBadge1').classList.toggle('active', wizardPaso === 1);
+    document.getElementById('wizardBadge1').classList.toggle('inactive', wizardPaso !== 1);
+    document.getElementById('wizardBadge2').classList.toggle('active', wizardPaso === 2);
+    document.getElementById('wizardBadge2').classList.toggle('inactive', wizardPaso !== 2);
+    
+    // Actualizar texto del botón
+    let btnText = '<span>Continuar <i class="fas fa-arrow-right"></i></span>';
+    if (wizardPaso === 2) {
+      btnText = '<span><i class="ri-check-line"></i> Seleccionar</span>';
+    } else if (wizardPaso === 3) {
+      btnText = '<span><i class="ri-save-line"></i> Crear y Seleccionar</span>';
+    }
+    document.getElementById('wizardBtnNext').innerHTML = btnText;
+    
+    document.getElementById('wizardBtnPrev').style.display = wizardPaso === 1 ? 'none' : 'inline-block';
+  }
+
+  function abrirFormularioCrearElemento() {
+    wizardPaso = 3;
+    mostrarWizardPaso();
+  }
+
+  function wizardNext() {
+    if (wizardPaso === 1) {
+      const categoriaValue = document.getElementById('wizardCategoria').value;
+      if (!categoriaValue) {
+        document.getElementById('error_wizard_categoria').innerText = 'Debe seleccionar una categoría.';
+        return;
+      }
+      document.getElementById('error_wizard_categoria').innerText = '';
+      wizardCategoriaSeleccionada = categoriaValue;
+      
+      // Cargar elementos por categoría (usando el valor directo de la categoría)
+      fetch("{% url 'gimnasio:obtener_elementos_por_categoria' %}?categoria_id=" + categoriaValue)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            Swal.fire({background:"rgba(10,10,10,0.95)",color:"#fff",icon:"error",title:"Error",text:data.error,confirmButtonColor:"#ffd700"});
+            return;
+          }
+          
+          const selectElemento = document.getElementById('wizardElemento');
+          selectElemento.innerHTML = '<option value="">-- Seleccione un elemento --</option>';
+          
+          if (data.elementos && data.elementos.length > 0) {
+            data.elementos.forEach(elem => {
+              const option = document.createElement('option');
+              option.value = elem.id;
+              option.textContent = `${elem.nombre} - ${elem.serial}`;
+              option.dataset.serial = elem.serial;
+              option.dataset.marca = elem.marca;
+              option.dataset.peso = elem.peso;
+              selectElemento.appendChild(option);
+            });
+            wizardPaso = 2;
+            mostrarWizardPaso();
+          } else {
+            // Si no hay elementos, ir directamente al formulario de crear
+            Swal.fire({
+              background:"rgba(10,10,10,0.95)", 
+              color:"#fff", 
+              icon:"info", 
+              title:"Sin elementos", 
+              text:"No hay elementos en esta categoría. Crearemos uno nuevo.",
+              confirmButtonColor:"#ffd700"
+            }).then(() => {
+              wizardPaso = 3;
+              mostrarWizardPaso();
+            });
+          }
+        })
+        .catch(() => {
+          Swal.fire({background:"rgba(10,10,10,0.95)",color:"#fff",icon:"error",title:"Error",text:"Error al cargar elementos.",confirmButtonColor:"#ffd700"});
+        });
+    } else if (wizardPaso === 2) {
+      // Paso 2: Seleccionar elemento existente
+      const elementoId = document.getElementById('wizardElemento').value;
+      if (!elementoId) {
+        document.getElementById('error_wizard_elemento').innerText = 'Debe seleccionar un elemento.';
+        return;
+      }
+      document.getElementById('error_wizard_elemento').innerText = '';
+      
+      // Seleccionar el elemento en el formulario principal
+      const selectPrincipal = document.querySelector('[name="nombre_elemento"]');
+      if (selectPrincipal) {
+        selectPrincipal.value = elementoId;
+        selectPrincipal.dispatchEvent(new Event('change'));
+      }
+      
+      bootstrap.Modal.getInstance(document.getElementById('modalWizardEquipo')).hide();
+      Swal.fire({
+        background:"rgba(10,10,10,0.95)", 
+        color:"#fff", 
+        icon:"success", 
+        title:"Equipo seleccionado", 
+        confirmButtonColor:"#ffd700",
+        timer: 1500, 
+        showConfirmButton: false
+      });
+    } else if (wizardPaso === 3) {
+      // Paso 3: Crear nuevo elemento
+      crearNuevoElemento();
+    }
+  }
+
+  function wizardPrev() {
+    if (wizardPaso > 1) {
+      wizardPaso--;
+      mostrarWizardPaso();
+    }
+  }
+
+  function crearNuevoElemento() {
+    const serial = document.getElementById('nuevoSerial').value.trim();
+    const marca = document.getElementById('nuevaMarca').value.trim();
+    const nombre = document.getElementById('nuevoNombre').value.trim();
+    const peso = document.getElementById('nuevoPeso').value;
+    const estado = document.getElementById('nuevoEstado').value;
+    const cantidad = document.getElementById('nuevaCantidad').value;
+    const foto = document.getElementById('nuevaFoto').files[0];
+    
+    // Validaciones
+    let valido = true;
+    if (!serial) {
+      document.getElementById('error_nuevo_serial').innerText = 'El serial es obligatorio.';
+      valido = false;
+    }
+    if (!marca) {
+      document.getElementById('error_nueva_marca').innerText = 'La marca es obligatoria.';
+      valido = false;
+    }
+    if (!nombre) {
+      document.getElementById('error_nuevo_nombre').innerText = 'El nombre es obligatorio.';
+      valido = false;
+    }
+    if (!peso) {
+      document.getElementById('error_nuevo_peso').innerText = 'El peso es obligatorio.';
+      valido = false;
+    }
+    if (!cantidad) {
+      document.getElementById('error_nueva_cantidad').innerText = 'La cantidad es obligatoria.';
+      valido = false;
+    }
+    
+    if (!valido) return;
+    
+    document.getElementById('wizardBtnNext').disabled = true;
+    
+    const formData = new FormData();
+    formData.append('serial', serial);
+    formData.append('marca', marca);
+    formData.append('nombre', nombre);
+    formData.append('peso', peso);
+    formData.append('estado', estado);
+    formData.append('categoria', wizardCategoriaSeleccionada);
+    formData.append('cantidad', cantidad);
+    if (foto) {
+      formData.append('foto', foto);
+    }
+    
+    fetch("{% url 'gimnasio:crear_elemento_ajax' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": '{{ csrf_token }}' },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('wizardBtnNext').disabled = false;
+      if (data.error) {
+        return Swal.fire({background:"rgba(10,10,10,0.95)",color:"#fff",icon:"error",title:"Error",text:data.error,confirmButtonColor:"#ffd700"});
+      }
+      
+      // Seleccionar el nuevo elemento en el formulario principal
+      const selectPrincipal = document.querySelector('[name="nombre_elemento"]');
+      if (selectPrincipal) {
+        if (!selectPrincipal.querySelector(`option[value="${data.id}"]`)) {
+          selectPrincipal.add(new Option(data.nombre, data.id, true, true));
+        } else {
+          selectPrincipal.value = data.id;
+        }
+        selectPrincipal.dispatchEvent(new Event('change'));
+      }
+      
+      bootstrap.Modal.getInstance(document.getElementById('modalWizardEquipo')).hide();
+      Swal.fire({
+        background:"rgba(10,10,10,0.95)", 
+        color:"#fff", 
+        icon:"success", 
+        title:"Elemento creado", 
+        text: "El elemento ha sido creado y seleccionado.",
+        confirmButtonColor:"#ffd700",
+        timer: 2000, 
+        showConfirmButton: false
+      });
+    })
+    .catch(() => {
+      document.getElementById('wizardBtnNext').disabled = false;
+      Swal.fire({background:"rgba(10,10,10,0.95)",color:"#fff",icon:"error",title:"Error de servidor",confirmButtonColor:"#ffd700"});
+    });
+  }
+
+
+=======
+  // ─── WIZARD SELECCIONAR EQUIPO POR CATEGORÍA ─────────────────────
+  let wizardPaso = 1;
+  let wizardCategoriaSeleccionada = '';
+
+  function abrirWizardEquipo() {
+    wizardPaso = 1;
+    wizardCategoriaSeleccionada = '';
+    document.getElementById('wizardCategoria').value = '';
+    document.getElementById('wizardElemento').innerHTML = '<option value="">-- Seleccione un elemento --</option>';
+    document.getElementById('infoElementoSeleccionado').style.display = 'none';
+    
+    // Limpiar formulario de crear elemento
+    document.getElementById('nuevoSerial').value = '';
+    document.getElementById('nuevaMarca').value = '';
+    document.getElementById('nuevoNombre').value = '';
+    document.getElementById('nuevoPeso').value = '';
+    document.getElementById('nuevoEstado').value = 'M';
+    document.getElementById('nuevaCantidad').value = '';
+    document.getElementById('nuevaFoto').value = '';
+    
+    // Limpiar errores
+    document.getElementById('error_wizard_categoria').innerText = '';
+    document.getElementById('error_wizard_elemento').innerText = '';
+    document.querySelectorAll('[id^="error_nuevo_"]').forEach(e => e.innerText = '');
+    
+    mostrarWizardPaso();
+    new bootstrap.Modal(document.getElementById('modalWizardEquipo')).show();
+  }
+
+  function mostrarWizardPaso() {
+    for (let i = 1; i <= 3; i++) {
+      const pasoEl = document.getElementById('wizardPaso' + i);
+      if (pasoEl) {
+        pasoEl.style.display = (i === wizardPaso) ? 'block' : 'none';
+      }
+    }
+    
+    // Actualizar badges (solo mostramos 2 badges en el header)
+    document.getElementById('wizardBadge1').classList.toggle('active', wizardPaso === 1);
+    document.getElementById('wizardBadge1').classList.toggle('inactive', wizardPaso !== 1);
+    document.getElementById('wizardBadge2').classList.toggle('active', wizardPaso === 2);
+    document.getElementById('wizardBadge2').classList.toggle('inactive', wizardPaso !== 2);
+    
+    // Actualizar texto del botón
+    let btnText = '<span>Continuar <i class="fas fa-arrow-right"></i></span>';
+    if (wizardPaso === 2) {
+      btnText = '<span><i class="ri-check-line"></i> Seleccionar</span>';
+    } else if (wizardPaso === 3) {
+      btnText = '<span><i class="ri-save-line"></i> Crear y Seleccionar</span>';
+    }
+    document.getElementById('wizardBtnNext').innerHTML = btnText;
+    
+    document.getElementById('wizardBtnPrev').style.display = wizardPaso === 1 ? 'none' : 'inline-block';
+  }
+
+  function abrirFormularioCrearElemento() {
+    wizardPaso = 3;
+    mostrarWizardPaso();
+  }
+
+  function wizardNext() {
+    if (wizardPaso === 1) {
+      const categoriaValue = document.getElementById('wizardCategoria').value;
+      if (!categoriaValue) {
+        document.getElementById('error_wizard_categoria').innerText = 'Debe seleccionar una categoría.';
+        return;
+      }
+      document.getElementById('error_wizard_categoria').innerText = '';
+      wizardCategoriaSeleccionada = categoriaValue;
+      
+      // Cargar elementos por categoría (usando el valor directo de la categoría)
+      fetch("{% url 'gimnasio:obtener_elementos_por_categoria' %}?categoria_id=" + categoriaValue)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            Swal.fire({background:"rgba(10,10,10,0.95)",color:"#fff",icon:"error",title:"Error",text:data.error,confirmButtonColor:"#ffd700"});
+            return;
+          }
+          
+          const selectElemento = document.getElementById('wizardElemento');
+          selectElemento.innerHTML = '<option value="">-- Seleccione un elemento --</option>';
+          
+          if (data.elementos && data.elementos.length > 0) {
+            data.elementos.forEach(elem => {
+              const option = document.createElement('option');
+              option.value = elem.id;
+              option.textContent = `${elem.nombre} - ${elem.serial}`;
+              option.dataset.serial = elem.serial;
+              option.dataset.marca = elem.marca;
+              option.dataset.peso = elem.peso;
+              selectElemento.appendChild(option);
+            });
+            wizardPaso = 2;
+            mostrarWizardPaso();
+          } else {
+            // Si no hay elementos, ir directamente al formulario de crear
+            Swal.fire({
+              background:"rgba(10,10,10,0.95)", 
+              color:"#fff", 
+              icon:"info", 
+              title:"Sin elementos", 
+              text:"No hay elementos en esta categoría. Crearemos uno nuevo.",
+              confirmButtonColor:"#ffd700"
+            }).then(() => {
+              wizardPaso = 3;
+              mostrarWizardPaso();
+            });
+          }
+        })
+        .catch(() => {
+          Swal.fire({background:"rgba(10,10,10,0.95)",color:"#fff",icon:"error",title:"Error",text:"Error al cargar elementos.",confirmButtonColor:"#ffd700"});
+        });
+    } else if (wizardPaso === 2) {
+      // Paso 2: Seleccionar elemento existente
+      const elementoId = document.getElementById('wizardElemento').value;
+      if (!elementoId) {
+        document.getElementById('error_wizard_elemento').innerText = 'Debe seleccionar un elemento.';
+        return;
+      }
+      document.getElementById('error_wizard_elemento').innerText = '';
+      
+      // Seleccionar el elemento en el formulario principal
+      const selectPrincipal = document.querySelector('[name="nombre_elemento"]');
+      if (selectPrincipal) {
+        selectPrincipal.value = elementoId;
+        selectPrincipal.dispatchEvent(new Event('change'));
+      }
+      
+      bootstrap.Modal.getInstance(document.getElementById('modalWizardEquipo')).hide();
+      Swal.fire({
+        background:"rgba(10,10,10,0.95)", 
+        color:"#fff", 
+        icon:"success", 
+        title:"Equipo seleccionado", 
+        confirmButtonColor:"#ffd700",
+        timer: 1500, 
+        showConfirmButton: false
+      });
+    } else if (wizardPaso === 3) {
+      // Paso 3: Crear nuevo elemento
+      crearNuevoElemento();
+    }
+  }
+
+  function wizardPrev() {
+    if (wizardPaso > 1) {
+      wizardPaso--;
+      mostrarWizardPaso();
+    }
+  }
+
+  function crearNuevoElemento() {
+    const serial = document.getElementById('nuevoSerial').value.trim();
+    const marca = document.getElementById('nuevaMarca').value.trim();
+    const nombre = document.getElementById('nuevoNombre').value.trim();
+    const peso = document.getElementById('nuevoPeso').value;
+    const estado = document.getElementById('nuevoEstado').value;
+    const cantidad = document.getElementById('nuevaCantidad').value;
+    const foto = document.getElementById('nuevaFoto').files[0];
+    
+    // Validaciones
+    let valido = true;
+    if (!serial) {
+      document.getElementById('error_nuevo_serial').innerText = 'El serial es obligatorio.';
+      valido = false;
+    }
+    if (!marca) {
+      document.getElementById('error_nueva_marca').innerText = 'La marca es obligatoria.';
+      valido = false;
+    }
+    if (!nombre) {
+      document.getElementById('error_nuevo_nombre').innerText = 'El nombre es obligatorio.';
+      valido = false;
+    }
+    if (!peso) {
+      document.getElementById('error_nuevo_peso').innerText = 'El peso es obligatorio.';
+      valido = false;
+    }
+    if (!cantidad) {
+      document.getElementById('error_nueva_cantidad').innerText = 'La cantidad es obligatoria.';
+      valido = false;
+    }
+    
+    if (!valido) return;
+    
+    document.getElementById('wizardBtnNext').disabled = true;
+    
+    const formData = new FormData();
+    formData.append('serial', serial);
+    formData.append('marca', marca);
+    formData.append('nombre', nombre);
+    formData.append('peso', peso);
+    formData.append('estado', estado);
+    formData.append('categoria', wizardCategoriaSeleccionada);
+    formData.append('cantidad', cantidad);
+    if (foto) {
+      formData.append('foto', foto);
+    }
+    
+    fetch("{% url 'gimnasio:crear_elemento_ajax' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": '{{ csrf_token }}' },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('wizardBtnNext').disabled = false;
+      if (data.error) {
+        return Swal.fire({background:"rgba(10,10,10,0.95)",color:"#fff",icon:"error",title:"Error",text:data.error,confirmButtonColor:"#ffd700"});
+      }
+      
+      // Seleccionar el nuevo elemento en el formulario principal
+      const selectPrincipal = document.querySelector('[name="nombre_elemento"]');
+      if (selectPrincipal) {
+        if (!selectPrincipal.querySelector(`option[value="${data.id}"]`)) {
+          selectPrincipal.add(new Option(data.nombre, data.id, true, true));
+        } else {
+          selectPrincipal.value = data.id;
+        }
+        selectPrincipal.dispatchEvent(new Event('change'));
+      }
+      
+      bootstrap.Modal.getInstance(document.getElementById('modalWizardEquipo')).hide();
+      Swal.fire({
+        background:"rgba(10,10,10,0.95)", 
+        color:"#fff", 
+        icon:"success", 
+        title:"Elemento creado", 
+        text: "El elemento ha sido creado y seleccionado.",
+        confirmButtonColor:"#ffd700",
+        timer: 2000, 
+        showConfirmButton: false
+      });
+    })
+    .catch(() => {
+      document.getElementById('wizardBtnNext').disabled = false;
+      Swal.fire({background:"rgba(10,10,10,0.95)",color:"#fff",icon:"error",title:"Error de servidor",confirmButtonColor:"#ffd700"});
+    });
+  }
+
+  // Mostrar información del elemento seleccionado
+  document.getElementById('wizardElemento').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const infoDiv = document.getElementById('infoElementoSeleccionado');
+    
+    if (selectedOption.value) {
+      document.getElementById('infoSerial').textContent = selectedOption.dataset.serial || '-';
+      document.getElementById('infoMarca').textContent = selectedOption.dataset.marca || '-';
+      document.getElementById('infoPeso').textContent = selectedOption.dataset.peso ? selectedOption.dataset.peso + ' kg' : '-';
+      infoDiv.style.display = 'block';
+    } else {
+      infoDiv.style.display = 'none';
+    }
+  });
+
+
+=======
+
+</script>
+{% endblock %}

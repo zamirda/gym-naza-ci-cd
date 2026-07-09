@@ -1,0 +1,115 @@
+{% load static %}
+<style>
+    .footer-neon {
+        background: #050505;
+        border-top: 1px solid rgba(255, 215, 0, 0.2);
+        padding: 20px 0;
+        margin-top: auto;
+        width: 100%;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 10;
+    }
+    .footer-text {
+        color: #8b9eb0;
+        font-size: 13px;
+        margin: 0;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+    .footer-link {
+        color: #ffd700;
+        text-decoration: none;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+    .footer-link:hover { color: #fff; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+    .footer-social i {
+        font-size: 18px; color: #a0a0a0; margin-left: 15px; transition: 0.3s; cursor: pointer;
+    }
+    .footer-social i:hover { color: #ffd700; transform: scale(1.1); }
+    /* ===== Dropdown Soporte Técnico ===== */
+    .dropdown-menu {
+        background-color: #111111;   /* Fondo negro */
+        border: 1px solid #ffd700;   /* Borde amarillo */
+        border-radius: 10px;
+        padding: 8px 0;
+    }
+
+    .dropdown-item {
+        color: #ffd700;              /* Texto amarillo */
+        font-weight: 600;
+        transition: all .3s ease;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item:focus {
+        background-color: #222222;   /* Fondo al pasar el mouse */
+        color: #ffffff;              /* Texto blanco */
+    }
+
+    .dropdown-divider {
+        border-color: rgba(255, 215, 0, 0.3);
+    }
+</style>
+
+<footer class="footer-neon" id="footer-element">
+    <div class="container-fluid px-4">
+        <div class="row align-items-center">
+            <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                <p class="footer-text">
+                    &copy; <script>document.write(new Date().getFullYear())</script> 
+                    <span style="color: #fff; font-weight: 800;">GYM NAZARETH</span>. 
+                    Todos los derechos reservados. Desarrollado por <a href="#" class="footer-link">Grupo 5</a>.
+                </p>
+            </div>
+            <div class="col-md-6 text-center text-md-end footer-social">
+                <div class="dropdown d-inline-block me-3">
+                    <a class="footer-link dropdown-toggle"
+                      href="#"
+                      role="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false">
+                        Soporte Técnico
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item"
+                              href="{% static 'Manuales/manualdeusuario.pdf' %}"
+                              target="_blank">
+                                📘 Manual de Usuario
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item"
+                              href="{% static 'Manuales/manualdeadministrador.pdf' %}"
+                              target="_blank">
+                                🛠️ Manual de Administrador
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <a href="https://wa.me/573138059194?text=Hola%2C%20me%20gustaría%20información%20sobre%20el%20gimnasio"
+                  target="_blank"
+                  class="footer-link me-3"
+                  id="whatsapp-link"
+                  title="Enviar mensaje por WhatsApp">
+                    <i class="fab fa-whatsapp"></i> 
+                </a>
+                <a href="https://www.instagram.com/TU_USUARIO"
+                  target="_blank"
+                  class="footer-link me-3">
+                    <i class="fab fa-instagram"></i>
+                </a>
+
+                <a href="https://www.facebook.com/TU_PAGINA"
+                  target="_blank"
+                  class="footer-link">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>

@@ -1,0 +1,67 @@
+{% extends 'body.html' %}
+{% load widget_tweaks %}
+
+{% block contenido %}
+<style>
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    .card-warning-dash {
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 0; box-shadow: 0 15px 40px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.2); overflow: hidden; max-width: 600px; margin: 40px auto;
+    }
+    
+    .card-warning-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: #ffd700; transform: skewX(-15deg); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); z-index: 0;
+    }
+
+    .warning-header { background: rgba(0,0,0,0.6); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;}
+    .warning-header h3 { font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 1px; color: #ffd700; }
+    
+    .alert-neon-box { background: rgba(255, 215, 0, 0.05); border: 1px solid rgba(255, 215, 0, 0.2); color: #fff; border-radius: 10px; padding: 20px; position: relative; z-index: 2;}
+
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 12px 25px; font-size: 13px; text-transform: uppercase; box-shadow: 0 0 15px rgba(255,215,0,0.3); transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); position: relative; z-index: 2; cursor: pointer; }
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+</style>
+
+<div class="container stagger-1">
+    <form method="post" action=".">
+        {% csrf_token %}
+        <div class="card-warning-dash">
+            <div class="warning-header">
+                <h3><i class="fas fa-trash fa-fade me-2"></i> {{ titulo }}</h3>
+            </div>
+            
+            <div class="card-body p-4 p-md-5 text-center" style="position: relative; z-index: 2;">
+                {% if form.errors %}
+                <div class="alert-neon-box text-start mb-4" style="border-color: #ff4d4f; background: rgba(255,77,79,0.1);">
+                    <h6 class="fw-bold" style="color: #ff4d4f; text-transform: uppercase;"><i class="fas fa-ban me-2"></i> Error al Procesar</h6>
+                    <ul class="mb-0">
+                        {% for field in form %} {% for error in field.errors %} <li style="font-size: 13px;">{{ error }}</li> {% endfor %} {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <i class="fas fa-exclamation-triangle fa-4x mb-4" style="color: #ffd700; filter: drop-shadow(0 0 15px rgba(255,215,0,0.3));"></i>
+                <h4 class="fw-bold mb-3 text-uppercase" style="letter-spacing: 1px; color: #fff;">¿Confirmas esta acción?</h4>
+                <div class="alert-neon-box d-inline-block text-start" style="width: 100%;">
+                    Estás a punto de eliminar permanentemente la categoría de inventario:<br>
+                    <span class="fw-bold fs-5 d-block mt-2 text-uppercase" style="color: #ffd700; letter-spacing: 1px;">ID #{{ object.id }} | {{ object.nombre_categoria }}</span>
+                </div>
+            </div>
+            
+            <div class="card-footer border-0 p-4 p-md-5 pt-0 d-flex justify-content-center gap-3" style="background: transparent; position: relative; z-index: 2;">
+                <a href="{% url 'gimnasio:listar_categorias' %}" class="btn fw-bold px-4 py-2" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase; font-size: 13px; transform: skewX(-10deg); display: inline-flex; text-decoration: none;">
+                    <span style="transform: skewX(10deg);"><i class="fas fa-arrow-left me-2"></i> Cancelar</span>
+                </a>
+                <button type="submit" class="btn-hero-gold">
+                    <span><i class="fas fa-check"></i> Sí, Eliminar</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

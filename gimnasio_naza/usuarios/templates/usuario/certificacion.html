@@ -1,0 +1,41 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    .card-dash { position: relative; background: rgba(10,10,10,0.95); backdrop-filter: blur(10px); border-radius: 15px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.9); border: 1px solid rgba(255,215,0,0.1); }
+    
+    .table-neon { width: 100%; color: #fff; border-collapse: separate; border-spacing: 0 5px; }
+    .table-neon th { background: #000; color: #ffd700; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #ffd700; }
+    .table-neon td { background: rgba(255,255,255,0.03); padding: 15px; color: #fff; }
+</style>
+
+<div class="container-fluid mt-4">
+    <h3 class="text-white fw-bold mb-4" style="text-transform: uppercase;"><i class="fas fa-certificate text-warning me-2"></i> Certificaciones Internas</h3>
+    
+    <div class="card-dash">
+        <table class="table-neon">
+            <thead>
+                <tr><th>ID</th><th>Descripción</th><th>Emisión</th><th>Estado</th><th>Acción</th></tr>
+            </thead>
+            <tbody>
+                {% for cert in certificaciones %}
+                <tr>
+                    <td class="fw-bold" style="color: #6c757d;">#CERT-{{ cert.id }}</td>
+                    <td>{{ cert.descripcion_certificacion }}</td>
+                    <td style="color: #a0a0a0;">{{ cert.fecha_certificacion|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if cert.descargado %}
+                            <span style="color: #28a745; font-weight: 800; font-size: 11px; text-transform: uppercase;">Descargado</span>
+                        {% else %}
+                            <span style="color: #ffd700; font-weight: 800; font-size: 11px; text-transform: uppercase;">Pendiente</span>
+                        {% endif %}
+                    </td>
+                    <td><a href="{% url 'gimnasio:certificacion_interna' cert.id %}" class="btn btn-sm" style="background: #ffd700; color: #000; font-weight: 900;">PDF</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

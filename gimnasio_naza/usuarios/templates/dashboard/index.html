@@ -1,0 +1,302 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    .stagger-3 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.3s; opacity: 0; }
+    .stagger-4 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.4s; opacity: 0; }
+    .stagger-5 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.5s; opacity: 0; }
+
+    @keyframes revealBounce { 
+        0% { opacity: 0; transform: translateY(30px) scale(0.97); } 
+        100% { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+
+    @keyframes neonPulse {
+        0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.2), 0 0 20px rgba(255, 215, 0, 0.1); }
+        100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3); }
+    }
+
+    .hero-banner {
+        position: relative;
+        background: linear-gradient(100deg, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.8) 45%, transparent 100%), 
+                    url('{% static "imagen/pexels-pixabay-260352.jpg" %}') center/cover no-repeat;
+        border-radius: var(--border-radius-card);
+        padding: 40px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(255, 215, 0, 0.1);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 1;
+    }
+
+    .hero-banner::before {
+        content: ''; position: absolute; right: 20%; top: -20%; width: 40px; height: 150%;
+        background: var(--primary-blue); transform: skewX(-25deg); z-index: 0;
+        animation: neonPulse 2s infinite alternate;
+    }
+
+    .hero-text { position: relative; z-index: 10; }
+    .hero-text h1 { font-size: 38px; font-weight: 900; color: #fff; text-transform: uppercase; text-shadow: 3px 3px 0 #000; margin-bottom: 5px; line-height: 1.1; }
+    .hero-text span.highlight { color: var(--primary-blue); text-shadow: 2px 2px 0 #000, 0 0 15px var(--primary-light); }
+
+    .card-dash { 
+        position: relative; background-color: var(--bg-surface); 
+        backdrop-filter: var(--card-backdrop); -webkit-backdrop-filter: var(--card-backdrop);
+        border-radius: var(--border-radius-card); padding: 25px; 
+        box-shadow: var(--shadow-main); border: var(--card-border); 
+        transition: var(--transition); overflow: hidden; height: 100%;
+    }
+    
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: var(--primary-blue); transform: skewX(-15deg);
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); transition: var(--transition); z-index: 0;
+    }
+    
+    .card-dash:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); border-color: var(--primary-blue); }
+    .card-dash:hover::before { width: 25px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); background: #fff; }
+
+    .card-title { font-size: 13px; font-weight: 800; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; position: relative; z-index: 2;}
+    .card-value { font-size: 18px; font-weight: 700; color: #fff; position: relative; z-index: 2;}
+
+    .grid-info-perfil { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px; }
+    .grid-accesos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px; }
+
+    .acceso-card { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px 15px; text-decoration: none; }
+    .acceso-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; margin-bottom: 15px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); transition: var(--transition); position: relative; z-index: 2; color: var(--primary-blue);}
+    .acceso-card:hover .acceso-icon { background: var(--primary-blue); color: #000; transform: scale(1.1) rotate(5deg); box-shadow: 0 0 20px var(--primary-blue); border-color: #fff; }
+    .acceso-card h3 { font-size: 16px; color: #fff; font-weight: 800; margin-bottom: 5px; position: relative; z-index: 2; text-transform: uppercase; letter-spacing: 1px; transition: var(--transition);}
+    .acceso-card p { font-size: 12px; color: var(--text-muted); margin: 0; position: relative; z-index: 2;}
+    .acceso-card:hover h3 { color: var(--primary-blue); }
+
+    .progress-track { width: 100%; height: 12px; background: rgba(0,0,0,0.6); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+    .progress-fill { height: 100%; background: var(--primary-blue); box-shadow: 0 0 15px var(--primary-blue); transition: width 1s cubic-bezier(0.16, 1, 0.3, 1); border-radius: 6px;}
+
+    #calendar-container { position: relative; z-index: 2;}
+    .fc { color: #fff !important; font-family: 'Poppins', sans-serif !important; }
+    .fc-theme-standard td, .fc-theme-standard th { border-color: rgba(255,255,255,0.08) !important; }
+    .fc-col-header-cell { background: rgba(0,0,0,0.5) !important; padding: 10px 0 !important; font-weight: 700; text-transform: uppercase; font-size: 13px; color: var(--primary-blue) !important; }
+    .fc-daygrid-day { background: rgba(0,0,0,0.2); transition: 0.3s; }
+    .fc-daygrid-day:hover { background: rgba(255,215,0,0.05); }
+    .fc-day-today { background: rgba(255,215,0,0.1) !important; }
+    .fc-daygrid-day-number { color: #fff !important; font-weight: 600; font-size: 13px; padding: 5px 8px !important; }
+    .fc-button-primary { background: var(--bg-surface) !important; border: 1px solid var(--border-color) !important; color: #fff !important; text-transform: capitalize; font-weight: 600 !important; transition: 0.3s !important;}
+    .fc-button-primary:hover, .fc-button-primary:active { background: var(--primary-blue) !important; color: #000 !important; border-color: #fff !important; box-shadow: 0 0 15px var(--primary-blue) !important; }
+    .fc-toolbar-title { font-size: 20px !important; font-weight: 800 !important; text-transform: uppercase; color: var(--primary-blue) !important; letter-spacing: 1px;}
+    .fc-event { border: none !important; border-radius: 4px !important; padding: 3px 5px !important; font-weight: 700 !important; font-size: 11px !important; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+
+    @media (max-width: 992px) { .grid-info-perfil, .grid-accesos { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .grid-info-perfil, .grid-accesos { grid-template-columns: 1fr; } .hero-banner { flex-direction: column; align-items: flex-start; } .hero-banner::before { right: 5%; width: 25px;} }
+</style>
+
+<div class="hero-banner stagger-1">
+    <div class="hero-text">
+        <p style="color: var(--primary-blue); font-size: 13px; font-weight: 800; letter-spacing: 2px; margin-bottom: 5px;">PANEL PERSONAL</p>
+        <h1>HOLA, <span class="highlight">{{ nombre_usuario }}</span></h1>
+    </div>
+    <div style="position: relative; z-index: 10; text-align: right;">
+        <i class="fas fa-dumbbell" style="font-size: 45px; color: rgba(255,255,255,0.1);"></i>
+    </div>
+</div>
+
+<div class="grid-info-perfil stagger-2">
+    <div class="card-dash d-flex align-items-center justify-content-between">
+        <div>
+            <div class="card-title">Documento</div>
+            <div class="card-value">{{ documento }}</div>
+        </div>
+        <i class="fas fa-id-card" style="font-size: 28px; color: rgba(255,255,255,0.1); position: relative; z-index: 2;"></i>
+    </div>
+    <div class="card-dash d-flex align-items-center justify-content-between">
+        <div>
+            <div class="card-title">Correo Electrónico</div>
+            <div class="card-value">{{ correo }}</div>
+        </div>
+        <i class="fas fa-envelope" style="font-size: 28px; color: rgba(255,255,255,0.1); position: relative; z-index: 2;"></i>
+    </div>
+    <div class="card-dash d-flex align-items-center justify-content-between">
+        <div>
+            <div class="card-title">Teléfono</div>
+            <div class="card-value">{{ telefono }}</div>
+        </div>
+        <i class="fas fa-phone" style="font-size: 28px; color: rgba(255,255,255,0.1); position: relative; z-index: 2;"></i>
+    </div>
+</div>
+
+<div class="row mb-4 stagger-3">
+    <div class="col-12">
+        {% if not mi_nutricion %}
+            <div class="card-dash" style="border: 1px solid var(--primary-blue); text-align: center; padding: 40px;">
+                <i class="fas fa-robot mb-3" style="font-size: 45px; color: var(--primary-blue); filter: drop-shadow(0 0 10px rgba(255,215,0,0.4)); position: relative; z-index: 2;"></i>
+                <h3 style="color: #fff; font-weight: 900; text-transform: uppercase; position: relative; z-index: 2; margin-bottom: 10px;">Potencia tu Entrenamiento con IA</h3>
+                <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto 25px; position: relative; z-index: 2;">Aún no tienes un plan estructurado. Deja que nuestro motor predictivo diseñe tu dieta y rutina ideal en base a tu perfil físico actual.</p>
+                
+                <a href="{% url 'usuarios:generar_plan_ia' user.id %}" class="btn" style="background: var(--primary-blue); color: #000; font-weight: 800; padding: 12px 30px; font-size: 15px; text-transform: uppercase; box-shadow: 0 0 20px var(--primary-light); position: relative; z-index: 2; text-decoration: none;">
+                    <i class="fas fa-bolt mr-2"></i> Generar Mi Plan Ahora
+                </a>
+            </div>
+        {% else %}
+            <div class="card-dash" style="border-left: 4px solid var(--primary-blue);">
+                <div class="d-flex justify-content-between align-items-center mb-4" style="position: relative; z-index: 2;">
+                    <h4 style="margin: 0; color: #fff; font-weight: 800; text-transform: uppercase;"><i class="fas fa-bullseye" style="color: var(--primary-blue); margin-right: 8px;"></i> Tu Plan Activo</h4>
+                    <span style="background: rgba(87, 77, 16, 0.1); color: var(--primary-blue); padding: 5px 15px; border-radius: 4px; border: 1px solid var(--primary-blue); font-weight: 700; font-size: 12px; text-transform: uppercase;">
+                        {{ mi_nutricion.get_objetivo_nutricional_display }}
+                    </span>
+                </div>
+                
+                <div class="row" style="position: relative; z-index: 2;">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 22px; color: #fff; margin-right: 15px;">
+                                <i class="fas fa-dumbbell"></i>
+                            </div>
+                            <div>
+                                <div class="card-title m-0">Rutina Actual</div>
+                                <h5 style="color: var(--primary-blue); font-weight: 800; margin: 0;">{{ mi_rutina.get_tipo_rutina_display|default:"Funcional" }}</h5>
+                                <small style="color: var(--text-muted); font-weight: 600;">{{ mi_rutina.dias_disponibles|default:"4" }} días / semana</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 22px; color: #fff; margin-right: 15px;">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div>
+                                <div class="card-title m-0">Nutrición</div>
+                                <h5 style="color: var(--primary-blue); font-weight: 800; margin: 0;">{{ mi_nutricion.get_tipo_plan_alimenticio_display }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-top" style="border-color: rgba(255,255,255,0.1) !important; position: relative; z-index: 2;">
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span style="font-weight: 700; color: #fff; font-size: 13px; text-transform: uppercase;"><i class="fas fa-fire" style="color: #ff4d4f; margin-right: 5px;"></i> Entrenamientos Meta (Este mes)</span>
+                            <span style="color: var(--primary-blue); font-weight: 800; font-size: 13px;">{{ asistencias_mes }} / {{ meta_mensual }}</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: {{ porcentaje_ia|default:'0' }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span style="font-weight: 700; color: #fff; font-size: 13px; text-transform: uppercase;"><i class="fas fa-clock" style="color: #a0a0a0; margin-right: 5px;"></i> Vigencia Membresía</span>
+                            <span style="color: var(--text-muted); font-weight: 800; font-size: 13px;" id="porcentajeText">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="barraMembresia" style="background: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.5);"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<h4 class="mb-3 mt-4" style="color: #fff; font-weight: 800; text-transform: uppercase; font-size: 16px; border-left: 3px solid var(--primary-blue); padding-left: 10px;">Accesos Directos</h4>
+<div class="grid-accesos stagger-4">
+    <a href="{% url 'usuarios:mi_rutina' %}" class="card-dash acceso-card">
+        <div class="acceso-icon"><i class="fas fa-list-check"></i></div>
+        <h3>Rutinas</h3><p>Ver mis ejercicios</p>
+    </a>
+    <a href="{% url 'usuarios:mi_nutricion' %}" class="card-dash acceso-card">
+        <div class="acceso-icon"><i class="fas fa-apple-alt"></i></div>
+        <h3>Nutrición</h3><p>Ver mi dieta actual</p>
+    </a>
+    <a href="{% url 'usuarios:mi_certificacion' %}" class="card-dash acceso-card">
+        <div class="acceso-icon"><i class="fas fa-award"></i></div>
+        <h3>Certificados</h3><p>Logros y documentos</p>
+    </a>
+</div>
+
+<h4 class="mb-3 mt-4" style="color: #fff; font-weight: 800; text-transform: uppercase; font-size: 16px; border-left: 3px solid var(--primary-blue); padding-left: 10px;">Agenda de Asistencias</h4>
+<div class="card-dash mb-4 stagger-5">
+    <div id="calendar-container">
+        <div id="calendar"></div>
+    </div>
+</div>
+
+{% endblock contenido %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    let restantes = Number("{{ dias_restantes|default:0 }}");
+    let totales = Number("{{ dias_totales|default:0 }}");
+    let porcentaje = 0;
+
+    if (totales > 0){
+        porcentaje = ((totales - restantes) / totales) * 100;
+    }
+    if (restantes <= 0 && totales > 0) {
+        porcentaje = 100;
+    }
+    porcentaje = Math.max(0, Math.min(100, porcentaje));
+
+    const barraMembresia = document.getElementById('barraMembresia');
+    const porcentajeText = document.getElementById('porcentajeText');
+
+    barraMembresia.style.width = porcentaje + '%';
+    
+    if (porcentaje > 85) {
+        barraMembresia.style.background = '#ff4d4f';
+        barraMembresia.style.boxShadow = '0 0 15px #ff4d4f';
+    } else if (porcentaje > 60) {
+        barraMembresia.style.background = '#ffc107';
+        barraMembresia.style.boxShadow = '0 0 15px #ffc107';
+    }
+
+    porcentajeText.textContent = porcentaje.toFixed(0) + '% (Días Consumidos)';
+
+    let calendarEl = document.getElementById('calendar');
+    let eventos = {{ eventos|default:"[]"|safe }};
+
+    let calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        height: 'auto',
+        contentHeight: 500,
+        headerToolbar: {
+            left: 'prev,next',
+            center: 'title',
+            right: 'today'
+        },
+        events: eventos,
+        eventDisplay: 'block'
+    });
+    calendar.render();
+
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                title: "{% if message.tags == 'success' %}¡Plan Asignado!{% elif message.tags == 'error' %}¡Error!{% else %}Atención{% endif %}",
+                text: "{{ message }}",
+                icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}",
+                background: "rgba(10,10,10,0.95)",
+                color: "#ffffff",
+                backdrop: "rgba(0,0,0,0.8)",
+                confirmButtonColor: "var(--primary-blue)",
+                showClass: { popup: 'animate__animated animate__zoomIn animate__faster' },
+                hideClass: { popup: 'animate__animated animate__zoomOut animate__faster' }
+            });
+        {% endfor %}
+    {% endif %}
+});
+</script>
+{% endblock js %}

@@ -1,0 +1,254 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* ANIMACIONES DASHBOARD */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETAS CONTENEDORAS */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); margin-bottom: 25px;
+    }
+    .header-title { color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin: 0;}
+
+    /* BOTONES DORADOS */
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; text-decoration: none;}
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+
+    .btn-hero-outline { background: rgba(255,215,0,0.05); color: #ffd700; border: 1px solid #ffd700; font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; border-radius: 0;}
+    .btn-hero-outline span { transform: skewX(10deg); display: block; }
+    .btn-hero-outline:hover { background: #ffd700; color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+
+    /* TARJETAS DE EQUIPAMIENTO (CATEGORÍAS) */
+    .equipment-card {
+      border: 1px solid rgba(255,215,0,0.2); border-radius: 15px; padding: 20px 16px;
+      background: rgba(0,0,0,0.6); transition: all 0.3s ease; height: 100%;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      text-align: center; cursor: pointer; text-decoration: none; color: #fff;
+    }
+    .equipment-card:hover { border-color: #ffd700; transform: translateY(-5px); box-shadow: 0 10px 25px rgba(255,215,0,0.15); color: #ffd700; text-decoration: none;}
+    .equipment-card.activa { border-color: #ffd700; border-width: 2px; background: rgba(255,215,0,0.05); }
+    .equipment-card img { width: 110px; height: 110px; object-fit: contain; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));}
+    .equipment-card .sin-imagen { width: 110px; height: 110px; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 15px; color: #ffd700; font-size: 0.85rem; border: 1px dashed rgba(255,215,0,0.3);}
+    .equipment-card .cantidad { font-size: 2.5rem; font-weight: 900; color: #fff; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,215,0,0.3);}
+    .equipment-card .nombre { font-size: 11px; color: #a0a0a0; text-transform: uppercase; font-weight: 800; margin-bottom: 0; letter-spacing: 1px;}
+    .cards-container { justify-content: center; }
+
+    /* DATATABLES OVERRIDES */
+    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { color: #a0a0a0 !important; font-weight: 600; font-size: 12px; text-transform: uppercase;}
+    .dataTables_wrapper .dataTables_filter input { background: #000 !important; border: 1px solid rgba(255,215,0,0.3) !important; color: #fff !important; border-radius: 5px;}
+    .dataTables_wrapper .dataTables_filter input:focus { border-color: #ffd700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.3) !important; outline: none;}
+    
+    table.dataTable, .table-dark-gold { width: 100% !important; border-collapse: separate !important; border-spacing: 0 5px !important; margin-top: 15px !important; border: none !important;}
+    table.dataTable thead th, .table-dark-gold thead th { background: #000 !important; color: #ffd700 !important; border-bottom: 2px solid #ffd700 !important; border-top: none !important; padding: 15px !important; text-transform: uppercase; font-size: 11px; font-weight: 900; letter-spacing: 1px; white-space: nowrap;}
+    table.dataTable tbody tr { background: rgba(0,0,0,0.5) !important; transition: 0.3s; }
+    table.dataTable tbody tr:hover { background-color: rgba(255, 215, 0, 0.05) !important; border-left: 3px solid #ffd700 !important;}
+    table.dataTable tbody td { padding: 15px !important; border: none !important; vertical-align: middle; color: #fff !important; font-size: 13px;}
+    
+    .page-item.active .page-link { background-color: #ffd700 !important; border-color: #ffd700 !important; color: #000 !important; font-weight: 900; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+    .page-item .page-link { background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #fff;}
+    
+    /* BOTONES DE ACCIÓN EN TABLA */
+    td.acciones-col { white-space: nowrap; width: 1%; min-width: 140px; }
+    td.acciones-col .btn-action { padding: 6px; width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: #fff; transition: all 0.3s ease; margin: 0 2px;}
+    td.acciones-col .btn-action:hover { background: #ffd700; color: #000; border-color: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.5);}
+    td.acciones-col .btn-action.delete:hover { background: #ef4444; color: #fff; border-color: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,0.5);}
+
+    /* ICONO DESPLEGABLE */
+    [aria-expanded="false"] #toggleIcon { transform: rotate(-90deg); transition: transform 0.3s ease; }
+    [aria-expanded="true"] #toggleIcon { transform: rotate(0deg); transition: transform 0.3s ease; color: #ffd700;}
+</style>
+
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/css/dataTables.bootstrap4.min.css' %}" />
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/css/responsive.bootstrap4.min.css' %}" />
+
+<div style="position: fixed; top: 20%; right: 5%; width: 300px; height: 800px; background: #ffd700; opacity: 0.02; transform: skewX(-30deg); z-index: -1; pointer-events: none;"></div>
+
+<div class="container-fluid mt-4">
+    <!-- HEADER -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 gap-3 stagger-1" style="position: relative; z-index: 100;">
+        <h3 class="header-title">
+            <i class="fa-solid fa-dumbbell" style="color: #ffd700; margin-right: 10px;"></i>
+            {% if categoria_activa %} Elementos — {{ categoria_activa.get_nombre_categoria_display }}
+            {% else %} Inventario de Elementos {% endif %}
+        </h3>
+
+        <div class="d-flex gap-3 flex-wrap">
+            {% if categoria_activa %}
+            <a href="{% url 'gimnasio:listar_elementos' %}" class="btn-hero-outline" style="color: #fff; border-color: rgba(255,255,255,0.2);">
+                <span><i class="ri-arrow-left-line me-2"></i> Ver Todo</span>
+            </a>
+            {% endif %}
+
+            <div class="dropdown">
+                <button class="btn-hero-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" style="transform: skewX(0); border-radius: 4px;">
+                    <i class="ri-file-chart-line me-2"></i> Exportar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark bg-dark border-warning mt-2" style="box-shadow: 0 15px 35px rgba(0,0,0,0.9);">
+                    <li><a class="dropdown-item fw-bold" href="{% url 'gimnasio:exportar_elementos_excel' %}"><i class="ri-file-excel-2-line me-2 text-success"></i> Exportar a Excel</a></li>
+                    <li><a class="dropdown-item fw-bold" href="{% url 'gimnasio:exportar_elementos_pdf' %}"><i class="ri-file-pdf-line me-2 text-danger"></i> Exportar a PDF</a></li>
+                </ul>
+            </div>
+
+            <a href="{% url 'gimnasio:crear_elemento' %}" class="btn-hero-gold">
+                <span><i class="ri-add-line me-1"></i> Agregar Elemento</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="card-dash stagger-2">
+        {% if not categoria_activa %}
+        <!-- CARDS CATEGORÍAS -->
+        <div class="border-bottom pb-4 mb-4" style="border-color: rgba(255,255,255,0.1) !important;">
+            <div class="d-flex align-items-center mb-3">
+                <h6 class="mb-0 me-2 text-uppercase fw-bold" style="color: #ffd700; letter-spacing: 1px;">Explorar Categorías</h6>
+                <a href="javascript:void(0);" class="text-white" data-bs-toggle="collapse" data-bs-target="#collapseCards" aria-expanded="true" style="text-decoration: none;"><i class="ri-arrow-down-s-line fs-4" id="toggleIcon"></i></a>
+            </div>
+
+            <div class="collapse show" id="collapseCards">
+                <div class="row g-4 cards-container">
+                    {% for cat in categorias %}
+                        {% with total=cat.elemento_set.count primer=cat.elemento_set.first %}
+                        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center">
+                            <a href="?categoria={{ cat.id }}" class="equipment-card w-100">
+                                {% if primer and primer.imagen %}
+                                    <img src="{{ primer.imagen.url }}" alt="{{ cat.get_nombre_categoria_display }}" />
+                                {% else %}
+                                    <div class="sin-imagen"><i class="ri-image-line" style="font-size:2.5rem;"></i></div>
+                                {% endif %}
+                                <p class="cantidad">{{ total }}</p>
+                                <p class="nombre">{{ cat.get_nombre_categoria_display }}</p>
+                            </a>
+                        </div>
+                        {% endwith %}
+                    {% empty %}
+                        <div class="col-12 text-center"><p class="text-muted fw-bold text-uppercase">No hay categorías registradas.</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- CARDS ELEMENTOS FILTRADOS -->
+        <div class="border-bottom pb-4 mb-4" style="border-color: rgba(255,255,255,0.1) !important;">
+            <div class="row g-4 cards-container">
+                {% for elemento in elementos %}
+                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 d-flex justify-content-center">
+                    <div class="equipment-card w-100">
+                        {% if elemento.imagen %}
+                            <img src="{{ elemento.imagen.url }}" alt="{{ elemento.nombre_elemento }}" />
+                        {% else %}
+                            <div class="sin-imagen"><i class="ri-image-line" style="font-size:2.5rem;"></i></div>
+                        {% endif %}
+                        <p class="cantidad">{{ elemento.cantidad|default:'1' }}</p>
+                        <p class="nombre">{{ elemento.nombre_elemento }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center"><p class="text-muted fw-bold text-uppercase">No hay elementos en esta categoría.</p></div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- TABLA DATATABLES -->
+        <div class="table-responsive">
+            <table id="tabla-elementos" class="table-dark-gold display nowrap">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Serial</th>
+                        <th>Marca</th>
+                        <th>Nombre del elemento</th>
+                        <th>Peso</th>
+                        <th>Estado</th>
+                        <th>Fecha Ingreso</th>
+                        {% if not categoria_activa %}<th>Categoría</th>{% endif %}
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in object_list %}
+                    <tr>
+                        <td class="fw-bold" style="color: #6c757d;">#{{ e.id }}</td>
+                        <td style="color: #ffd700; font-weight: 800;">{{ e.serial }}</td>
+                        <td class="text-uppercase fw-bold">{{ e.marca }}</td>
+                        <td class="text-white">{{ e.nombre_elemento }}</td>
+                        <td class="fw-bold text-info">{{ e.peso_elemento }} {{ e.unidad_peso }}</td>
+                        <td>
+                            {% if e.estado == 'activo' %} <span style="background: rgba(40,167,69,0.1); color: #28a745; border: 1px solid #28a745; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">Activo</span>
+                            {% elif e.estado == 'inactivo' %} <span style="background: rgba(220,53,69,0.1); color: #dc3545; border: 1px solid #dc3545; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">Inactivo</span>
+                            {% else %} <span class="badge bg-secondary">{{ e.estado }}</span> {% endif %}
+                        </td>
+                        <td style="color: #a0a0a0;">{{ e.fecha_ingreso }}</td>
+                        {% if not categoria_activa %}
+                        <td class="text-uppercase" style="font-size: 11px; letter-spacing: 1px;">{{ e.nombre_categoria.get_nombre_categoria_display }}</td>
+                        {% endif %}
+                        <td class="acciones-col text-center">
+                            <a href="{% url 'gimnasio:crear_mantenimiento' %}?elemento={{ e.id }}" class="btn-action" title="Mantenimiento"><i class="ri-tools-line"></i></a>
+                            <a href="{% url 'gimnasio:editar_elemento' e.id %}" class="btn-action" title="Editar"><i class="ri-edit-box-line"></i></a>
+                            <a href="{% url 'gimnasio:eliminar_elemento' e.id %}" class="btn-action delete btn-eliminar" title="Eliminar"><i class="ri-delete-bin-line"></i></a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="{% if categoria_activa %}8{% else %}9{% endif %}" class="text-center py-5"><i class="fas fa-dumbbell fa-3x mb-3" style="color: #ffd700; opacity: 0.2;"></i><br><span class="text-muted fw-bold text-uppercase">No hay elementos registrados</span></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'lib/datatables-1.10.20/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+$(document).ready(function () {
+    $('#tabla-elementos').DataTable({
+        responsive: true,
+        autoWidth: false,
+        pageLength: 10,
+        language: { url: "{% static 'lib/datatables-1.10.20/spanish.txt' %}" },
+        columnDefs: [ { orderable: false, searchable: false, targets: -1 } ]
+    });
+
+    // Confirmación eliminar (Adaptada a modo oscuro)
+    $('.btn-eliminar').on('click', function (e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        Swal.fire({
+            title: '¿Eliminar elemento?',
+            text: 'Esta acción no se puede deshacer.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            background: "rgba(10,10,10,0.95)", color: "#fff",
+            confirmButtonColor: '#ef4444', cancelButtonColor: 'rgba(255,255,255,0.1)',
+            customClass: { popup: 'border border-warning' }
+        }).then(function (result) {
+            if (result.isConfirmed) { window.location.href = url; }
+        });
+    });
+
+    {% if messages %}
+        {% for message in messages %}
+        Swal.fire({
+            title: 'Correcto', text: '{{ message|escapejs }}', icon: 'success',
+            background: "rgba(10,10,10,0.95)", color: "#fff", confirmButtonColor: "#ffd700"
+        });
+        {% endfor %}
+    {% endif %}
+});
+</script>
+{% endblock %}

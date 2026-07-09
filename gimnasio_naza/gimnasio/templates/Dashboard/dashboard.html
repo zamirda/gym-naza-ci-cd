@@ -1,0 +1,452 @@
+{% extends "body.html" %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* ========================================================
+       ANIMACIONES Y EFECTOS / GEOMÉTRICOS
+    ======================================================== */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    .stagger-3 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.3s; opacity: 0; }
+    .stagger-4 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.4s; opacity: 0; }
+    .stagger-5 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.5s; opacity: 0; }
+
+    @keyframes revealBounce { 
+        0% { opacity: 0; transform: translateY(30px) scale(0.97); } 
+        100% { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+
+    @keyframes neonPulse {
+        0% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.2), 0 0 20px rgba(255, 215, 0, 0.1); }
+        100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.3); }
+    }
+
+    @keyframes slideShape {
+        0% { transform: skewX(-25deg) translateX(-20px); }
+        100% { transform: skewX(-25deg) translateX(20px); }
+    }
+
+    /* ========================================================
+        BANNER - ESTILO  FITNESS
+    ======================================================== */
+    .hero-banner {
+        position: relative;
+        background: linear-gradient(100deg, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.8) 45%, transparent 100%), 
+                    url('{% static "imagen/pexels-pixabay-260352.jpg" %}') center/cover no-repeat;
+        border-radius: var(--border-radius-card);
+        padding: 50px 40px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(255, 215, 0, 0.1);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.9);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 1;
+    }
+
+    .hero-banner::before {
+        content: ''; position: absolute; right: 25%; top: -20%; width: 60px; height: 150%;
+        background: var(--primary-blue); transform: skewX(-25deg); z-index: 0;
+        animation: neonPulse 2s infinite alternate, slideShape 6s infinite alternate ease-in-out;
+    }
+
+    .hero-banner::after {
+        content: ''; position: absolute; right: -10%; top: 0; width: 40%; height: 100%;
+        background: var(--primary-blue); clip-path: polygon(25% 0, 100% 0, 100% 100%, 0% 100%);
+        opacity: 0.15; mix-blend-mode: overlay; z-index: 0;
+    }
+
+    .hero-text, .hero-action { position: relative; z-index: 10; }
+    .hero-text h1 {
+        font-size: 48px; font-weight: 900; color: #fff; text-transform: uppercase;
+        text-shadow: 4px 4px 0 #000, 0 0 20px rgba(0,0,0,0.8); margin-bottom: 5px; line-height: 1.05; letter-spacing: 1px;
+    }
+    .hero-text span.highlight { color: var(--primary-blue); text-shadow: 2px 2px 0 #000, 0 0 15px var(--primary-light); }
+
+    .btn-hero {
+        background: var(--primary-blue); color: #000; border: none; font-weight: 900; 
+        padding: 14px 28px; font-size: 15px; text-transform: uppercase; 
+        box-shadow: 0 0 20px var(--primary-light); transition: all 0.3s; 
+        display: inline-flex; align-items: center; gap: 10px; transform: skewX(-10deg);
+    }
+    .btn-hero span { transform: skewX(10deg); display: block; }
+    .btn-hero:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 30px var(--primary-blue); background: #fff; }
+
+    /* ========================================================
+       TARJETAS  COMUNES
+    ======================================================== */
+    .card-dash { 
+        position: relative; background-color: var(--bg-surface); 
+        backdrop-filter: var(--card-backdrop); -webkit-backdrop-filter: var(--card-backdrop);
+        border-radius: var(--border-radius-card); padding: 25px; 
+        box-shadow: var(--shadow-main); border: var(--card-border); 
+        transition: var(--transition); overflow: hidden;
+    }
+    
+    .card-dash::before, .chart-card::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: var(--primary-blue); transform: skewX(-15deg);
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); transition: var(--transition); z-index: 0;
+    }
+    
+    .card-dash:hover, .chart-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); border-color: var(--primary-blue); }
+    .card-dash:hover::before, .chart-card:hover::before { width: 25px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); background: #fff; }
+
+    .card-title { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; position: relative; z-index: 2; text-align: center;}
+    .card-subtitle { font-size: 11px; color: var(--primary-blue); background-color: rgba(255, 215, 0, 0.05); padding: 4px 12px; border-radius: var(--border-radius-btn); display: inline-block; margin-bottom: 20px; font-weight: 700; border: 1px solid rgba(255, 215, 0, 0.1); position: relative; z-index: 2;}
+
+    /* ========================================================
+        (TARJETAS RÁPIDAS)
+    ======================================================== */
+    .grid-sparklines { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
+    .sparkline-card { display: flex; align-items: center; justify-content: space-between; padding-left: 35px; }
+    .spark-icon { 
+        width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; 
+        color: #000; font-size: 24px; background: var(--primary-blue); transform: skewX(-15deg);
+        box-shadow: 0 0 15px var(--primary-light); transition: var(--transition); position: relative; z-index: 2;
+    }
+    .spark-icon i { transform: skewX(15deg); }
+    .card-dash:hover .spark-icon { transform: skewX(-15deg) scale(1.1); box-shadow: 0 0 25px var(--primary-blue); background: #fff; }
+    
+    .spark-text { position: relative; z-index: 2; }
+    .spark-text h2 { font-size: 32px; color: #fff; margin-bottom: -2px; font-weight: 900; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+    .spark-text p { font-size: 13px; color: var(--primary-blue); font-weight: 800; text-transform: uppercase; margin: 0; letter-spacing: 1px; }
+
+    .grid-5-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 30px; }
+    .stat-box { text-align: center; padding: 25px 15px 20px 25px; } 
+    .stat-box h3 { font-size: 26px; color: #fff; margin-bottom: 5px; font-weight: 900; position: relative; z-index: 2;}
+    .stat-box p { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin: 0; position: relative; z-index: 2;}
+
+    /* ========================================================
+       GRÁFICAS Y CONTENEDORES (CHART.JS)
+    ======================================================== */
+    .chart-card {
+        position: relative; background-color: var(--bg-surface); 
+        backdrop-filter: var(--card-backdrop); -webkit-backdrop-filter: var(--card-backdrop);
+        border-radius: var(--border-radius-card); padding: 25px 35px; /* Más padding lateral por la figura oblicua */
+        box-shadow: var(--shadow-main); border: var(--card-border); 
+        transition: var(--transition); overflow: hidden;
+        display: flex; flex-direction: column; align-items: center; width: 100%;
+    }
+    
+    .grid-bottom-charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 30px; align-items: stretch; }
+    .chart-container { position: relative; width: 100%; height: 280px; z-index: 2; }
+    .chart-container-small { position: relative; width: 100%; height: 200px; display: flex; justify-content: center; z-index: 2;}
+
+    .donut-inner-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 1;}
+    .donut-inner-text span { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 2px; font-weight: 600; text-transform: uppercase;}
+    .donut-inner-text h2 { font-size: 28px; color: var(--primary-blue); margin: 0; font-weight: 900; text-shadow: 0 0 10px rgba(255,215,0,0.2);}
+
+    @media (max-width: 1024px) { 
+        .grid-sparklines, .grid-bottom-charts { grid-template-columns: repeat(2, 1fr); } 
+        .hero-banner { flex-direction: column; align-items: flex-start; gap: 30px; } 
+    }
+    @media (max-width: 768px) { 
+        .grid-sparklines, .grid-5-stats, .grid-bottom-charts { grid-template-columns: 1fr; } 
+        .hero-text h1 { font-size: 32px; }
+    }
+</style>
+
+<div style="position: fixed; top: 20%; right: 5%; width: 300px; height: 800px; background: var(--primary-blue); opacity: 0.02; transform: skewX(-30deg); z-index: -1; pointer-events: none;"></div>
+<div style="position: fixed; bottom: -10%; left: -5%; width: 150px; height: 500px; border: 4px solid var(--primary-blue); opacity: 0.05; transform: skewX(-20deg); z-index: -1; pointer-events: none;"></div>
+
+<div class="hero-banner stagger-1">
+    <div class="hero-text">
+        <p style="color: var(--primary-blue); font-size: 14px; font-weight: 800; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase;">PANEL DE CONTROL</p>
+        <h1>BIENVENIDO AL GIMNASIO <br><span class="highlight">NAZARETH</span></h1>
+    </div>
+    
+    <div class="hero-action">
+        {% if user.usuario %}
+            <a href="{% url 'gimnasio:generar_plan_ia' user.usuario.id %}" class="btn-hero" style="text-decoration: none;">
+                <span><i class="fas fa-bolt" style="font-size: 1.1rem; color: #000;"></i> MOTOR IA ACTIVO</span>
+            </a>
+        {% elif user.is_superuser %}
+            <div class="alert alert-warning m-0" style="background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); border: 1px solid var(--primary-blue); color: var(--primary-blue); font-size: 12px; font-weight: 700; transform: skewX(-10deg); box-shadow: 0 0 15px rgba(255,215,0,0.2);">
+                <span style="display:block; transform: skewX(10deg);"><i class="fas fa-exclamation-triangle"></i> MODO DEV: Requiere Perfil Usuario</span>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid-sparklines stagger-2">
+    <div class="card-dash sparkline-card">
+        <div class="spark-info">
+            <div class="spark-text"><h2>{{ usuarios_activos|default:"0" }}</h2><p>ACTIVOS</p></div>
+        </div>
+        <div class="spark-icon"><i><i class="fas fa-users"></i></i></div>
+    </div>
+    <div class="card-dash sparkline-card">
+        <div class="spark-info">
+            <div class="spark-text"><h2>{{ asistencias_hoy|default:"0" }}</h2><p>INGRESOS HOY</p></div>
+        </div>
+        <div class="spark-icon"><i><i class="fas fa-fire"></i></i></div>
+    </div>
+    <div class="card-dash sparkline-card">
+        <div class="spark-info">
+            <div class="spark-text"><h2>{{ membresias_activas|default:"0" }}</h2><p>VIGENTES</p></div>
+        </div>
+        <div class="spark-icon"><i><i class="fas fa-crown"></i></i></div>
+    </div>
+</div>
+
+<div class="chart-card mb-4 stagger-3">
+    <div style="text-align: center; width: 100%; position: relative; z-index: 2;">
+        <div class="card-title">FLUJO DE ASISTENCIAS</div>
+        <div class="card-subtitle">Tráfico de los últimos 7 días</div>
+    </div>
+    <div class="chart-container">
+        <canvas id="chartActivity"></canvas>
+    </div>
+</div>
+
+<div class="grid-5-stats stagger-4">
+    <div class="card-dash stat-box">
+        <i class="fas fa-id-card" style="color: var(--primary-blue); font-size: 24px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(255,215,0,0.4)); position: relative; z-index: 2;"></i>
+        <h3>{{ total_usuarios|default:"0" }}</h3><p>Registrados</p>
+    </div>
+    <div class="card-dash stat-box">
+        <i class="fas fa-dumbbell" style="color: var(--primary-blue); font-size: 24px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(255,215,0,0.4)); position: relative; z-index: 2;"></i>
+        <h3>{{ elementos_activos|default:"0" }}</h3><p>Equipos</p>
+    </div>
+    <div class="card-dash stat-box">
+        <i class="fas fa-headset" style="color: var(--primary-blue); font-size: 24px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(255,215,0,0.4)); position: relative; z-index: 2;"></i>
+        <h3>{{ pqrs_pendientes|default:"0" }}</h3><p>Soporte</p>
+    </div>
+    <div class="card-dash stat-box">
+        <i class="fas fa-clipboard-check" style="color: var(--primary-blue); font-size: 24px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(255,215,0,0.4)); position: relative; z-index: 2;"></i>
+        <h3>Listo</h3><p>Encuestas</p>
+    </div>
+    <div class="card-dash stat-box">
+        <i class="fas fa-tools" style="color: var(--primary-blue); font-size: 24px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(255,215,0,0.4)); position: relative; z-index: 2;"></i>
+        <h3>Al Día</h3><p>Mantenimiento</p>
+    </div>
+</div>
+
+<div class="grid-bottom-charts stagger-5">
+    
+    <div class="chart-card">
+        <div class="card-title">Distribución de Rutinas</div>
+        <div class="card-subtitle">Enfoques Actuales</div>
+        <div class="chart-container-small">
+            <canvas id="chartProgress"></canvas>
+        </div>
+    </div>
+    
+    <div class="chart-card">
+        <div class="card-title">Crecimiento Mensual</div>
+        <div class="card-subtitle">Nuevos Registros</div>
+        <div class="chart-container-small">
+            <canvas id="chartWeight"></canvas>
+        </div>
+    </div>
+    
+    <div class="chart-card">
+        <div class="card-title">Estado Membresías</div>
+        <div class="card-subtitle">Vigentes vs Inactivas</div>
+        <div class="chart-container-small">
+            <canvas id="chartSleepGauge"></canvas>
+            <div class="donut-inner-text">
+                <span>Activas</span>
+                <h2 id="pctActivasText">0%</h2>
+            </div>
+        </div>
+    </div>
+    <!-- TARJETA VISUAL DE PROGRESO DE ENTRENAMIENTO -->
+<div class="card-dash" style="position: relative; overflow: hidden; max-width: 400px;">
+    <!-- Imagen de fondo translúcida para dar contexto visual al plan -->
+    <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(to top, var(--bg-surface) 20%, transparent), url('/static/imagen/rutina_bg.jpg') center/cover; opacity: 0.4; z-index: 0;"></div>
+    
+    <div style="position: relative; z-index: 2;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 style="color: #fff; font-weight: 800; margin: 0; text-transform: uppercase;">PLAN ACTUAL</h3>
+            <div class="badge-plan" style="transform: skewX(-10deg);">
+                <span style="transform: skewX(10deg); display: block;"><i class="fas fa-fire"></i> {{ mi_nutricion.objetivo_nutricional }}</span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+            <!-- Icono Visual en lugar de texto -->
+            <div style="width: 80px; height: 80px; border-radius: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--primary-blue); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary-blue); box-shadow: 0 0 15px var(--primary-light);">
+                <i class="fas fa-dumbbell"></i>
+            </div>
+            <div>
+                <h4 style="color: var(--primary-blue); font-weight: 800; font-size: 18px; margin: 0;">{{ mi_rutina.tipo_rutina }}</h4>
+                <p style="color: var(--text-muted); font-size: 12px; font-weight: 600; margin: 0;"><i class="fas fa-utensils"></i> {{ mi_nutricion.tipo_plan_alimenticio }} | Meta: Aumentar Calorías</p>
+            </div>
+        </div>
+
+        <!-- BARRA DE PROGRESO DE ASISTENCIA MENSUAL -->
+        <h5 style="color: #fff; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Progreso de Asistencia (Este mes)</h5>
+        <div style="width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; position: relative;">
+            <!-- El 'width' se calcula en el backend: (asistencias / meta_dias) * 100 -->
+            <div style="width: 65%; height: 100%; background: var(--primary-blue); box-shadow: 0 0 15px var(--primary-blue);"></div>
+        </div>
+        <div class="d-flex justify-content-between mt-1">
+            <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">12 Asistencias</span>
+            <span style="font-size: 10px; color: var(--primary-blue); font-weight: 800;">Meta: 20 Días</span>
+        </div>
+    </div>
+</div>
+    
+</div>
+{% endblock contenido %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Variables enviadas desde la vista de Django
+    const diasSemana = {{ dias_semana|safe }};
+    const asistenciasSemana = {{ asistencias_semana|safe }};
+    const rutinasLabels = {{ rutinas_labels|safe }};
+    const rutinasData = {{ rutinas_data|safe }};
+    const pctActivas = {{ porcentaje_activas|default:"0" }};
+    const pctInactivas = {{ porcentaje_inactivas|default:"0" }};
+
+    document.getElementById('pctActivasText').innerText = pctActivas + '%';
+
+    // CONFIGURACIÓN DE CHART.JS 
+    Chart.defaults.color = '#a0a0a0';
+    Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(10, 10, 10, 0.95)';
+    Chart.defaults.plugins.tooltip.titleFont = { family: 'Poppins', size: 13, weight: '800' };
+    Chart.defaults.plugins.tooltip.bodyFont = { family: 'Poppins', size: 12 };
+    Chart.defaults.plugins.tooltip.borderColor = '#ffd700';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.padding = 10;
+    Chart.defaults.plugins.tooltip.cornerRadius = 6;
+    
+    function createGradient(ctx, colorStart, colorEnd, height = 200) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, height);
+        gradient.addColorStop(0, colorStart);
+        gradient.addColorStop(1, colorEnd);
+        return gradient;
+    }
+
+    const progressiveAnimation = {
+        y: {
+            easing: 'easeOutQuart',
+            duration: 1200,
+            from: (ctx) => { if (ctx.type === 'data') { return ctx.chart.scales.y.getPixelForValue(0); } },
+            delay: (ctx) => { return ctx.type === 'data' ? ctx.dataIndex * 100 : 0; }
+        }
+    };
+
+    // 1. GRÁFICA DE ASISTENCIAS (BARRA / LÍNEA)
+    const ctxAct = document.getElementById('chartActivity').getContext('2d');
+    new Chart(ctxAct, {
+        type: 'line', // Cambiado a Linea con relleno para verse más futurista
+        data: {
+            labels: diasSemana,
+            datasets: [{
+                label: 'Asistencias',
+                data: asistenciasSemana,
+                backgroundColor: createGradient(ctxAct, 'rgba(255, 215, 0, 0.4)', 'rgba(255, 215, 0, 0)', 300),
+                borderColor: '#ffd700',
+                borderWidth: 3,
+                pointBackgroundColor: '#000',
+                pointBorderColor: '#ffd700',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.4 // Hace las líneas curvas
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: progressiveAnimation,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+            }
+        }
+    });
+
+    // 2. GRÁFICA DE DISTRIBUCIÓN DE RUTINAS (PIE)
+    new Chart(document.getElementById('chartProgress'), {
+        type: 'pie',
+        data: {
+            labels: rutinasLabels,
+            datasets: [{
+                data: rutinasData,
+                backgroundColor: ['#ffd700', '#b8860b', '#444444'],
+                borderWidth: 2,
+                borderColor: 'rgba(15,15,15,0.8)', // Color de fondo del Glassmorphism
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#fff', boxWidth: 12, font: { size: 11, family: 'Poppins' } } } }
+        }
+    });
+
+    // 3. GRÁFICA CRECIMIENTO MENSUAL (BAR)
+    const ctxW = document.getElementById('chartWeight').getContext('2d');
+    new Chart(ctxW, {
+        type: 'bar',
+        data: {
+            labels: {{ meses_labels|safe }},
+            datasets: [{
+                data: {{ usuarios_mensuales|safe }},
+                backgroundColor: createGradient(ctxW, '#ffd700', 'rgba(255,215,0,0.05)', 200),
+                borderRadius: 4,
+                barThickness: 20
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: progressiveAnimation,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#fff'} },
+                y: { display: false, beginAtZero: true }
+            }
+        }
+    });
+
+    // 4. GRÁFICA GAUGE MEMBRESÍAS (DOUGHNUT)
+    new Chart(document.getElementById('chartSleepGauge'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Activas', 'Inactivas'],
+            datasets: [{
+                data: [pctActivas, pctInactivas],
+                backgroundColor: ['#ffd700', 'rgba(255,255,255,0.05)'],
+                borderWidth: 0,
+                cutout: '82%'
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            rotation: 225,
+            circumference: 270,
+            animation: { animateRotate: true, duration: 1500, easing: 'easeOutQuart' }
+        }
+    });
+
+    // SWEETALERT MESSAGES
+    document.addEventListener('DOMContentLoaded', function () {
+        {% if messages %}
+            {% for message in messages %}
+                Swal.fire({
+                    title: "{% if message.tags == 'success' %}¡TODO LISTO!{% elif message.tags == 'error' %}¡ERROR!{% else %}ATENCIÓN{% endif %}",
+                    text: "{{ message }}",
+                    icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}",
+                    background: "rgba(10,10,10,0.95)",
+                    backdrop: "rgba(0,0,0,0.7)",
+                    color: "#ffffff",
+                    confirmButtonColor: "var(--primary-blue)",
+                    customClass: { popup: 'border border-warning' }
+                });
+            {% endfor %}
+        {% endif %}
+    });
+</script>
+{% endblock js %}

@@ -1,0 +1,825 @@
+{% extends 'home.html' %}
+{% load static %}
+{% block body %}
+  <body class="{% if user.usuario.genero_usuario == 'F' %}theme-soft{% else %}theme-strong{% endif %} sidebar-active">
+    {% include 'header.html' %}
+    <div class="main-container" id="main-container">
+        {% include "aside.html" %}
+        <main class="content-area" id="content-area">{% block contenido %}{% endblock contenido %}</main>
+    </div>
+    {% include 'footer.html' %}
+
+    <script>
+      const menuToggle = document.getElementById('menuToggle');
+      if(menuToggle) {
+        menuToggle.addEventListener('click', () => {
+          if (window.innerWidth > 1024) document.body.classList.toggle('sidebar-collapsed');
+          else document.getElementById('sidebar').classList.toggle('mobile-active');
+        });
+      }
+      
+      document.querySelectorAll('.submenu-toggle').forEach(t => {
+        t.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (!document.body.classList.contains('sidebar-collapsed')) {
+            const p = this.parentElement; p.classList.toggle('open');
+            const i = this.querySelector('.arrow-icon');
+            i.classList.toggle('fa-chevron-right', !p.classList.contains('open'));
+            i.classList.toggle('fa-chevron-down', p.classList.contains('open'));
+          }
+        });
+      });
+    </script>
+
+    <script src="{% static 'assets/vendor/libs/jquery/jquery.js' %}"></script>
+    <script src="{% static 'assets/vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static 'assets/vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static 'assets/vendor/libs/node-waves/node-waves.js' %}"></script>
+    <script src="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+    <script src="{% static 'assets/vendor/js/menu.js' %}"></script>
+    <script src="{% static 'assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+    <script src="{% static 'assets/js/main.js' %}"></script>
+    <script src="{% static 'assets/js/dashboards-analytics.js' %}"></script>
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script src="{% static 'lib/sweetalert2/sweetalert2.all.min.js' %}"></script>
+    
+<style>
+    /* ===== FIX: Eliminar espacio vacío debajo del footer ===== */
+    html, body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+    .main-container {
+        flex: 1;
+        display: flex;
+        min-height: 0;
+    }
+    .content-area {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+    }
+    /* ===== FIN FIX ===== */
+
+    .search-container { max-width: 220px!important; width: 220px!important; position: relative; }
+    #input-buscar { width: 100%!important; padding: 6px 12px!important; font-size: .85rem!important; background: rgba(255,255,255,.05)!important; border: 1px solid var(--border-color)!important; color: #fff!important; border-radius: var(--border-radius-btn)!important; }
+    
+    .resultados-dropdown { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--bg-surface); border-radius: var(--border-radius-card); box-shadow: 0 10px 30px rgba(0,0,0,.6); z-index: 9999; overflow: hidden; min-width: 240px; border: 1px solid var(--border-color); }
+    .resultado-item { display: flex; align-items: center; padding: 10px 16px; color: var(--text-muted); text-decoration: none; font-size: .88rem; transition: var(--transition); }
+    .resultado-item:hover { background: var(--bg-surface-hover); color: var(--primary-blue); }
+
+    /* ===== FOOTER FIX: Nunca se pierde al hacer zoom ===== */
+    .footer-neon {
+        background: #050505;
+        border-top: 1px solid rgba(255, 215, 0, 0.2);
+        padding: 15px 0;
+        width: 100%;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+    }
+    .footer-text {
+        color: #8b9eb0;
+        font-size: 13px;
+        margin: 0;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+    .footer-link {
+        color: #ffd700;
+        text-decoration: none;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+    .footer-link:hover {
+        color: #fff;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    .footer-social i {
+        font-size: 18px;
+        color: #a0a0a0;
+        margin-left: 15px;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+    .footer-social i:hover {
+        color: #ffd700;
+        transform: scale(1.1);
+    }
+    .footer-neon .dropdown-menu {
+        background-color: #111111;
+        border: 1px solid #ffd700;
+        border-radius: 10px;
+        padding: 8px 0;
+        min-width: 210px;
+    }
+    .footer-neon .dropdown-item {
+        color: #ffd700;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 8px 16px;
+        transition: all 0.3s ease;
+    }
+    .footer-neon .dropdown-item:hover,
+    .footer-neon .dropdown-item:focus {
+        background-color: #222222;
+        color: #ffffff;
+    }
+    .footer-neon .dropdown-divider {
+        border-color: rgba(255, 215, 0, 0.3);
+    }
+    @media (max-width:768px){
+
+        .main-container{
+            margin-top:70px;
+            display:block;
+            height:auto;
+        }
+
+        .content-area{
+            width:100%;
+            padding:15px;
+            overflow-x:auto;
+        }
+
+    }
+</style>
+<script>
+        const modulos = [
+            { n: "Asistencia", u: "{% url 'gimnasio:listar_asistencia' %}", i: "fa-solid fa-calendar-check" },
+            { n: "Membresía", u: "{% url 'gimnasio:listar_membresia' %}", i: "fa-solid fa-crown" },
+            { n: "Notificaciones", u: "{% url 'gimnasio:listar_notificacion' %}", i: "fa-solid fa-bell" },
+            { n: "Usuarios", u: "{% url 'gimnasio:listar_usuario' %}", i: "fa-solid fa-users" },
+            { n: "Registro Visitantes", u: "{% url 'gimnasio:listar_registrovisitante' %}", i: "fa-solid fa-person-walking" },
+            { n: "Nutrición", u: "{% url 'gimnasio:listar_nutriciones' %}", i: "fa-solid fa-utensils" },
+            { n: "Rutinas", u: "{% url 'gimnasio:listar_rutinas' %}", i: "fa-solid fa-dumbbell" },
+            { n: "Masa Corporal", u: "{% url 'gimnasio:listar_masa_corporal_clas' %}", i: "fa-solid fa-weight-scale" },
+            { n: "Certificaciones", u: "{% url 'gimnasio:listar_certificacioninterna' %}", i: "fa-solid fa-award" },
+            { n: "Elementos", u: "{% url 'gimnasio:listar_elementos' %}", i: "fa-solid fa-cogs" },
+            { n: "Mantenimiento", u: "{% url 'gimnasio:listar_mantenimiento' %}", i: "fa-solid fa-wrench" },
+            { n: "Reportes", u: "{% url 'gimnasio:listar_Reportes_estadisticas' %}", i: "fa-solid fa-chart-line" },
+            { n: "Categorías", u: "{% url 'gimnasio:listar_categorias' %}", i: "fa-solid fa-tags" },
+            { n: "Turnos Entrenadores", u: "{% url 'gimnasio:listar_turnodeentrenador' %}", i: "fa-solid fa-calendar-days" },
+            { n: "Encuestas", u: "{% url 'gimnasio:listar_encuestas' %}", i: "fa-solid fa-poll" },
+            { n: "Soporte PQRS", u: "{% url 'gimnasio:listar_Soporte_PQRS' %}", i: "fa-solid fa-headset" },
+            { n: "Sanciones", u: "{% url 'gimnasio:listar_sanciones_clas' %}", i: "fa-solid fa-gavel" }
+        ];
+        const inp = document.getElementById("input-buscar"), res = document.getElementById("resultados-buscar");
+        if (inp && res) {
+            inp.addEventListener("input", function() {
+                const q = this.value.trim().toLowerCase(); res.innerHTML = "";
+                if (!q) return res.classList.add("d-none");
+                const f = modulos.filter(m => m.n.toLowerCase().includes(q));
+                if (!f.length) res.innerHTML = `<div class="resultado-item text-muted">Sin resultados</div>`;
+                else f.forEach(m => res.innerHTML += `<a href="${m.u}" class="resultado-item"><i class="${m.i} me-2"></i>${m.n}</a>`);
+                res.classList.remove("d-none");
+            });
+            document.addEventListener("click", e => { if(!inp.contains(e.target) && !res.contains(e.target)) res.classList.add("d-none"); });
+        }
+    </script>
+    <!-- ==================== WIDGET ACCESIBILIDAD ==================== -->
+    <style>
+      /* === Widget posicionado arriba del footer === */
+      #accesibilidad-widget {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        z-index: 9999;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      /* === Botón principal (icono accesibilidad) === */
+      #btn-accesibilidad-toggle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #000000;
+        border: 3px solid #ffffff;
+        color: #ffffff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      #btn-accesibilidad-toggle:hover {
+        transform: scale(1.08);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+      }
+      #btn-accesibilidad-toggle svg {
+        width: 32px;
+        height: 32px;
+        fill: currentColor;
+      }
+
+      /* === Panel principal === */
+      #accesibilidad-panel {
+        position: absolute;
+        bottom: 75px;
+        right: 0;
+        width: 240px;
+        background: #1a4a4a;
+        border-radius: 20px;
+        padding: 18px;
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.15);
+      }
+      #accesibilidad-panel.activo {
+        display: flex;
+      }
+
+      /* === Icono manos arriba === */
+      .accesibilidad-icono-top {
+        text-align: center;
+        margin-bottom: 2px;
+      }
+      .accesibilidad-icono-top svg {
+        width: 28px;
+        height: 28px;
+        fill: #ffffff;
+        opacity: 0.9;
+      }
+
+      /* === Grid de botones === */
+      .accesibilidad-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      /* === Botón genérico del panel === */
+      .accesibilidad-btn {
+        background: #ffffff;
+        border: none;
+        border-radius: 14px;
+        padding: 10px 4px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.15s ease;
+        color: #1a3a5c;
+        font-size: 11px;
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.2;
+        min-height: 72px;
+        justify-content: center;
+      }
+      .accesibilidad-btn:hover {
+        transform: translateY(-3px);
+        background: #e0f7fa;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      .accesibilidad-btn.activo {
+        background: #ffd700;
+        color: #1a3a5c;
+        box-shadow: 0 0 0 3px rgba(255,215,0,0.4);
+      }
+      .accesibilidad-btn svg,
+      .accesibilidad-btn .icono-letra {
+        width: 26px;
+        height: 26px;
+        fill: #1a3a5c;
+        font-size: 20px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* === Sub-panel Daltonismo (colores) === */
+      #daltonismo-submenu {
+        display: none;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        animation: fadeIn 0.2s ease;
+      }
+      #daltonismo-submenu.visible {
+        display: grid;
+      }
+      .daltonismo-opcion {
+        border: none;
+        border-radius: 12px;
+        padding: 10px 4px;
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 700;
+        color: #fff;
+        text-align: center;
+        transition: transform 0.15s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+      .daltonismo-opcion:hover {
+        transform: scale(1.05);
+      }
+      .daltonismo-opcion.activo {
+        box-shadow: 0 0 0 3px #ffffff;
+      }
+      .daltonismo-opcion svg {
+        width: 22px;
+        height: 22px;
+        fill: currentColor;
+      }
+      .daltonismo-ninguno { background: #6c757d; }
+      .daltonismo-protanopia { background: #e74c3c; }
+      .daltonismo-deuteranopia { background: #27ae60; }
+      .daltonismo-tritanopia { background: #3498db; }
+
+      /* === Botón Restablecer === */
+      .btn-restablecer {
+        background: #ff6b6b;
+        border: none;
+        border-radius: 14px;
+        padding: 12px;
+        cursor: pointer;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.15s ease;
+        width: 100%;
+        margin-top: 4px;
+      }
+      .btn-restablecer:hover {
+        background: #ff5252;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255,107,107,0.3);
+      }
+      .btn-restablecer svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+      }
+
+      /* === Indicador flotante === */
+      #indicador-accesibilidad {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #1a4a4a;
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: bold;
+        display: none;
+        z-index: 10000;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.2);
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* === Modos aplicados al body === */
+      /* ===== ALTO CONTRASTE - CON FONDO DE IMAGEN_LOGIN ===== */
+      body.alto-contraste {
+        background: url("{% static 'imagen/imagen_login.jpg' %}") no-repeat center center fixed !important;
+        background-size: cover !important;
+        color: #ffe600 !important;
+        filter: brightness(1.4);
+        position: relative;
+      }
+
+      /* Aplica el esquema a texto/estructura, sin tocar imágenes, svg ni el widget de accesibilidad */
+      body.alto-contraste *:not(svg):not(img):not(video):not(canvas):not(#accesibilidad-widget):not(#accesibilidad-widget *):not(.main-container):not(.content-area):not(.sidebar) {
+        background-color: #000 !important;
+        color: #ffe600 !important;
+        border-color: #ffe600 !important;
+      }
+
+      /* Contenedores principales transparentes para ver la imagen de fondo */
+      body.alto-contraste .main-container,
+      body.alto-contraste .content-area,
+      body.alto-contraste .sidebar {
+        background-color: transparent !important;
+      }
+
+      /* Los SVG conservan color reforzado en lugar de perder su fill original */
+      body.alto-contraste svg * {
+        fill: #ffe600 !important;
+        stroke: #ffe600 !important;
+      }
+
+      /* Otras imágenes de fondo (ej: banner del hero) mantienen su imagen, con capa oscura */
+      body.alto-contraste [style*="background-image"] {
+        background-color: transparent !important;
+        position: relative;
+      }
+      body.alto-contraste [style*="background-image"]::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,.7);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* Botones y enlaces no dependen solo del color para distinguirse */
+      body.alto-contraste a,
+      body.alto-contraste button {
+        text-decoration: underline;
+        outline: 1px solid #ffe600;
+      }
+
+      @font-face {
+        font-family: 'OpenDyslexic';
+        src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.0/ttf/OpenDyslexic-Regular.ttf') format('truetype');
+        font-display: swap;
+      }
+      body.modo-dislexia,
+      body.modo-dislexia * {
+        font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+      }
+
+      body.daltonismo-protanopia { filter: url('#protanopia') !important; }
+      body.daltonismo-deuteranopia { filter: url('#deuteranopia') !important; }
+      body.daltonismo-tritanopia { filter: url('#tritanopia') !important; }
+    </style>
+
+    <!-- Filtros SVG para daltonismo -->
+    <svg style="display:none;">
+      <defs>
+        <filter id="protanopia">
+          <feColorMatrix type="matrix" values="0.567 0.433 0 0 0  0.558 0.442 0 0 0  0 0.242 0.758 0 0  0 0 0 1 0"/>
+        </filter>
+        <filter id="deuteranopia">
+          <feColorMatrix type="matrix" values="0.625 0.375 0 0 0  0.7 0.3 0 0 0  0 0.3 0.7 0 0  0 0 0 1 0"/>
+        </filter>
+        <filter id="tritanopia">
+          <feColorMatrix type="matrix" values="0.95 0.05 0 0 0  0 0.433 0.567 0 0  0 0.475 0.525 0 0  0 0 0 1 0"/>
+        </filter>
+      </defs>
+    </svg>
+
+    <div id="indicador-accesibilidad">Mensaje</div>
+
+    <div id="accesibilidad-widget">
+      <!-- Panel de opciones -->
+      <div id="accesibilidad-panel">
+        <div class="accesibilidad-icono-top">
+          <svg viewBox="0 0 24 24"><path d="M16.5 13c-1.2 0-3.07.34-4.5 1-1.43-.67-3.3-1-4.5-1C5.5 13 4 13.67 4 14.5V18h16v-3.5c0-.83-1.5-1.5-2.5-1.5zM18.5 9c-1.2 0-3.07.34-4.5 1-1.43-.67-3.3-1-4.5-1C8.5 9 7 9.67 7 10.5V14h11.5V9zM12 2C9.5 2 7.5 3.5 7.5 5.5c0 2 2 3.5 4.5 3.5s4.5-1.5 4.5-3.5S14.5 2 12 2z"/></svg>
+        </div>
+
+        <div class="accesibilidad-grid">
+          <button class="accesibilidad-btn" id="btn-aumentar" title="Aumentar letra">
+            <span class="icono-letra">A+</span>
+            <span>Aumentar<br>Letra</span>
+          </button>
+          <button class="accesibilidad-btn" id="btn-disminuir" title="Disminuir letra">
+            <span class="icono-letra">A-</span>
+            <span>Disminuir<br>Letra</span>
+          </button>
+          <button class="accesibilidad-btn" id="btn-contraste" title="Alto contraste">
+            <svg viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 000 1.41.996.996 0 001.41 0l1.06-1.06c.39-.39.39-1.03 0-1.41s-1.03-.39-1.41 0l-1.06 1.06z"/></svg>
+            <span>Contraste</span>
+          </button>
+          <button class="accesibilidad-btn" id="btn-dislexia" title="Modo dislexia">
+            <svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg>
+            <span>Dislexia</span>
+          </button>
+          <button class="accesibilidad-btn" id="btn-lector" title="Lector de pantalla">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h2zm0 8h2v2h-2z"/></svg>
+            <span>Lector</span>
+          </button>
+          <button class="accesibilidad-btn" id="btn-daltonismo" title="Modo daltonismo">
+            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            <span>Daltonismo</span>
+          </button>
+        </div>
+
+        <!-- Sub-panel Daltonismo con colores -->
+        <div id="daltonismo-submenu">
+          <button class="daltonismo-opcion daltonismo-ninguno" data-tipo="ninguno">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            Normal
+          </button>
+          <button class="daltonismo-opcion daltonismo-protanopia" data-tipo="protanopia">
+            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+            Protanopia
+          </button>
+          <button class="daltonismo-opcion daltonismo-tritanopia" data-tipo="tritanopia">
+            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+            Tritanopia
+          </button>
+        </div>
+
+        <!-- Botón Restablecer -->
+        <button class="btn-restablecer" id="btn-restablecer" title="Restablecer todo">
+          <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+          Restablecer
+        </button>
+      </div>
+
+      <!-- Botón flotante principal (icono accesibilidad) -->
+      <button id="btn-accesibilidad-toggle" title="Accesibilidad">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H9V9H3V7h18v2z"/>
+        </svg>
+      </button>
+    </div>
+
+    <script>
+    (function() {
+      'use strict';
+
+      const toggle = document.getElementById('btn-accesibilidad-toggle');
+      const panel = document.getElementById('accesibilidad-panel');
+      const indicador = document.getElementById('indicador-accesibilidad');
+      const daltonismoBtn = document.getElementById('btn-daltonismo');
+      const daltonismoSubmenu = document.getElementById('daltonismo-submenu');
+
+      const btnContraste = document.getElementById('btn-contraste');
+      const btnDislexia = document.getElementById('btn-dislexia');
+      const btnLector = document.getElementById('btn-lector');
+
+      // ============================================================
+      // LOCALSTORAGE - Clave para guardar la configuración
+      // ============================================================
+      const STORAGE_KEY = 'accesibilidad_config';
+
+      // Estado actual (con valores por defecto)
+      let tamanoActual = 100;
+      let lectorActivo = false;
+      let daltonismoActivo = null;
+      let contrasteActivo = false;
+      let dislexiaActiva = false;
+
+      // --- Guardar estado en localStorage ---
+      function guardarEstado() {
+        const estado = {
+          tamano: tamanoActual,
+          lector: lectorActivo,
+          daltonismo: daltonismoActivo,
+          contraste: contrasteActivo,
+          dislexia: dislexiaActiva
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(estado));
+      }
+
+      // --- Cargar estado desde localStorage ---
+      function cargarEstado() {
+        try {
+          const guardado = localStorage.getItem(STORAGE_KEY);
+          if (guardado) {
+            const estado = JSON.parse(guardado);
+            tamanoActual = estado.tamano || 100;
+            lectorActivo = estado.lector || false;
+            daltonismoActivo = estado.daltonismo || null;
+            contrasteActivo = estado.contraste || false;
+            dislexiaActiva = estado.dislexia || false;
+          }
+        } catch (e) {
+          console.warn('Error al cargar accesibilidad:', e);
+        }
+      }
+
+      // --- Aplicar estado guardado al cargar la página ---
+      function aplicarEstadoGuardado() {
+        // 1. Tamaño de letra
+        document.documentElement.style.fontSize = tamanoActual + '%';
+
+        // 2. Contraste
+        if (contrasteActivo) {
+          document.body.classList.add('alto-contraste');
+          btnContraste.classList.add('activo');
+        }
+
+        // 3. Dislexia
+        if (dislexiaActiva) {
+          document.body.classList.add('modo-dislexia');
+          btnDislexia.classList.add('activo');
+        }
+
+        // 4. Lector
+        if (lectorActivo) {
+          btnLector.classList.add('activo');
+          document.addEventListener('mouseup', leerSeleccion);
+        }
+
+        // 5. Daltonismo
+        if (daltonismoActivo) {
+          document.body.classList.add('daltonismo-' + daltonismoActivo);
+          daltonismoBtn.classList.add('activo');
+          // Marcar la opción activa en el submenú
+          document.querySelectorAll('.daltonismo-opcion').forEach(b => {
+            if (b.dataset.tipo === daltonismoActivo) {
+              b.classList.add('activo');
+            }
+          });
+        }
+      }
+
+      // ============================================================
+      // Indicador flotante
+      // ============================================================
+      function mostrarIndicador(texto) {
+        indicador.textContent = texto;
+        indicador.style.display = 'block';
+        clearTimeout(indicador._timer);
+        indicador._timer = setTimeout(() => { indicador.style.display = 'none'; }, 2000);
+      }
+
+      // ============================================================
+      // Toggle del panel
+      // ============================================================
+      toggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        panel.classList.toggle('activo');
+        if (!panel.classList.contains('activo')) {
+          daltonismoSubmenu.classList.remove('visible');
+        }
+      });
+      document.addEventListener('click', function(e) {
+        if (!document.getElementById('accesibilidad-widget').contains(e.target)) {
+          panel.classList.remove('activo');
+          daltonismoSubmenu.classList.remove('visible');
+        }
+      });
+
+      // ============================================================
+      // 1. AUMENTAR LETRA
+      // ============================================================
+      document.getElementById('btn-aumentar').addEventListener('click', function() {
+        if (tamanoActual < 200) {
+          tamanoActual += 10;
+          document.documentElement.style.fontSize = tamanoActual + '%';
+          guardarEstado();
+          mostrarIndicador('Tamaño: ' + tamanoActual + '%');
+        }
+      });
+
+      // ============================================================
+      // 2. DISMINUIR LETRA
+      // ============================================================
+      document.getElementById('btn-disminuir').addEventListener('click', function() {
+        if (tamanoActual > 30) {
+          tamanoActual -= 10;
+          document.documentElement.style.fontSize = tamanoActual + '%';
+          guardarEstado();
+          mostrarIndicador('Tamaño: ' + tamanoActual + '%');
+        }
+      });
+
+      // ============================================================
+      // 3. CONTRASTE
+      // ============================================================
+      btnContraste.addEventListener('click', function() {
+        contrasteActivo = !contrasteActivo;
+        document.body.classList.toggle('alto-contraste');
+        btnContraste.classList.toggle('activo');
+        guardarEstado();
+        mostrarIndicador(contrasteActivo ? 'Contraste: Alto' : 'Contraste: Normal');
+      });
+
+      // ============================================================
+      // 4. DISLEXIA
+      // ============================================================
+      btnDislexia.addEventListener('click', function() {
+        dislexiaActiva = !dislexiaActiva;
+        document.body.classList.toggle('modo-dislexia');
+        btnDislexia.classList.toggle('activo');
+        guardarEstado();
+        mostrarIndicador(dislexiaActiva ? 'Dislexia: Activado' : 'Dislexia: Desactivado');
+      });
+
+      // ============================================================
+      // 5. LECTOR (Text-to-Speech)
+      // ============================================================
+      btnLector.addEventListener('click', function() {
+        lectorActivo = !lectorActivo;
+        btnLector.classList.toggle('activo', lectorActivo);
+        guardarEstado();
+        if (lectorActivo) {
+          document.addEventListener('mouseup', leerSeleccion);
+          mostrarIndicador('Lector activado: selecciona texto');
+        } else {
+          document.removeEventListener('mouseup', leerSeleccion);
+          window.speechSynthesis.cancel();
+          mostrarIndicador('Lector desactivado');
+        }
+      });
+      function leerSeleccion() {
+        if (!lectorActivo) return;
+        const texto = window.getSelection().toString().trim();
+        if (texto) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(texto);
+          u.lang = 'es-ES';
+          u.rate = 1;
+          window.speechSynthesis.speak(u);
+        }
+      }
+
+      // ============================================================
+      // 6. DALTONISMO (sub-panel con colores)
+      // ============================================================
+      daltonismoBtn.addEventListener('click', function() {
+        daltonismoSubmenu.classList.toggle('visible');
+      });
+
+      document.querySelectorAll('.daltonismo-opcion').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const tipo = this.dataset.tipo;
+
+          // Limpiar filtros anteriores
+          document.body.classList.remove('daltonismo-protanopia', 'daltonismo-deuteranopia', 'daltonismo-tritanopia');
+          document.querySelectorAll('.daltonismo-opcion').forEach(b => b.classList.remove('activo'));
+
+          if (tipo === 'ninguno') {
+            daltonismoActivo = null;
+            daltonismoBtn.classList.remove('activo');
+            mostrarIndicador('Daltonismo: Apagado');
+          } else {
+            document.body.classList.add('daltonismo-' + tipo);
+            this.classList.add('activo');
+            daltonismoActivo = tipo;
+            daltonismoBtn.classList.add('activo');
+            mostrarIndicador('Daltonismo: ' + tipo.charAt(0).toUpperCase() + tipo.slice(1));
+          }
+          guardarEstado();
+        });
+      });
+
+      // ============================================================
+      // 7. RESTABLECER TODO
+      // ============================================================
+      document.getElementById('btn-restablecer').addEventListener('click', function() {
+        // Tamaño
+        tamanoActual = 100;
+        document.documentElement.style.fontSize = '100%';
+
+        // Contraste
+        contrasteActivo = false;
+        document.body.classList.remove('alto-contraste');
+        btnContraste.classList.remove('activo');
+
+        // Dislexia
+        dislexiaActiva = false;
+        document.body.classList.remove('modo-dislexia');
+        btnDislexia.classList.remove('activo');
+
+        // Lector
+        lectorActivo = false;
+        document.removeEventListener('mouseup', leerSeleccion);
+        window.speechSynthesis.cancel();
+        btnLector.classList.remove('activo');
+
+        // Daltonismo
+        document.body.classList.remove('daltonismo-protanopia', 'daltonismo-deuteranopia', 'daltonismo-tritanopia');
+        document.querySelectorAll('.daltonismo-opcion').forEach(b => b.classList.remove('activo'));
+        daltonismoBtn.classList.remove('activo');
+        daltonismoSubmenu.classList.remove('visible');
+        daltonismoActivo = null;
+
+        // Limpiar localStorage
+        localStorage.removeItem(STORAGE_KEY);
+
+        mostrarIndicador('Configuración restablecida');
+      });
+
+      // ============================================================
+      // INICIALIZACIÓN: Cargar y aplicar estado al arrancar
+      // ============================================================
+      cargarEstado();
+      aplicarEstadoGuardado();
+
+    })();
+    </script>
+
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    {% for message in messages %}
+    Swal.fire({
+        icon: "{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}",
+        title: "{% if message.tags == 'success' %}Correcto{% elif message.tags == 'error' %}Error{% elif message.tags == 'warning' %}Advertencia{% else %}Información{% endif %}",
+        text: "{{ message|escapejs }}",
+        background: "rgba(10,10,10,0.95)",
+        color: "#fff",
+        confirmButtonColor: "#ffd700"
+    });
+    {% endfor %}
+});
+</script>
+    {% block js %}{% endblock %}
+  </body>
+{% endblock body %}

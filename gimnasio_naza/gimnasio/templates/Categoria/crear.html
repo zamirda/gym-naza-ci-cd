@@ -1,0 +1,261 @@
+{% extends 'body.html' %}
+{% load widget_tweaks %}
+
+{% block contenido %}
+<style>
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETAS ESTILO DASHBOARD */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); transition: 0.3s; overflow: hidden; margin-bottom: 25px;
+    }
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: #ffd700; transform: skewX(-15deg); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); z-index: 0;
+    }
+
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;}
+    .header-neon h3 { margin: 0; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; color: #fff; letter-spacing: 1px;}
+    .header-neon h3 i { color: #ffd700; }
+
+    /* INPUTS OSCUROS */
+    .form-label-custom { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #a0a0a0; font-weight: 800; margin-bottom: 8px; position: relative; z-index: 2;}
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; transition: 0.3s; padding: 12px 15px; font-family: 'Poppins', sans-serif; position: relative; z-index: 2;}
+    .input-dark:focus { background: #000 !important; border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important; outline: none;}
+    
+    /* BOTONES HERO SESGADOS */
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 12px 25px; font-size: 13px; text-transform: uppercase; box-shadow: 0 0 15px rgba(255,215,0,0.3); transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); position: relative; z-index: 2; text-decoration: none; cursor: pointer; }
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+</style>
+
+<div class="container mt-4" style="max-width: 800px;">
+    <form method="post" action="." class="stagger-1">
+        {% csrf_token %}
+        <div class="card-dash">
+            
+            <div class="header-neon">
+                <h3><i class="fas fa-edit me-2"></i> {{ titulo }}</h3>
+            </div>
+
+            <div class="card-body p-4 p-md-5" style="position: relative; z-index: 2;">
+                {% if form.errors %}
+                <div class="alert mb-4" style="background: rgba(255,77,79,0.1); border: 1px solid #ff4d4f; color: #fff; border-radius: 8px;">
+                    <h6 class="fw-bold" style="color: #ff4d4f;"><i class="fas fa-ban me-2"></i> ¡Atención! Verifica los campos.</h6>
+                </div>
+                {% endif %}
+
+                <div class="form-group mb-4 stagger-2">
+                    <label class="form-label-custom">Nombre de la categoría:</label>
+                    <select name="nombre_categoria" class="form-select input-dark" required>
+                        <option value="">-- Seleccione una categoría --</option>
+                        <option value="maquinas">Máquinas</option>
+                        <option value="mancuernas">Mancuernas</option>
+                        <option value="discos">Discos</option>
+                        <option value="accesorios">Accesorios</option>
+                        <option value="barras">Barras</option>
+                    </select>
+                    {% if form.nombre_categoria.errors %}
+                        <div class="invalid-feedback d-block fw-bold mt-2" style="color: #ff4d4f !important;">
+                            {{ form.nombre_categoria.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-4 stagger-2">
+                    <label class="form-label-custom">Descripción:</label>
+                    {{ form.descripcion|add_class:'form-control input-dark'|attr:'rows:4' }}
+                    {% if form.descripcion.errors %}
+                        <div class="invalid-feedback d-block fw-bold mt-2" style="color: #ff4d4f !important;">
+                            {{ form.descripcion.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-footer border-0 p-4 p-md-5 pt-0 d-flex gap-3" style="background: transparent; position: relative; z-index: 2;">
+                <button type="submit" class="btn-hero-gold">
+                    <span><i class="fas fa-save me-1"></i> Guardar Categoría</span>
+                </button>
+                <a href="{% url 'gimnasio:listar_categorias' %}" class="btn fw-bold px-4 py-2" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase; font-size: 13px; transform: skewX(-10deg); display: inline-flex; text-decoration: none;">
+                    <span style="transform: skewX(10deg);"><i class="fas fa-times me-2"></i> Cancelar</span>
+                </a>
+            </div>
+
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if form.errors %}
+<script>
+Swal.fire({
+    title: "Error",
+    text: "Verifica los campos ingresados",
+    icon: "error",
+    background: "rgba(10,10,10,0.95)",
+    color: "#fff",
+    confirmButtonColor: "#ffd700"
+});
+</script>
+{% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ===============================
+    // FUNCIONES DE VALIDACIÓN
+    // ===============================
+
+    function setError(field, mensaje) {
+
+        field.classList.remove("is-valid");
+        field.classList.add("is-invalid");
+
+        let feedback = field.parentNode.querySelector(".invalid-feedback");
+
+        if (!feedback) {
+            feedback = document.createElement("div");
+            feedback.className = "invalid-feedback d-block fw-bold mt-2";
+            feedback.style.color = "#ff4d4f";
+            field.parentNode.appendChild(feedback);
+        }
+
+        feedback.innerHTML = mensaje;
+    }
+
+    function setOk(field) {
+
+        field.classList.remove("is-invalid");
+        field.classList.add("is-valid");
+
+        const feedback = field.parentNode.querySelector(".invalid-feedback");
+
+        if (feedback) {
+            feedback.innerHTML = "";
+        }
+    }
+
+    // ===============================
+    // CAMPOS
+    // ===============================
+
+    const categoria = document.querySelector("[name='nombre_categoria']");
+    const descripcion = document.querySelector("[name='descripcion']");
+
+    // ===============================
+    // VALIDAR NOMBRE CATEGORÍA
+    // ===============================
+
+    function validarCategoria() {
+
+        const valor = categoria.value.trim();
+
+        if (valor === "") {
+            setError(categoria, "El nombre es obligatorio.");
+            return false;
+        }
+
+        if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/.test(valor)) {
+            setError(categoria, "El nombre no puede contener números.");
+            return false;
+        }
+
+        if (valor.length < 3) {
+            setError(categoria, "El nombre debe tener mínimo 3 caracteres.");
+            return false;
+        }
+
+        if (valor.length > 45) {
+            setError(categoria, "El nombre no puede superar los 45 caracteres.");
+            return false;
+        }
+
+        setOk(categoria);
+        return true;
+    }
+
+    // ===============================
+    // VALIDAR DESCRIPCIÓN
+    // ===============================
+
+    function validarDescripcion() {
+
+        const valor = descripcion.value.trim();
+
+        if (valor === "") {
+            setError(descripcion, "La descripción es obligatoria.");
+            return false;
+        }
+
+        if (valor.length < 10) {
+            setError(descripcion, "La descripción debe tener mínimo 10 caracteres.");
+            return false;
+        }
+
+        if (valor.length > 250) {
+            setError(descripcion, "La descripción no puede superar los 250 caracteres.");
+            return false;
+        }
+
+        setOk(descripcion);
+        return true;
+    }
+
+    // ===============================
+    // EVENTOS
+    // ===============================
+
+    if (categoria) {
+        categoria.addEventListener("input", validarCategoria);
+        categoria.addEventListener("blur", validarCategoria);
+    }
+
+    if (descripcion) {
+        descripcion.addEventListener("input", validarDescripcion);
+        descripcion.addEventListener("blur", validarDescripcion);
+    }
+
+    // ===============================
+    // VALIDAR FORMULARIO
+    // ===============================
+
+    const formulario = document.querySelector("form");
+
+    formulario.addEventListener("submit", function (e) {
+
+        let valido = true;
+
+        if (categoria && !validarCategoria())
+            valido = false;
+
+        if (descripcion && !validarDescripcion())
+            valido = false;
+
+        if (!valido) {
+
+            e.preventDefault();
+
+            Swal.fire({
+                title: "Formulario incompleto",
+                text: "Corrige los campos marcados en rojo.",
+                icon: "error",
+                background: "rgba(10,10,10,0.95)",
+                color: "#fff",
+                confirmButtonColor: "#ffd700"
+            });
+
+        }
+
+    });
+
+});
+</script>
+{% endblock %}

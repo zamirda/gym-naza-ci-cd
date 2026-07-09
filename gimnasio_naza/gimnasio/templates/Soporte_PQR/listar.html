@@ -1,0 +1,106 @@
+{% extends "body.html" %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* ANIMACIONES Y EFECTOS */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETAS PREMIUM */
+    .card-dash{
+    position: relative;
+    overflow: hidden;      /* Oculta el exceso de la línea */
+    z-index: 1;
+}
+
+.card-dash > *{
+    position: relative;
+    z-index: 2;           /* Todo el contenido queda encima */
+}
+
+    /* GRID DE ESTADÍSTICAS (Ajustado) */
+    .grid-5-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 30px; }
+    .stat-card { 
+        background: rgba(20,20,20,0.8); border-radius: 15px; padding: 20px; 
+        display: flex; align-items: center; border: 1px solid rgba(255,215,0,0.2); 
+        color: #fff; transition: 0.3s;
+    }
+    .stat-card:hover { border-color: #ffd700; }
+    .stat-icon { font-size: 24px; color: #ffd700; margin-right: 15px; }
+    .stat-card h3 { font-size: 24px; font-weight: 900; margin: 0; }
+    .stat-card p { font-size: 11px; text-transform: uppercase; color: #a0a0a0; margin: 0; font-weight: 800; }
+
+    /* TABLA DARK GOLD */
+    table.dataTable { width: 100% !important; border-collapse: separate !important; border-spacing: 0 5px !important; }
+    table.dataTable thead th { background: #000 !important; color: #ffd700 !important; border-bottom: 2px solid #ffd700 !important; padding: 15px !important; text-transform: uppercase; font-size: 11px; font-weight: 900; }
+    table.dataTable tbody tr { background: rgba(0,0,0,0.5) !important; }
+    table.dataTable tbody td { padding: 12px 15px !important; border: none !important; color: #fff !important; font-size: 13px; }
+    table thead,
+table thead tr,
+table thead th {
+    background: #0b0b0c !important;
+    color: #ffd700 !important;
+}
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Estadísticas Neón -->
+    <div class="grid-5-stats stagger-1">
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-address-book"></i></div><div><h3>{{ total_peticion }}</h3><p>Peticiones</p></div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-layer-group"></i></div><div><h3>{{ total_queja }}</h3><p>Quejas</p></div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-pen-to-square"></i></div><div><h3>{{ total_reclamo }}</h3><p>Reclamos</p></div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-comments"></i></div><div><h3>{{ total_sugerencia }}</h3><p>Sugerencias</p></div></div>
+    </div>
+
+    <!-- Listado -->
+    <div class="card-dash stagger-2">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="text-white fw-bold text-uppercase"><i class="fas fa-list me-2" style="color:#ffd700"></i> Soporte y PQRS</h3>
+            <a href="{{ crear_url }}" class="btn" style="background: #ffd700; font-weight:900; color:#000; transform: skewX(-10deg);">Agregar Registro</a>
+        </div>
+        <table id="tabla-soporte" class="table table-dark-gold">
+            <thead>
+                <tr><th>ID</th><th>Tipo</th><th>Descripción</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+                {% for soporte in object_list %}
+                <tr>
+                    <td class="fw-bold" style="color:#6c757d;">#{{ soporte.id }}</td>
+                    <td class="text-white">{{ soporte.tipo }}</td>
+                    <td style="color:#a0a0a0;">{{ soporte.descripcion }}</td>
+                    <td style="color:#a0a0a0;">{{ soporte.fecha_ingreso }}</td>
+                    <td>
+                        {% if soporte.estado == 'solucionada' %} <span class="badge bg-success">Solucionado</span>
+                        {% elif soporte.estado == 'en_proceso' %} <span class="badge bg-warning text-dark">Proceso</span>
+                        {% else %} <span class="badge bg-danger">Pendiente</span> {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'gimnasio:editar_Soporte_PQRS' soporte.id %}" class="text-warning"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'gimnasio:eliminar_Soporte_PQRS' soporte.id %}" class="text-danger ms-2"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% if messages %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    {% for message in messages %}
+    Swal.fire({
+        icon: "{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% else %}info{% endif %}",
+        title: "{% if message.tags == 'success' %}Éxito{% elif message.tags == 'error' %}Error{% else %}Información{% endif %}",
+        text: "{{ message }}",
+        confirmButtonColor: "#ffd700",
+        background: "#111",
+        color: "#fff"
+    });
+    {% endfor %}
+});
+</script>
+{% endif %}
+{% endblock %}

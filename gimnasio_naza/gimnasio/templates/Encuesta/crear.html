@@ -1,0 +1,421 @@
+{% extends 'body.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block contenido %}
+<style>
+    /* ANIMACIONES */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETAS ESTILO DASHBOARD */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); overflow: hidden; margin-bottom: 25px;
+    }
+
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;}
+    .header-neon h3 { margin: 0; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; color: #fff; letter-spacing: 1px;}
+    .header-neon h3 i { color: #ffd700; }
+
+    /* INPUTS OSCUROS */
+    .form-label-custom { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #a0a0a0; font-weight: 800; margin-bottom: 8px; position: relative; z-index: 2;}
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; transition: 0.3s; padding: 10px 15px; font-family: 'Poppins', sans-serif;}
+    .input-dark:focus { border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important; outline: none;}
+    
+    /* SECCIÓN PREGUNTAS (FORMSET) */
+    .titulo-seccion { display:flex; align-items:center; gap:12px; font-size:16px; font-weight:800; color:#fff; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1px; position: relative; z-index: 2;}
+    .titulo-seccion i { background: rgba(255,215,0,0.1); color: #ffd700; padding: 10px; border-radius: 8px; border: 1px solid #ffd700; }
+    
+    .preguntas-wrapper { background: rgba(0,0,0,0.4); padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;}
+    .pregunta-item { background: rgba(20,20,20,0.9); border-radius: 10px; padding: 20px; border-left: 4px solid #ffd700; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: relative; transition: 0.3s;}
+
+    /* BOTONES HERO */
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 12px 25px; font-size: 13px; text-transform: uppercase; box-shadow: 0 0 15px rgba(255,215,0,0.3); transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); text-decoration: none; cursor: pointer; }
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; }
+
+    #add-pregunta { background: rgba(255,215,0,0.1); color: #ffd700; border: 1px dashed #ffd700; border-radius: 8px; padding: 12px 20px; font-weight: 800; text-transform: uppercase; transition: 0.3s; width: 100%; letter-spacing: 1px;}
+    #add-pregunta:hover { background: #ffd700; color: #000; box-shadow: 0 0 15px rgba(255,215,0,0.5); }
+
+    /* MODAL OSCURO */
+    .modal-dark .modal-content { background: #0a0a0a; border: 1px solid #ffd700; color: #fff; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+</style>
+
+<div class="container-fluid mt-4" style="max-width: 1000px;">
+<form method="post" id="formEncuesta" class="stagger-1">
+    {% csrf_token %}
+    <div class="card-dash">
+
+        <div class="header-neon">
+            <h3><i class="fas fa-edit"></i> {{ titulo }}</h3>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <div class="row g-4 position-relative" style="z-index: 2;">
+                {% for field in form.visible_fields %}
+                <div class="form-group mb-4">
+                    <label style="color: #a0a0a0; font-size: 11px; font-weight: 800; text-transform: uppercase;">
+                        {% if field.name == 'fk_usuario' %}
+                            Usuario:
+                        {% else %}
+                            {{ field.label }}:
+                        {% endif %}
+                    </label>
+                    {% if field.name == 'fk_usuario' %}
+                        <div class="d-flex gap-2">
+                            {{ field|add_class:'form-control input-dark' }}
+                            
+                        </div>
+                    {% else %}
+                        {{ field|add_class:'form-control input-dark' }}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 30px 0; position: relative; z-index: 2;">
+
+            <div class="form-group">
+                <div class="titulo-seccion"><i class="fas fa-layer-group"></i> <span>Configuración de Preguntas</span></div>
+
+                <div class="preguntas-wrapper">
+                    {{ formset.management_form }}
+
+                    {% if formset.non_form_errors %}
+                        <div class="alert mb-3" style="background: rgba(255,77,79,0.1); border: 1px solid #ff4d4f; color: #fff;">{{ formset.non_form_errors }}</div>
+                    {% endif %}
+
+                    <div id="preguntas-container">
+                        {% for form_pregunta in formset %}
+                        <div class="pregunta-item">
+                            <div class="row g-3">
+                                {% for field in form_pregunta.visible_fields %}
+                                <div class="col-md-4">
+                                    <label class="form-label-custom" style="font-size: 10px;">{{ field.label }}</label>
+                                    {{ field|add_class:'form-control form-control-sm input-dark' }}
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block fw-bold mt-1" style="color: #ff4d4f;">{{ field.errors|striptags }}</div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <!-- TEMPLATE OCULTO PARA NUEVAS PREGUNTAS -->
+                        <div id="empty-form-template" style="display:none;">
+                            <div class="pregunta-item">
+                                <div class="row g-3">
+                                {% for field in formset.empty_form.visible_fields %}
+                                <div class="col-md-4">
+                                    <label class="form-label-custom" style="font-size: 10px;">{{ field.label }}</label>
+                                    {{ field|add_class:'form-control form-control-sm input-dark' }}
+                                </div>
+                                {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="add-pregunta" class="mt-3">
+                        <i class="fas fa-plus-circle me-2"></i> Agregar Otra Pregunta
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer border-0 p-4 p-md-5 pt-0 d-flex justify-content-end gap-3" style="background: transparent; position: relative; z-index: 2;">
+            <a href="{% url 'gimnasio:listar_encuestas' %}" class="btn fw-bold px-4 py-2" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase; font-size: 13px; transform: skewX(-10deg); display: inline-flex; text-decoration: none;">
+                <span style="transform: skewX(10deg);">Cancelar</span>
+            </a>
+            <button type="submit" class="btn-hero-gold">
+                <span><i class="fas fa-save me-2"></i> Guardar en G-Forms</span>
+            </button>
+        </div>
+
+    </div>
+</form>
+</div>
+
+<!-- ========================= -->
+<!-- MODAL USUARIO (OSCURO)    -->
+<!-- ========================= -->
+<div class="modal fade modal-dark" id="modalUsuario" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered"> 
+    <div class="modal-content">
+      <div class="modal-header border-0" style="background: #000; border-bottom: 1px solid rgba(255,215,0,0.2) !important; padding: 20px 30px;">
+        <h5 class="fw-bold text-uppercase m-0" style="color: #ffd700; font-size: 16px; letter-spacing: 1px;"><i class="ri-user-add-line me-2"></i> Crear Usuario</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>  
+      <div class="modal-body p-4 p-md-5">
+        {% csrf_token %}
+        
+        <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 12px;"><i class="fas fa-lock me-2" style="color: #ffd700;"></i> Datos de Acceso</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6"><input type="text" id="username" name="fake_user" class="form-control input-dark" placeholder="Username" autocomplete="off"></div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="password" id="password" class="form-control input-dark" placeholder="Contraseña" style="border-right: none !important;">
+                    <button type="button" class="btn input-dark border-start-0" id="btnTogglePassword"><i class="ri-eye-line" id="iconPassword" style="color: #a0a0a0;"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 12px;"><i class="fas fa-id-card me-2" style="color: #ffd700;"></i> Datos Personales</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6"><input type="text" id="documento" class="form-control input-dark" placeholder="Documento"></div>
+            <div class="col-md-6"><input type="email" id="correo" class="form-control input-dark" placeholder="Correo"></div>
+            <div class="col-md-6"><input type="text" id="nombre" class="form-control input-dark" placeholder="Nombre"></div>
+            <div class="col-md-6"><input type="text" id="apellido" class="form-control input-dark" placeholder="Apellido"></div>
+            <div class="col-md-6"><input type="text" id="telefono" class="form-control input-dark" placeholder="Teléfono"></div>
+            <div class="col-md-6"><input type="date" id="fecha_nacimiento" class="form-control input-dark" style="color: #a0a0a0;"></div>
+            <div class="col-md-12">
+                <select id="genero" class="form-select input-dark">
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                </select>
+            </div>
+        </div>
+
+        <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 12px;"><i class="fas fa-weight me-2" style="color: #ffd700;"></i> Datos Físicos</h6>
+        <div class="row g-3">
+            <div class="col-md-6"><input type="number" id="peso" class="form-control input-dark" placeholder="Peso"></div>
+            <div class="col-md-6"><input type="number" id="altura" class="form-control input-dark" placeholder="Altura"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 p-4" style="background: rgba(0,0,0,0.5);">
+        <button class="btn fw-bold px-4" style="background: rgba(255,255,255,0.05); color: #fff; text-transform: uppercase; font-size: 12px; border: 1px solid rgba(255,255,255,0.1);" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-hero-gold px-4" onclick="crearUsuario()" style="transform: skewX(0);"><span><i class="ri-save-line me-1"></i> Guardar</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src='{% static "js/validation.js" %}'></script>
+
+<script>
+// ================= CREAR USUARIO AJAX =================
+function crearUsuario() {
+    const modal = document.getElementById("modalUsuario");
+    const inputs = modal.querySelectorAll(".form-control, .form-select");
+    let formularioValido = true;
+
+    if(typeof validarCampo === "function") {
+        inputs.forEach(input => { if (!validarCampo(input)) { formularioValido = false; } });
+    } else {
+        if(!document.getElementById('nombre').value || !document.getElementById('documento').value){ formularioValido = false; }
+    }
+
+    if (!formularioValido) {
+        Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "warning", title: "Datos incompletos", confirmButtonColor: "#ffd700"});
+        return; 
+    }
+
+    let data = {
+        documento: document.getElementById('documento').value, nombre: document.getElementById('nombre').value,
+        apellido: document.getElementById('apellido').value, correo: document.getElementById('correo').value,
+        password: document.getElementById('password').value, username: document.getElementById('username').value,
+        telefono: document.getElementById('telefono').value, fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+        peso: document.getElementById('peso').value, altura: document.getElementById('altura').value, genero: document.getElementById('genero').value
+    };
+
+    fetch("{% url 'gimnasio:crear_usuario_ajax' %}", {
+        method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": '{{csrf_token}}' }, body: JSON.stringify(data)
+    }).then(res => res.json()).then(data => {
+        if (data.error) { return Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "error", title: "Error", text: data.error, confirmButtonColor: "#ffd700"}); }
+        let select = document.querySelector('[name="fk_usuario"]');
+        if (!select.querySelector(`option[value="${data.id}"]`)) { select.add(new Option(data.nombre, data.id, true, true)); }
+        
+        document.querySelectorAll('#modalUsuario input').forEach(i => i.value = '');
+        Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "success", title: "Correcto", text: "Usuario creado", confirmButtonColor: "#ffd700"});
+        bootstrap.Modal.getInstance(document.getElementById('modalUsuario')).hide();
+    });
+}
+
+// Toggle Password visual effect
+const btnToggle = document.getElementById('btnTogglePassword');
+const inputPass = document.getElementById('password');
+const iconPass = document.getElementById('iconPassword');
+if(btnToggle && inputPass) {
+    btnToggle.addEventListener('click', () => {
+        if(inputPass.type === 'password') { inputPass.type = 'text'; iconPass.className = 'ri-eye-off-line'; iconPass.style.color = '#ffd700'; }
+        else { inputPass.type = 'password'; iconPass.className = 'ri-eye-line'; iconPass.style.color = '#a0a0a0'; }
+    });
+}
+
+// ================= FORMSET & VALIDACIONES =================
+document.addEventListener("DOMContentLoaded", function () {
+
+    // Función para manejar agregar formularios (Formset)
+    const addButton = document.getElementById('add-pregunta');
+    const container = document.getElementById('preguntas-container');
+    const totalForms = document.querySelector('[name$="TOTAL_FORMS"]');
+
+    addButton.addEventListener('click', function () {
+        let formNum = parseInt(totalForms.value);
+        let templateContainer = document.getElementById('empty-form-template');
+        let template = templateContainer.querySelector('.pregunta-item');
+        if (!template) return;
+
+        let newForm = template.cloneNode(true);
+        newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formNum).replace(/forms-(\d+)-/g, `forms-${formNum}-`);
+
+        newForm.querySelectorAll('input, select, textarea').forEach(input => {
+            if (input.type === 'checkbox') { input.checked = false; } else { input.value = ''; }
+        });
+
+        let deleteSection = newForm.querySelector('.text-end');
+        if (deleteSection) deleteSection.remove();
+
+        container.insertBefore(newForm, templateContainer);
+        totalForms.value = formNum + 1;
+        
+        // Re-asignar validaciones a los nuevos campos generados
+        setTimeout(function () {
+            validarPreguntas();
+            validarOpciones();
+        }, 200);
+    });
+
+    // Eliminar con confirmación visual
+    container.addEventListener('change', function(e) {
+        if (e.target.name && e.target.name.includes('DELETE')) {
+            let item = e.target.closest('.pregunta-item');
+            if (e.target.checked) {
+                Swal.fire({
+                    title: "¿Eliminar pregunta?", text: "Esta acción no se puede deshacer", icon: "warning",
+                    showCancelButton: true, confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar",
+                    background: "rgba(10,10,10,0.95)", color: "#fff", confirmButtonColor: "#ff4d4f", cancelButtonColor: "rgba(255,255,255,0.1)",
+                    customClass: { popup: 'border border-warning' }
+                }).then((result) => {
+                    if (result.isConfirmed) { item.style.display = 'none'; } else { e.target.checked = false; }
+                });
+            } else { item.style.display = 'block'; }
+        }
+    });
+
+    // =====================================================
+    // FUNCIONES HELPER (ESTILO NEON)
+    // =====================================================
+    function crearMensaje(input) {
+        if (!document.getElementById("error_" + input.id)) {
+            let small = document.createElement("small");
+            small.id = "error_" + input.id;
+            small.style.display = "block"; small.style.marginTop = "5px"; small.style.fontSize = "11px"; small.style.fontWeight = "bold";
+            input.parentNode.appendChild(small);
+        }
+    }
+
+    function mostrarError(id, mensaje) {
+        let input = document.getElementById(id);
+        let error = document.getElementById("error_" + id);
+        if (input && error) {
+            input.classList.remove("is-valid"); input.classList.add("is-invalid");
+            input.style.borderColor = "#ff4d4f"; input.style.boxShadow = "0 0 10px rgba(255,77,79,0.3)";
+            error.innerText = mensaje; error.style.color = "#ff4d4f";
+        }
+    }
+
+    function mostrarValido(id, mensaje = "Campo válido") {
+        let input = document.getElementById(id);
+        let error = document.getElementById("error_" + id);
+        if (input && error) {
+            input.classList.remove("is-invalid"); input.classList.add("is-valid");
+            input.style.borderColor = "#28a745"; input.style.boxShadow = "0 0 10px rgba(40,167,69,0.3)";
+            error.innerText = mensaje; error.style.color = "#28a745";
+        }
+    }
+
+    // =====================================================
+    // VALIDACION NOMBRE ENCUESTA
+    // =====================================================
+    const nombreEncuesta = document.getElementById("id_nombre");
+    if (nombreEncuesta) {
+        crearMensaje(nombreEncuesta);
+        nombreEncuesta.addEventListener("input", function () {
+            let valor = nombreEncuesta.value.trim();
+            if (valor.length === 0) { mostrarError("id_nombre", "El nombre es obligatorio"); return; }
+            if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(valor)) { mostrarError("id_nombre", "Solo se permiten letras"); return; }
+            if (valor.replace(/\s/g, "").length > 0 && new Set(valor.replace(/\s/g, "").toLowerCase()).size === 1) {
+                mostrarError("id_nombre", "No se permiten letras repetidas"); return;
+            }
+            mostrarValido("id_nombre", "Nombre válido");
+        });
+    }
+
+    // =====================================================
+    // VALIDACION PREGUNTAS (REGEX)
+    // =====================================================
+    function validarPreguntas() {
+        let preguntas = document.querySelectorAll("input[name$='-pregunta']");
+        preguntas.forEach(input => {
+            crearMensaje(input);
+            input.addEventListener("input", function () {
+                let valor = input.value.trim();
+                
+                if (valor.length === 0) { mostrarError(input.id, "La pregunta es obligatoria"); return; }
+                if (valor.length < 5) { mostrarError(input.id, "Mínimo 5 caracteres"); return; }
+                if (valor.replace(/\s/g, "").match(/^\d+$/)) { mostrarError(input.id, "No puede contener solo números"); return; }
+                if (!/[a-zA-ZáéíóúÁÉÍÓÚñÑ]/.test(valor)) { mostrarError(input.id, "Debe contener al menos una letra"); return; }
+                if (/[{}[\]<>\\|°¬¨´`+=~^_*]/.test(valor)) { mostrarError(input.id, "Caracteres inválidos"); return; }
+                if (/[-.]{3,}/.test(valor)) { mostrarError(input.id, "La pregunta no es coherente"); return; }
+                if (/([a-zA-Z])\1{3,}/.test(valor.toLowerCase())) { mostrarError(input.id, "No se permiten letras repetidas"); return; }
+                if (/^(ha|ja|je|ji|jo|ju)+$/i.test(valor.replace(/\s/g, ""))) { mostrarError(input.id, "Ingrese una pregunta coherente"); return; }
+
+                let palabras = valor.split(" ");
+                for (let palabra of palabras) {
+                    let palabraLower = palabra.toLowerCase();
+                    let patrones = ['asdf', 'qwerty', 'zxcv', 'hjkl', 'poiuy', 'lkjh'];
+                    for (let patron of patrones) {
+                        if (palabraLower.includes(patron)) { mostrarError(input.id, "Contiene texto inválido"); return; }
+                    }
+                    if (/^[a-zA-Z0-9]{10,}$/.test(palabra)) {
+                        let letras = (palabra.match(/[a-zA-Z]/g) || []).length;
+                        let numeros = (palabra.match(/[0-9]/g) || []).length;
+                        if (letras >= 5 && numeros >= 2) { mostrarError(input.id, "Ingrese una pregunta válida"); return; }
+                    }
+                }
+                mostrarValido(input.id, "Pregunta válida");
+            });
+        });
+    }
+
+    // =====================================================
+    // VALIDACION OPCIONES (REGEX)
+    // =====================================================
+    function validarOpciones() {
+        let opciones = document.querySelectorAll("textarea[name$='-opciones']");
+        opciones.forEach(textarea => {
+            crearMensaje(textarea);
+            textarea.addEventListener("input", function () {
+                let valor = textarea.value.trim();
+                if (valor.length === 0) {
+                    textarea.classList.remove("is-valid"); textarea.classList.remove("is-invalid");
+                    textarea.style.boxShadow = "none"; textarea.style.borderColor = "rgba(255,255,255,0.1)";
+                    document.getElementById("error_" + textarea.id).innerText = "";
+                    return;
+                }
+                if (/[{}[\]<>*/\\|°¬¨+=~`%^]/.test(valor)) { mostrarError(textarea.id, "Caracteres especiales no permitidos"); return; }
+                
+                let lista = valor.split(",");
+                let invalidas = lista.some(op => op.trim() === "");
+                if (invalidas) { mostrarError(textarea.id, "Hay opciones vacías entre las comas"); return; }
+
+                mostrarValido(textarea.id, "Opciones válidas");
+            });
+        });
+    }
+
+    // Inicializar validaciones de campos existentes
+    validarPreguntas();
+    validarOpciones();
+});
+
+</script>
+{% endblock %}

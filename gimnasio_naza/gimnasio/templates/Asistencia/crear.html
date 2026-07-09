@@ -1,0 +1,701 @@
+{% extends 'body.html' %}
+{% load widget_tweaks %}
+
+{% block contenido %}
+<style>
+    .input-dark.is-valid { border-color: #2ecc71 !important; box-shadow: 0 0 10px rgba(46, 204, 113, 0.3) !important; }
+    .input-dark.is-invalid { border-color: #ff4d4f !important; box-shadow: 0 0 10px rgba(255, 77, 79, 0.3) !important; }
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 
+        0% { opacity: 0; transform: translateY(30px) scale(0.97); } 
+        100% { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+
+    /* TARJETAS ESTILO DASHBOARD */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); 
+        backdrop-filter: blur(10px); border-radius: 15px; padding: 0; 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.9); border: 1px solid rgba(255,215,0,0.1); 
+        transition: 0.3s; overflow: hidden; margin-bottom: 25px;
+    }
+    
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: #ffd700; transform: skewX(-15deg);
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); transition: 0.3s; z-index: 0;
+    }
+
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;}
+    .header-neon h3 { margin: 0; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; color: #fff; letter-spacing: 1px;}
+    .header-neon h3 i { color: #ffd700; }
+
+    /* INPUTS OSCUROS */
+    .form-label-custom { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #eeeef0; font-weight: 800; margin-bottom: 8px; position: relative; z-index: 2;}
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; transition: 0.3s; padding: 12px 15px; font-family: 'Poppins', sans-serif; position: relative; z-index: 2;}
+    .input-dark:focus { background: #000 !important; border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important; outline: none;}
+    .input-dark::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer;}
+
+    /* BARRA DE FORTALEZA DE CONTRASEÑA */
+    .password-strength-wrap { margin-top: 8px; position: relative; z-index: 2; }
+    .password-strength-bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+    .password-strength-fill { height: 100%; width: 0%; border-radius: 3px; transition: width 0.25s ease, background-color 0.25s ease; background: #ff4d4f; }
+    .password-strength-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; margin-top: 4px; display: block; font-weight: 700; }
+    .password-rules { list-style: none; padding: 0; margin: 8px 0 0; font-size: 11px; }
+    .password-rules li { color: #6c757d; margin-bottom: 3px; transition: color 0.2s; }
+    .password-rules li.ok { color: #2ecc71; }
+    .password-rules li i { width: 14px; display: inline-block; }
+
+    /* BOTONES HERO SESGADOS */
+    .btn-hero-gold {
+        background: #ffd700; color: #000; border: none; font-weight: 900; 
+        padding: 12px 25px; font-size: 13px; text-transform: uppercase; 
+        box-shadow: 0 0 15px rgba(255,215,0,0.3); transition: all 0.3s; 
+        display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg);
+        position: relative; z-index: 2; text-decoration: none; cursor: pointer;
+    }
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+    .btn-hero-gold:disabled { opacity: 0.5; cursor: not-allowed; transform: skewX(-10deg) scale(1); box-shadow: none; }
+
+    /* MODAL WIZARD */
+    .modal-dark .modal-content { background: #0a0a0a; border: 1px solid #ffd700; color: #fff; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+    .wizard-step { font-weight: 900; text-transform: uppercase; padding: 8px 20px; letter-spacing: 1px; font-size: 11px; border-radius: 30px;}
+    .wizard-step.active { background: #ffd700; color: #000; box-shadow: 0 0 15px rgba(255,215,0,0.5); border: 1px solid #ffd700;}
+    .wizard-step.inactive { background: rgba(255,255,255,0.05); color: #6c757d; border: 1px solid rgba(255,255,255,0.1);}
+
+    .swal2-container { z-index: 20000 !important; }
+</style>
+
+<div class="container mt-4" style="max-width: 800px;">
+    <form method="post" class="stagger-1" id="formAsistencia">
+        {% csrf_token %}
+        <div class="card-dash">
+            <div class="header-neon">
+                <h3><i class="fas fa-user-check"></i> {{ titulo }}</h3>
+            </div>
+
+            <div class="card-body p-4 p-md-5" style="position: relative; z-index: 2;">
+                {% for field in form.visible_fields %}
+                    <div class="mb-4 stagger-2">
+                        <label class="form-label-custom">
+                            {% if field.name == 'fk_membresia' %} Membresía Asociada al Atleta
+                            {% elif field.name == 'fk_usuario' %} Seleccionar Atleta
+                            {% else %} {{ field.label }} {% endif %}
+                        </label>
+
+                        {% if field.name == 'fk_membresia' %}
+                            <div class="d-flex align-items-center gap-2">
+                                {{ field|add_class:'form-control input-dark' }}
+                                <button type="button" class="btn" style="background: rgba(255, 215, 0, 0.1); color: #ffd700; border: 1px solid #ffd700; padding: 12px 18px; border-radius: 6px; transition: 0.3s;" onclick="abrirWizard()" title="Crear Nuevo Atleta">
+                                    <i class="fas fa-user-plus"></i>
+                                </button>
+                            </div>
+                        {% else %}
+                            {{ field|add_class:'form-control input-dark' }}
+                        {% endif %}
+
+                        <div class="text-danger small mt-2 fw-bold field-error-msg" id="error_{{ field.id_for_label }}" style="color: #ff4d4f !important;">
+                            {% if field.errors %}<i class="fas fa-exclamation-triangle"></i> {{ field.errors|striptags }}{% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="card-footer border-0 p-4 p-md-5 pt-0 d-flex gap-3" style="background: transparent; position: relative; z-index: 2;">
+                <button type="submit" class="btn-hero-gold" id="btnGuardarAsistencia">
+                    <span><i class="fas fa-save"></i> Guardar</span>
+                </button>
+                <a href="{% url 'gimnasio:listar_asistencia' %}" class="btn-hero-outline" style="background: rgba(255,255,255,0.05); color: #fff; border-color: rgba(255,255,255,0.2); text-decoration: none; padding: 12px 25px; font-size: 13px; text-transform: uppercase; font-weight: 900; display: inline-flex; align-items: center; transform: skewX(-10deg);">
+                    <span style="transform: skewX(10deg);"><i class="fas fa-times"></i> Cancelar</span>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade modal-dark" id="modalWizard" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0" style="background: #000; border-bottom: 1px solid rgba(255,215,0,0.2) !important; padding: 20px 30px;">
+        <h5 class="fw-bold text-uppercase m-0" style="color: #ffd700; font-size: 16px; letter-spacing: 1px;"><i class="fas fa-bolt me-2"></i> Alta Rápida de Atleta</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-4 p-md-5">
+        {% csrf_token %}
+        <div class="d-flex justify-content-center align-items-center mb-5 gap-3">
+          <span class="wizard-step active" id="badge1">1. Credenciales</span>
+          <i class="fas fa-arrow-right" style="color: #333;"></i>
+          <span class="wizard-step inactive" id="badge2">2. Membresía</span>
+        </div>
+
+        <div id="paso1">
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-lock me-2" style="color: #ffd700;"></i> Datos de Acceso</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <input type="text" id="username" class="form-control input-dark" placeholder="Usuario (Login)" maxlength="30" autocomplete="off">
+              <small class="text-muted" style="font-size: 10px; display:block; margin-top:4px;">Solo letras y números, sin espacios ni símbolos. Mínimo 4 caracteres.</small>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group">
+                <input type="password" id="password" class="form-control input-dark" placeholder="Contraseña" style="border-right: none !important;" autocomplete="new-password">
+                <button type="button" class="btn input-dark border-start-0" id="btnTogglePassword" style="border-left: none !important;"><i class="fas fa-eye" id="iconPassword" style="color: #eeeef0;"></i></button>
+              </div>
+              <div class="password-strength-wrap" id="passwordStrengthWrap" style="display:none;">
+                <div class="password-strength-bar"><div class="password-strength-fill" id="passwordStrengthFill"></div></div>
+                <span class="password-strength-label" id="passwordStrengthLabel">Muy débil</span>
+                <ul class="password-rules" id="passwordRules">
+                    <li id="ruleLen"><i class="fas fa-circle-notch"></i> Mínimo 8 caracteres</li>
+                    <li id="ruleUpper"><i class="fas fa-circle-notch"></i> Al menos 1 mayúscula</li>
+                    <li id="ruleNumber"><i class="fas fa-circle-notch"></i> Al menos 1 número</li>
+                    <li id="ruleSymbol"><i class="fas fa-circle-notch"></i> Al menos 1 símbolo (!@#$%...)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2 mt-4" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-id-badge me-2" style="color: #ffd700;"></i> Datos Personales</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6"><input id="documento" class="form-control input-dark" placeholder="N° Documento" maxlength="10" inputmode="numeric"></div>
+            <div class="col-md-6"><input id="correo_usuario" type="email" class="form-control input-dark" placeholder="Correo Electrónico" autocomplete="off"></div>
+            <div class="col-md-6"><input id="nombre_usuario" class="form-control input-dark" placeholder="Nombres" autocomplete="off"></div>
+            <div class="col-md-6"><input id="apellido_usuario" class="form-control input-dark" placeholder="Apellidos" autocomplete="off"></div>
+            <div class="col-md-6"><input id="telefono_usuario" class="form-control input-dark" placeholder="Teléfono" inputmode="numeric"></div>
+            <div class="col-md-6"><input type="date" id="fecha_nacimiento" class="form-control input-dark" title="Fecha Nacimiento"></div>
+            <div class="col-md-12">
+              <select id="genero_usuario" class="form-select input-dark mb-3">
+                <option value="">Seleccione Género...</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+              </select>
+              <select id="rol" class="form-select input-dark">
+                <option value="">Seleccione Rol</option>
+                <option value="M">Administrador</option>
+                <option value="F">Cliente</option>
+              </select>
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2 mt-4" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-weight me-2" style="color: #ffd700;"></i> Física (Opcional)</h6>
+          <div class="row g-3">
+            <div class="col-md-6"><input id="peso_usuario" type="number" step="0.1" class="form-control input-dark" placeholder="Peso (kg) Ej: 75.5"></div>
+            <div class="col-md-6"><input id="altura_usuario" type="number" step="0.01" class="form-control input-dark" placeholder="Altura (cm) Ej: 175"></div>
+          </div>
+        </div>
+
+        <div id="paso2" style="display:none;">
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-ticket-alt me-2" style="color: #ffd700;"></i> Configuración Membresía</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label-custom">Fecha de Inicio</label>
+              <input id="fecha_inicio" type="date" class="form-control input-dark">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-custom">Fecha de Fin</label>
+              <input id="fecha_fin" type="date" class="form-control input-dark">
+            </div>
+            <div class="col-md-12 mt-4">
+              <label class="form-label-custom">Estado Inicial</label>
+              <select id="estado_membresia" class="form-select input-dark">
+                <option value="activo">Activo (Acceso Permitido)</option>
+                <option value="inactivo">Inactivo (Suspendido)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 p-4" style="background: rgba(0,0,0,0.5);">
+        <button class="btn fw-bold px-4" style="background: rgba(255,255,255,0.05); color: #fff; text-transform: uppercase; font-size: 12px; border: 1px solid rgba(255,255,255,0.1); display: none;" onclick="prevPaso()" id="btnPrev">Volver</button>
+        <button class="btn btn-hero-gold px-4" id="btnSiguiente" onclick="nextPaso()"><span>Continuar <i class="fas fa-arrow-right"></i></span></button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const $ = (id) => document.getElementById(id);
+    const btnSiguiente = $("btnSiguiente");
+    let paso = 1;
+
+    // ================= REGLAS COMPARTIDAS (deben coincidir con forms.py) =================
+    const USERNAME_REGEX = /^[A-Za-z0-9]+$/;
+
+    function evaluarPassword(password) {
+        return {
+            len: password.length >= 8,
+            upper: /[A-Z]/.test(password),
+            number: /\d/.test(password),
+            symbol: /[^\w\s]/.test(password)
+        };
+    }
+
+    function setFechasDefault() {
+        const hoy = new Date();
+        const fmt = (fecha) => fecha.toISOString().split("T")[0];
+        const en30 = new Date(hoy);
+        en30.setDate(hoy.getDate() + 30);
+        if ($("fecha_inicio")) $("fecha_inicio").value = fmt(hoy);
+        if ($("fecha_fin")) $("fecha_fin").value = fmt(en30);
+        if (window.validarFechasMembresia) validarFechasMembresia();
+    }
+
+    function mostrarPaso() {
+        for (let i = 1; i <= 2; i++) {
+            if ($("paso" + i)) $("paso" + i).style.display = i === paso ? "block" : "none";
+            if ($("badge" + i)) {
+                $("badge" + i).classList.toggle("active", i === paso);
+                $("badge" + i).classList.toggle("inactive", i !== paso);
+            }
+        }
+        if (btnSiguiente) btnSiguiente.innerHTML = paso === 2 ? '<span><i class="fas fa-save"></i> Guardar</span>' : '<span>Continuar <i class="fas fa-arrow-right"></i></span>';
+        let btnPrev = document.getElementById("btnPrev");
+        if (btnPrev) { btnPrev.style.display = paso === 1 ? "none" : "inline-block"; }
+    }
+
+    function abrirWizard() {
+        if (!$("modalWizard")) return;
+        limpiarFormulario();
+        paso = 1;
+        setFechasDefault();
+        mostrarPaso();
+        new bootstrap.Modal($("modalWizard")).show();
+    }
+
+    function nextPaso() {
+        if (paso === 1) {
+            validarTodoPaso1();
+            const camposPaso1 = ["username", "password", "documento", "correo_usuario", "nombre_usuario", "apellido_usuario", "telefono_usuario", "fecha_nacimiento", "genero_usuario", "rol"];
+            const tieneErrores = camposPaso1.some(id => $(id) && $(id).classList.contains("is-invalid"));
+            const estanVaciosObligatorios = ["username", "password", "documento", "nombre_usuario"].some(id => $(id) && !$(id).value.trim());
+
+            if (tieneErrores || estanVaciosObligatorios) {
+                Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "warning", title: "Campos incorrectos", text: "Por favor, corrige o completa los campos requeridos en rojo.", confirmButtonColor: "#ffd700" });
+                return;
+            }
+            paso++;
+            mostrarPaso();
+            return;
+        }
+
+        // Validar paso 2 (membresía) antes de guardar
+        if (window.validarFechasMembresia) validarFechasMembresia();
+        const camposPaso2 = ["fecha_inicio", "fecha_fin"];
+        const tieneErroresPaso2 = camposPaso2.some(id => $(id) && $(id).classList.contains("is-invalid"));
+
+        if (tieneErroresPaso2) {
+            Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "warning", title: "Fechas inválidas", text: "Corrige las fechas de membresía antes de guardar.", confirmButtonColor: "#ffd700" });
+            return;
+        }
+
+        guardarTodo();
+    }
+
+    function prevPaso() { if (paso > 1) { paso--; mostrarPaso(); } }
+
+    function obtenerDatos() {
+        return {
+            username: $("username") ? $("username").value.trim() : "",
+            password: $("password") ? $("password").value : "",
+            documento: $("documento") ? $("documento").value.trim() : "",
+            nombre_usuario: $("nombre_usuario") ? $("nombre_usuario").value.trim() : "",
+            apellido_usuario: $("apellido_usuario") ? $("apellido_usuario").value.trim() : "",
+            correo_usuario: $("correo_usuario") ? $("correo_usuario").value.trim() : "",
+            telefono_usuario: $("telefono_usuario") ? $("telefono_usuario").value.trim() : "",
+            fecha_nacimiento: $("fecha_nacimiento") ? $("fecha_nacimiento").value : "",
+            peso_usuario: $("peso_usuario") ? (parseFloat($("peso_usuario").value) || null) : null,
+            altura_usuario: $("altura_usuario") ? (parseFloat($("altura_usuario").value) || null) : null,
+            genero_usuario: $("genero_usuario") ? $("genero_usuario").value : "",
+            rol: $("rol") ? $("rol").value : "",
+            fecha_inicio: $("fecha_inicio") ? $("fecha_inicio").value : "",
+            fecha_fin: $("fecha_fin") ? $("fecha_fin").value : "",
+            estado_membresia: $("estado_membresia") ? $("estado_membresia").value : ""
+        };
+    }
+
+    function limpiarFormulario() {
+        document.querySelectorAll("#modalWizard input, #modalWizard select").forEach(c => {
+            if (c.type !== "date") { c.value = ""; }
+            c.classList.remove("is-valid", "is-invalid");
+            const err = document.getElementById("err_wizard_" + c.id);
+            if (err) err.innerHTML = "";
+        });
+        if ($("passwordStrengthWrap")) $("passwordStrengthWrap").style.display = "none";
+        setFechasDefault();
+        paso = 1;
+    }
+
+    function guardarTodo() {
+        const data = obtenerDatos();
+        if (btnSiguiente) {
+            btnSiguiente.disabled = true;
+            btnSiguiente.innerHTML = "<span>Procesando...</span>";
+        }
+
+        fetch("{% url 'gimnasio:wizard_asistencia' %}", {
+            method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" }, body: JSON.stringify(data)
+        }).then(res => res.json()).then(res => {
+            if (res.error) { Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "error", title: "Error", text: res.error, customClass: { popup: 'border border-danger' } }); return; }
+            const select = $("id_fk_membresia");
+            if (select) { select.add(new Option(res.nombre, res.id, true, true)); select.dispatchEvent(new Event("change")); }
+            if ($("modalWizard")) bootstrap.Modal.getInstance($("modalWizard")).hide();
+            limpiarFormulario();
+            Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "success", title: "Atleta Creado", text: "Registro exitoso", confirmButtonColor: "#ffd700", customClass: { popup: 'border border-warning' } });
+        }).catch(() => { Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "error", title: "Error", text: "Fallo de servidor" }); })
+            .finally(() => {
+                if (btnSiguiente) {
+                    btnSiguiente.disabled = false;
+                    btnSiguiente.innerHTML = paso === 2 ? '<span><i class="fas fa-save"></i> Guardar</span>' : '<span>Continuar <i class="fas fa-arrow-right"></i></span>';
+                }
+            });
+    }
+
+    // Toggle Password visualización (Ojo)
+    const passwordInput = document.getElementById("password");
+    const btnTogglePassword = document.getElementById("btnTogglePassword");
+    const iconPassword = document.getElementById("iconPassword");
+    if (passwordInput && btnTogglePassword && iconPassword) {
+        btnTogglePassword.addEventListener("click", function () {
+            const isPassword = passwordInput.type === "password";
+            passwordInput.type = isPassword ? "text" : "password";
+            iconPassword.className = isPassword ? "fas fa-eye-slash" : "fas fa-eye";
+            iconPassword.style.color = isPassword ? "#ffd700" : "#eeeef0";
+        });
+    }
+
+    // ================= VALIDACIONES EN TIEMPO REAL DEL WIZARD Y ASISTENCIA =================
+    (function () {
+        function renderEstado(input, valido, mensaje = "") {
+            if (!input) return;
+            const errorDiv = document.getElementById("err_wizard_" + input.id) || document.getElementById("error_" + input.id);
+            input.classList.remove("is-valid", "is-invalid");
+            if (valido === null) {
+                if (errorDiv) errorDiv.innerHTML = "";
+                return;
+            }
+            if (valido) {
+                input.classList.add("is-valid");
+                if (errorDiv) errorDiv.innerHTML = "";
+            } else {
+                input.classList.add("is-invalid");
+                if (errorDiv) errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${mensaje}`;
+            }
+        }
+
+        // --- VALIDACIONES BACKEND EN TIEMPO REAL (AJAX) ---
+        function validarBackend(input, campo, valor) {
+            if (!valor.trim()) return;
+            renderEstado(input, null);
+
+            fetch(`/gimnasio/validar-atleta/?campo=${campo}&valor=${encodeURIComponent(valor)}`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Respuesta no válida del servidor");
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.existe) {
+                        renderEstado(input, false, data.mensaje || `Este ${campo} ya se encuentra registrado.`);
+                    } else {
+                        renderEstado(input, true);
+                    }
+                })
+                .catch(() => {
+                    renderEstado(input, true);
+                });
+        }
+
+        function on(id, evento, handler) {
+            const el = $(id);
+            if (el) el.addEventListener(evento, handler);
+        }
+
+        if ($("modalWizard")) {
+            document.querySelectorAll("#modalWizard .form-control, #modalWizard .form-select").forEach(input => {
+                if (!document.getElementById("err_wizard_" + input.id)) {
+                    const errDiv = document.createElement("div");
+                    errDiv.id = "err_wizard_" + input.id;
+                    errDiv.className = "text-danger small mt-1 fw-bold";
+                    errDiv.style.color = "#ff4d4f";
+                    if (input.id === "password" && input.closest(".input-group")) {
+                        input.closest(".input-group").after(errDiv);
+                    } else {
+                        input.after(errDiv);
+                    }
+                }
+            });
+
+            // --- USERNAME: solo letras y números, sin espacios ni símbolos ---
+            on("username", "input", function () {
+                // Sanitiza en vivo: elimina cualquier caracter que no sea letra/número
+                const limpio = this.value.replace(/[^A-Za-z0-9]/g, "");
+                if (limpio !== this.value) this.value = limpio;
+
+                if (!this.value.trim()) { renderEstado(this, false, "El nombre de usuario es requerido."); return; }
+                if (this.value.length < 4) { renderEstado(this, false, "Debe tener al menos 4 caracteres."); return; }
+                if (this.value.length > 30) { renderEstado(this, false, "No puede tener más de 30 caracteres."); return; }
+                if (!USERNAME_REGEX.test(this.value)) { renderEstado(this, false, "Solo letras y números, sin espacios ni símbolos."); return; }
+                validarBackend(this, "username", this.value);
+            });
+
+            // --- PASSWORD: mín 8, mayúscula, número, símbolo + barra de fortaleza ---
+            on("password", "input", function () {
+                const valor = this.value;
+                const reglas = evaluarPassword(valor);
+
+                const wrap = $("passwordStrengthWrap");
+                if (wrap) wrap.style.display = valor ? "block" : "none";
+
+                // Marcar reglas individuales
+                const marcar = (id, ok) => {
+                    const li = $(id);
+                    if (!li) return;
+                    li.classList.toggle("ok", ok);
+                    const icon = li.querySelector("i");
+                    if (icon) icon.className = ok ? "fas fa-check-circle" : "fas fa-circle-notch";
+                };
+                marcar("ruleLen", reglas.len);
+                marcar("ruleUpper", reglas.upper);
+                marcar("ruleNumber", reglas.number);
+                marcar("ruleSymbol", reglas.symbol);
+
+                // Barra de fortaleza (0 a 4 reglas cumplidas)
+                const cumplidas = Object.values(reglas).filter(Boolean).length;
+                const fill = $("passwordStrengthFill");
+                const label = $("passwordStrengthLabel");
+                if (fill && label) {
+                    const porcentaje = (cumplidas / 4) * 100;
+                    fill.style.width = porcentaje + "%";
+                    if (cumplidas <= 1) { fill.style.background = "#ff4d4f"; label.textContent = "Muy débil"; label.style.color = "#ff4d4f"; }
+                    else if (cumplidas === 2) { fill.style.background = "#ff9f43"; label.textContent = "Débil"; label.style.color = "#ff9f43"; }
+                    else if (cumplidas === 3) { fill.style.background = "#f1c40f"; label.textContent = "Aceptable"; label.style.color = "#f1c40f"; }
+                    else { fill.style.background = "#2ecc71"; label.textContent = "Fuerte"; label.style.color = "#2ecc71"; }
+                }
+
+                if (!valor.trim()) { renderEstado(this, false, "La contraseña es requerida."); return; }
+                if (!reglas.len) { renderEstado(this, false, "Debe tener al menos 8 caracteres."); return; }
+                if (!reglas.upper) { renderEstado(this, false, "Debe contener al menos una mayúscula."); return; }
+                if (!reglas.number) { renderEstado(this, false, "Debe contener al menos un número."); return; }
+                if (!reglas.symbol) { renderEstado(this, false, "Debe contener al menos un símbolo (!@#$%...)."); return; }
+                renderEstado(this, true);
+            });
+
+            on("documento", "input", function () {
+                // Sanitiza en vivo: solo dígitos
+                const limpio = this.value.replace(/\D/g, "");
+                if (limpio !== this.value) this.value = limpio;
+
+                if (!this.value.trim()) { renderEstado(this, false, "El documento es requerido."); return; }
+                if (!/^\d+$/.test(this.value)) { renderEstado(this, false, "Solo se admiten números."); return; }
+                if (this.value.length < 7 || this.value.length > 10) { renderEstado(this, false, "Debe tener entre 7 y 10 dígitos."); return; }
+                validarBackend(this, "documento", this.value);
+            });
+
+            on("correo_usuario", "input", function () {
+                if (!this.value.trim()) { renderEstado(this, null); return; }
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(this.value)) { renderEstado(this, false, "Formato de correo inválido."); return; }
+                validarBackend(this, "correo", this.value);
+            });
+
+            on("nombre_usuario", "input", function () {
+                const valor = this.value.trim();
+                if (!valor) { renderEstado(this, false, "El nombre es requerido."); return; }
+                if (!/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/.test(valor)) { renderEstado(this, false, "Solo se permiten letras y espacios."); return; }
+                if (valor.length < 2) { renderEstado(this, false, "El nombre es demasiado corto."); return; }
+                renderEstado(this, true);
+            });
+
+            on("apellido_usuario", "input", function () {
+                const valor = this.value.trim();
+                if (!valor) { renderEstado(this, null); return; }
+                if (!/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/.test(valor)) { renderEstado(this, false, "Solo se permiten letras y espacios."); return; }
+                if (valor.length < 2) { renderEstado(this, false, "El apellido es demasiado corto."); return; }
+                renderEstado(this, true);
+            });
+
+            on("telefono_usuario", "input", function () {
+                // Sanitiza en vivo: solo dígitos (permitiendo + inicial)
+                const limpio = this.value.replace(/(?!^\+)[^\d]/g, "");
+                if (limpio !== this.value) this.value = limpio;
+
+                if (!this.value.trim()) { renderEstado(this, null); return; }
+                if (!/^\+?\d{7,15}$/.test(this.value)) { renderEstado(this, false, "Número de teléfono inválido."); return; }
+                renderEstado(this, true);
+            });
+
+            on("fecha_nacimiento", "change", function () {
+                if (!this.value) { renderEstado(this, null); return; }
+                const hoyStr = new Date().toLocaleDateString("en-CA");
+                if (this.value >= hoyStr) { renderEstado(this, false, "La fecha no puede ser hoy ni futura."); return; }
+                const edad = new Date().getFullYear() - new Date(this.value).getFullYear();
+                if (edad < 12 || edad > 90) { renderEstado(this, false, "Edad permitida entre 12 y 90 años."); return; }
+                renderEstado(this, true);
+            });
+
+            ["genero_usuario", "rol", "estado_membresia"].forEach(id => {
+                on(id, "change", function () {
+                    renderEstado(this, this.value ? true : null);
+                });
+            });
+
+            on("peso_usuario", "input", function () {
+                if (!this.value.trim()) { renderEstado(this, null); return; }
+                const peso = parseFloat(this.value);
+                if (isNaN(peso) || peso < 30 || peso > 300) { renderEstado(this, false, "El peso debe estar entre 30 kg y 300 kg."); return; }
+                renderEstado(this, true);
+            });
+
+            on("altura_usuario", "input", function () {
+                if (!this.value.trim()) { renderEstado(this, null); return; }
+                const altura = parseFloat(this.value);
+                if (isNaN(altura) || altura < 100 || altura > 230) { renderEstado(this, false, "La altura debe estar entre 100 cm y 230 cm."); return; }
+                renderEstado(this, true);
+            });
+
+            // --- VALIDACIÓN FECHAS DE MEMBRESÍA (igual a MembresiaForm.clean) ---
+            function validarFechasMembresia() {
+                const inputInicio = $("fecha_inicio");
+                const inputFin = $("fecha_fin");
+                if (!inputInicio || !inputFin) return;
+
+                const inicioStr = inputInicio.value;
+                const finStr = inputFin.value;
+
+                if (!inicioStr) {
+                    renderEstado(inputInicio, false, "La fecha de inicio es requerida.");
+                } else {
+                    const hoyStr = new Date().toLocaleDateString("en-CA");
+                    if (inicioStr !== hoyStr) {
+                        renderEstado(inputInicio, false, "La fecha de inicio debe ser la actual.");
+                    } else {
+                        renderEstado(inputInicio, true);
+                    }
+                }
+
+                if (!finStr) {
+                    renderEstado(inputFin, false, "La fecha de fin es requerida.");
+                    return;
+                }
+
+                if (!inicioStr) {
+                    renderEstado(inputFin, null);
+                    return;
+                }
+
+                const inicio = new Date(inicioStr + "T00:00:00");
+                const fin = new Date(finStr + "T00:00:00");
+                const hoy = new Date(new Date().toLocaleDateString("en-CA") + "T00:00:00");
+
+                const esperada = new Date(inicio);
+                esperada.setDate(esperada.getDate() + 30);
+
+                if (fin < hoy) {
+                    renderEstado(inputFin, false, "La fecha de finalización no puede ser anterior al día de hoy.");
+                } else if (fin.getTime() === inicio.getTime()) {
+                    renderEstado(inputFin, false, "La fecha de finalización no puede ser igual a la fecha de inicio.");
+                } else if (fin < inicio) {
+                    renderEstado(inputFin, false, "La fecha de finalización no puede ser anterior a la fecha de inicio.");
+                } else if (fin.getTime() > esperada.getTime()) {
+                    renderEstado(inputFin, false, "La fecha de finalización no puede ser mayor a un mes.");
+                } else if (fin.getTime() < esperada.getTime()) {
+                    renderEstado(inputFin, false, "La fecha de finalización no puede ser menor a un mes.");
+                } else {
+                    renderEstado(inputFin, true);
+                }
+            }
+            window.validarFechasMembresia = validarFechasMembresia;
+
+            on("fecha_inicio", "input", validarFechasMembresia);
+            on("fecha_inicio", "change", validarFechasMembresia);
+            on("fecha_fin", "input", validarFechasMembresia);
+            on("fecha_fin", "change", validarFechasMembresia);
+
+            window.validarTodoPaso1 = function () {
+                ["username", "password", "documento", "nombre_usuario"].forEach(id => {
+                    const el = $(id);
+                    if (el && el.value.trim()) {
+                        // dispara el evento 'input' para que se re-evalúen las reglas
+                        el.dispatchEvent(new Event("input"));
+                    } else if (el) {
+                        renderEstado(el, false, "Este campo es obligatorio.");
+                    }
+                });
+            };
+        } else {
+            window.validarFechasMembresia = function () {};
+            window.validarTodoPaso1 = function () {};
+        }
+
+        // ---------- VALIDACIONES DEL FORMULARIO BASE (ASISTENCIA) ----------
+        const fechaInput = document.getElementById("id_fecha_asistencia");
+        const horaInput = document.getElementById("id_hora_ingreso");
+        const formAsistencia = document.getElementById("formAsistencia");
+        const esEdicion = {{ form.instance.pk|yesno:"true,false" }};
+
+        function inicioFinSemana() {
+            const hoy = new Date();
+            const diaSemana = (hoy.getDay() + 6) % 7; // 0 = lunes ... 6 = domingo
+            const lunes = new Date(hoy);
+            lunes.setDate(hoy.getDate() - diaSemana);
+            const domingo = new Date(lunes);
+            domingo.setDate(lunes.getDate() + 6);
+            const fmt = (f) => f.toLocaleDateString("en-CA");
+            return { lunes: fmt(lunes), domingo: fmt(domingo) };
+        }
+
+        function validarFecha() {
+            if (!fechaInput || !fechaInput.value) { renderEstado(fechaInput, null); return; }
+
+            if (!esEdicion) {
+                const hoyStr = new Date().toLocaleDateString("en-CA");
+                if (fechaInput.value !== hoyStr) {
+                    renderEstado(fechaInput, false, "Al crear una asistencia, la fecha debe ser la actual");
+                } else {
+                    renderEstado(fechaInput, true);
+                }
+            } else {
+                const { lunes, domingo } = inicioFinSemana();
+                if (fechaInput.value < lunes || fechaInput.value > domingo) {
+                    renderEstado(fechaInput, false, "La fecha debe estar dentro de la semana actual (lunes a domingo)");
+                } else {
+                    renderEstado(fechaInput, true);
+                }
+            }
+        }
+
+        function aMinutos(horaStr) {
+            const [h, m] = horaStr.split(":").map(Number);
+            return h * 60 + m;
+        }
+
+        function validarHora() {
+            if (!horaInput || !horaInput.value) { renderEstado(horaInput, null); return; }
+            const minutos = aMinutos(horaInput.value);
+            if (minutos >= 720 && minutos <= 1020) renderEstado(horaInput, false, "No se permiten registros entre las 12:00 PM y las 5:00 PM");
+            else if (minutos >= 1260 || minutos < 300) renderEstado(horaInput, false, "No se permiten registros entre las 9:00 PM y las 5:00 AM");
+            else renderEstado(horaInput, true);
+        }
+
+        if (fechaInput) { fechaInput.addEventListener("input", validarFecha); fechaInput.addEventListener("change", validarFecha); }
+        if (horaInput) { horaInput.addEventListener("input", validarHora); horaInput.addEventListener("change", validarHora); }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            validarFecha();
+            validarHora();
+        });
+
+        if (formAsistencia) {
+            formAsistencia.addEventListener("submit", function (e) {
+                if (formAsistencia.querySelectorAll(".is-invalid").length > 0) {
+                    e.preventDefault();
+                    Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "warning", title: "Revisa el formulario", text: "Corrige los campos marcados en rojo antes de guardar.", confirmButtonColor: "#ffd700" });
+                }
+            });
+        }
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,581 @@
+{% extends 'body.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block contenido %}
+<style>
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 
+        0% { opacity: 0; transform: translateY(30px) scale(0.97); } 
+        100% { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+
+    /* TARJETAS ESTILO DASHBOARD */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); 
+        backdrop-filter: blur(10px); border-radius: 15px; padding: 0; 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.9); border: 1px solid rgba(255,215,0,0.1); 
+        transition: 0.3s; overflow: hidden; margin-bottom: 25px;
+    }
+    
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: #ffd700; transform: skewX(-15deg);
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); transition: 0.3s; z-index: 0;
+    }
+
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;}
+    .header-neon h3 { margin: 0; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; color: #fff; letter-spacing: 1px;}
+    .header-neon h3 i { color: #ffd700; }
+
+    /* INPUTS OSCUROS */
+    .form-label-custom { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #eeeef0; font-weight: 800; margin-bottom: 8px; position: relative; z-index: 2;}
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; transition: 0.3s; padding: 12px 15px; font-family: 'Poppins', sans-serif; position: relative; z-index: 2;}
+    .input-dark:focus { background: #000 !important; border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important; outline: none;}
+    .input-dark::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer;}
+    .input-dark.is-valid { border-color: #2ecc71 !important; box-shadow: 0 0 10px rgba(46, 204, 113, 0.3) !important; }
+    .input-dark.is-invalid { border-color: #ff4d4f !important; box-shadow: 0 0 10px rgba(255, 77, 79, 0.3) !important; }
+
+    /* BARRA DE FORTALEZA DE CONTRASEÑA */
+    .password-strength-wrap { margin-top: 8px; position: relative; z-index: 2; }
+    .password-strength-bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+    .password-strength-fill { height: 100%; width: 0%; border-radius: 3px; transition: width 0.25s ease, background-color 0.25s ease; background: #ff4d4f; }
+    .password-strength-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; margin-top: 4px; display: block; font-weight: 700; }
+    .password-rules { list-style: none; padding: 0; margin: 8px 0 0; font-size: 11px; }
+    .password-rules li { color: #6c757d; margin-bottom: 3px; transition: color 0.2s; }
+    .password-rules li.ok { color: #2ecc71; }
+    .password-rules li i { width: 14px; display: inline-block; }
+    
+    /* BOTONES HERO SESGADOS */
+    .btn-hero-gold {
+        background: #ffd700; color: #000; border: none; font-weight: 900; 
+        padding: 12px 25px; font-size: 13px; text-transform: uppercase; 
+        box-shadow: 0 0 15px rgba(255,215,0,0.3); transition: all 0.3s; 
+        display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg);
+        position: relative; z-index: 2; text-decoration: none; cursor: pointer;
+    }
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+
+    /* MODAL WIZARD */
+    .modal-dark .modal-content { background: #0a0a0a; border: 1px solid #ffd700; color: #fff; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+    .swal2-container { z-index: 20000 !important; }
+</style>
+
+<div class="container mt-4" style="max-width: 800px;">
+    <form method="post" action="." class="stagger-1" id="formMembresia">
+        {% csrf_token %}
+        <div class="card-dash">
+            <div class="header-neon">
+                <h3><i class="fas fa-edit"></i> {{ titulo }}</h3>
+            </div>
+
+            <div class="card-body p-4 p-md-5" style="position: relative; z-index: 2;">
+                {% if form.errors %}
+                <div class="alert mb-4" style="background: rgba(255,77,79,0.1); border: 1px solid #ff4d4f; color: #fff; border-radius: 8px;">
+                    <h6 class="fw-bold" style="color: #ff4d4f;"><i class="fas fa-ban me-2"></i> Error de Validación</h6>
+                    <ul class="mb-0">
+                        {% for field in form %} {% for error in field.errors %} <li style="font-size: 13px;">{{ field.label }}: {{ error }}</li> {% endfor %} {% endfor %}
+                        {% for error in form.non_field_errors %} <li style="font-size: 13px;">{{ error }}</li> {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% for field in form.visible_fields %}
+                <div class="form-group mb-4 stagger-2">
+                    <label class="form-label-custom">
+                        {% if field.name == 'fk_usuario' %} Seleccionar Atleta
+                        {% else %} {{ field.label }} {% endif %}
+                    </label>
+
+                    {% if field.name == 'fk_usuario' %}
+                    <div class="d-flex align-items-center gap-2">
+                        {{ field|add_class:'form-control input-dark' }}
+                        <button type="button" class="btn" style="background: rgba(255, 215, 0, 0.1); color: #ffd700; border: 1px solid #ffd700; padding: 12px 18px; border-radius: 6px; transition: 0.3s;" data-bs-toggle="modal" data-bs-target="#modalUsuario" title="Crear Nuevo Atleta">
+                            <i class="fas fa-user-plus"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                        {{ field|add_class:'form-control input-dark' }}
+                    {% endif %}
+
+                    <div class="text-danger small mt-2 fw-bold field-error-msg" id="error_{{ field.id_for_label }}" style="color: #ff4d4f !important;">
+                        {% for error in field.errors %}<i class="fas fa-exclamation-triangle"></i> {{ error }}{% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="card-footer border-0 p-4 p-md-5 pt-0 d-flex gap-3" style="background: transparent; position: relative; z-index: 2;">
+                <button type="submit" class="btn-hero-gold">
+                    <span><i class="fas fa-save"></i> Guardar</span>
+                </button>
+                <a href="{% url 'gimnasio:listar_membresia' %}" class="btn-hero-outline" style="background: rgba(255,255,255,0.05); color: #fff; border-color: rgba(255,255,255,0.2); text-decoration: none; padding: 12px 25px; transform: skewX(-10deg); display: inline-flex;">
+                    <span style="transform: skewX(10deg);"><i class="fas fa-times me-2"></i> Cancelar</span>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ================= MODAL CREAR USUARIO (OSCURO) ================= -->
+<div class="modal fade modal-dark" id="modalUsuario" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered"> 
+    <div class="modal-content">
+      <div class="modal-header border-0" style="background: #000; border-bottom: 1px solid rgba(255,215,0,0.2) !important; padding: 20px 30px;">
+        <h5 class="fw-bold text-uppercase m-0" style="color: #ffd700; font-size: 16px; letter-spacing: 1px;"><i class="fas fa-user-astronaut me-2"></i> Alta Rápida de Atleta</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-4 p-md-5">
+        {% csrf_token %}
+        <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-lock me-2" style="color: #ffd700;"></i> Datos de Acceso</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <input type="text" id="username" name="fake_user" class="form-control input-dark" placeholder="Usuario (Login)" maxlength="30" autocomplete="off">
+            <small class="text-muted" style="font-size: 10px; display:block; margin-top:4px;">Solo letras y números, sin espacios ni símbolos. Mínimo 4 caracteres.</small>
+            <div id="err_modal_username" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+          <div class="col-md-6">
+            <div class="input-group">
+                <input type="password" id="password" class="form-control input-dark" placeholder="Contraseña" style="border-right: none !important;" autocomplete="new-password">
+                <button type="button" class="btn input-dark border-start-0" id="btnTogglePassword"><i class="fas fa-eye" id="iconPassword" style="color: #eeeef0;"></i></button>
+            </div>
+            <div id="err_modal_password" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+            <div class="password-strength-wrap" id="passwordStrengthWrap" style="display:none;">
+              <div class="password-strength-bar"><div class="password-strength-fill" id="passwordStrengthFill"></div></div>
+              <span class="password-strength-label" id="passwordStrengthLabel">Muy débil</span>
+              <ul class="password-rules" id="passwordRules">
+                <li id="ruleLen"><i class="fas fa-circle-notch"></i> Mínimo 8 caracteres</li>
+                <li id="ruleUpper"><i class="fas fa-circle-notch"></i> Al menos 1 mayúscula</li>
+                <li id="ruleNumber"><i class="fas fa-circle-notch"></i> Al menos 1 número</li>
+                <li id="ruleSymbol"><i class="fas fa-circle-notch"></i> Al menos 1 símbolo (!@#$%...)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2 mt-4" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-id-badge me-2" style="color: #ffd700;"></i> Datos Personales</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <input type="text" id="documento" class="form-control input-dark" placeholder="N° Documento" maxlength="10" inputmode="numeric">
+            <div id="err_modal_documento" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+          <div class="col-md-6">
+            <input type="email" id="correo" class="form-control input-dark" placeholder="Correo Electrónico" autocomplete="off">
+            <div id="err_modal_correo" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="nombre" class="form-control input-dark" placeholder="Nombres" autocomplete="off">
+            <div id="err_modal_nombre" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="apellido" class="form-control input-dark" placeholder="Apellidos" autocomplete="off">
+            <div id="err_modal_apellido" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="telefono" class="form-control input-dark" placeholder="Teléfono" inputmode="numeric">
+            <div id="err_modal_telefono" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+          <div class="col-md-6">
+            <input type="date" id="fecha_nacimiento" class="form-control input-dark" title="Fecha Nacimiento">
+            <div id="err_modal_fecha_nacimiento" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+          <div class="col-md-6">
+            <select id="genero" class="form-select input-dark">
+              <option value="">Seleccione Género...</option>
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+            </select>
+            <div id="err_modal_genero" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+          <div class="col-md-6">
+            <select id="rol" class="form-select input-dark">
+              <option value="">Seleccione Rol...</option>
+              <option value="Cliente">Cliente</option>
+              <option value="Administrador">Administrador</option>
+            </select>
+            <div id="err_modal_rol" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+        </div>
+
+        <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2 mt-4" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-weight me-2" style="color: #ffd700;"></i> Física (Opcional)</h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <input type="number" id="peso" step="0.1" class="form-control input-dark" placeholder="Peso (kg) Ej: 75.5">
+            <div id="err_modal_peso" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+          <div class="col-md-6">
+            <input type="number" id="altura" step="0.01" class="form-control input-dark" placeholder="Altura (cm) Ej: 175">
+            <div id="err_modal_altura" class="text-danger small mt-1 fw-bold" style="color: #ff4d4f;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 p-4" style="background: rgba(0,0,0,0.5);">
+        <button class="btn fw-bold px-4" style="background: rgba(255,255,255,0.05); color: #fff; text-transform: uppercase; font-size: 12px; border: 1px solid rgba(255,255,255,0.1);" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-hero-gold px-4" onclick="crearUsuario()" style="transform: skewX(0);"><span><i class="fas fa-save me-1"></i> Guardar Atleta</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src='{% static "js/validation.js" %}'></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+(function () {
+    // ============================================================
+    //  VALIDACIONES DEL FORMULARIO PRINCIPAL (membresía)
+    // ============================================================
+    const fechaInicioInput = document.getElementById("id_fecha_inicio");
+    const fechaFinInput    = document.getElementById("id_fecha_fin");
+    const formMembresia    = document.getElementById("formMembresia");
+    const esEdicion        = {{ form.instance.pk|yesno:"true,false" }};
+
+    function setEstado(input, valido, mensaje) {
+        if (!input) return;
+        const errorDiv = document.getElementById("error_" + input.id);
+        input.classList.remove("is-valid", "is-invalid");
+        if (valido === null) { if (errorDiv) errorDiv.innerHTML = ""; return; }
+        if (valido) {
+            input.classList.add("is-valid");
+            if (errorDiv) errorDiv.innerHTML = "";
+        } else {
+            input.classList.add("is-invalid");
+            if (errorDiv) errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + mensaje;
+        }
+    }
+
+    function hoyStr() { return new Date().toLocaleDateString("en-CA"); }
+
+    function sumarDias(fechaStr, dias) {
+        const fecha = new Date(fechaStr + "T00:00:00");
+        fecha.setDate(fecha.getDate() + dias);
+        return fecha.toLocaleDateString("en-CA");
+    }
+
+    function validarFechaInicio() {
+        if (!fechaInicioInput || !fechaInicioInput.value) { setEstado(fechaInicioInput, null); return; }
+        if (!esEdicion) {
+            if (fechaInicioInput.value !== hoyStr()) {
+                setEstado(fechaInicioInput, false, "La fecha de inicio debe ser la actual");
+            } else {
+                setEstado(fechaInicioInput, true);
+            }
+        } else {
+            const [anioSel, mesSel] = fechaInicioInput.value.split("-");
+            const [anioHoy, mesHoy] = hoyStr().split("-");
+            if (anioSel !== anioHoy || mesSel !== mesHoy) {
+                setEstado(fechaInicioInput, false, "La fecha de inicio debe estar dentro del mes y año actual");
+            } else {
+                setEstado(fechaInicioInput, true);
+            }
+        }
+        if (fechaFinInput) { fechaFinInput.value = sumarDias(fechaInicioInput.value, 30); validarFechaFin(); }
+    }
+
+    function validarFechaFin() {
+        if (!fechaFinInput || !fechaFinInput.value || !fechaInicioInput || !fechaInicioInput.value) { setEstado(fechaFinInput, null); return; }
+        const inicio = fechaInicioInput.value, fin = fechaFinInput.value;
+        const hoy = hoyStr(), maxFin = sumarDias(inicio, 30);
+        if (fin === inicio)      setEstado(fechaFinInput, false, "La fecha de finalización no puede ser igual a la fecha de inicio");
+        else if (fin < inicio)   setEstado(fechaFinInput, false, "La fecha de finalización no puede ser anterior a la fecha de inicio");
+        else if (fin < hoy)      setEstado(fechaFinInput, false, "La fecha de finalización no puede ser anterior al día de hoy");
+        else if (fin > maxFin)   setEstado(fechaFinInput, false, "La fecha de finalización no puede ser mayor a un mes");
+        else if (fin < maxFin)   setEstado(fechaFinInput, false, "La fecha de finalización no puede ser menor a un mes");
+        else                     setEstado(fechaFinInput, true);
+    }
+
+    const selectsMembresia = formMembresia ? Array.from(formMembresia.querySelectorAll("select")) : [];
+    function validarSelect(select) {
+        if (!select) return;
+        if (!select.value) setEstado(select, false, "Debe seleccionar una opción");
+        else               setEstado(select, true);
+    }
+    selectsMembresia.forEach(s => s.addEventListener("change", () => validarSelect(s)));
+
+    if (fechaInicioInput) { fechaInicioInput.addEventListener("input", validarFechaInicio); fechaInicioInput.addEventListener("change", validarFechaInicio); }
+    if (fechaFinInput)    { fechaFinInput.addEventListener("input", validarFechaFin);   fechaFinInput.addEventListener("change", validarFechaFin); }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        validarFechaInicio(); validarFechaFin(); selectsMembresia.forEach(validarSelect);
+    });
+
+    if (formMembresia) {
+        formMembresia.addEventListener("submit", function (e) {
+            selectsMembresia.forEach(validarSelect);
+            if (formMembresia.querySelectorAll(".is-invalid").length > 0) {
+                e.preventDefault();
+                Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "warning", title: "Revisa el formulario", text: "Corrige los campos marcados en rojo antes de guardar.", confirmButtonColor: "#ffd700" });
+            }
+        });
+    }
+})();
+
+// ============================================================
+//  VALIDACIONES DEL MODAL (usuario nuevo) — portadas del wizard
+// ============================================================
+(function () {
+    const USERNAME_REGEX = /^[A-Za-z0-9]+$/;
+
+    function renderEstado(inputId, errorDivId, valido, mensaje) {
+        const input    = document.getElementById(inputId);
+        const errorDiv = document.getElementById(errorDivId);
+        if (!input) return;
+        input.classList.remove("is-valid", "is-invalid");
+        if (valido === null) { if (errorDiv) errorDiv.innerHTML = ""; return; }
+        if (valido) {
+            input.classList.add("is-valid");
+            if (errorDiv) errorDiv.innerHTML = "";
+        } else {
+            input.classList.add("is-invalid");
+            if (errorDiv) errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${mensaje}`;
+        }
+    }
+
+    function evaluarPassword(password) {
+        return {
+            len:    password.length >= 8,
+            upper:  /[A-Z]/.test(password),
+            number: /\d/.test(password),
+            symbol: /[^\w\s]/.test(password)
+        };
+    }
+
+    function validarBackend(inputId, errorDivId, campo, valor) {
+        if (!valor.trim()) return;
+        renderEstado(inputId, errorDivId, null, "");
+        fetch(`/gimnasio/validar-atleta/?campo=${campo}&valor=${encodeURIComponent(valor)}`)
+            .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+            .then(data => {
+                if (data.existe) renderEstado(inputId, errorDivId, false, data.mensaje || `Este ${campo} ya se encuentra registrado.`);
+                else             renderEstado(inputId, errorDivId, true, "");
+            })
+            .catch(() => renderEstado(inputId, errorDivId, true, ""));
+    }
+
+    function on(id, evento, handler) {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener(evento, handler);
+    }
+
+    // --- USERNAME ---
+    on("username", "input", function () {
+        const limpio = this.value.replace(/[^A-Za-z0-9]/g, "");
+        if (limpio !== this.value) this.value = limpio;
+        if (!this.value.trim())         { renderEstado("username", "err_modal_username", false, "El nombre de usuario es requerido."); return; }
+        if (this.value.length < 4)      { renderEstado("username", "err_modal_username", false, "Debe tener al menos 4 caracteres."); return; }
+        if (this.value.length > 30)     { renderEstado("username", "err_modal_username", false, "No puede tener más de 30 caracteres."); return; }
+        if (!USERNAME_REGEX.test(this.value)) { renderEstado("username", "err_modal_username", false, "Solo letras y números, sin espacios ni símbolos."); return; }
+        validarBackend("username", "err_modal_username", "username", this.value);
+    });
+
+    // --- PASSWORD + barra de fortaleza ---
+    on("password", "input", function () {
+        const valor  = this.value;
+        const reglas = evaluarPassword(valor);
+        const wrap   = document.getElementById("passwordStrengthWrap");
+        if (wrap) wrap.style.display = valor ? "block" : "none";
+
+        const marcar = (id, ok) => {
+            const li = document.getElementById(id);
+            if (!li) return;
+            li.classList.toggle("ok", ok);
+            const icon = li.querySelector("i");
+            if (icon) icon.className = ok ? "fas fa-check-circle" : "fas fa-circle-notch";
+        };
+        marcar("ruleLen",    reglas.len);
+        marcar("ruleUpper",  reglas.upper);
+        marcar("ruleNumber", reglas.number);
+        marcar("ruleSymbol", reglas.symbol);
+
+        const cumplidas = Object.values(reglas).filter(Boolean).length;
+        const fill  = document.getElementById("passwordStrengthFill");
+        const label = document.getElementById("passwordStrengthLabel");
+        if (fill && label) {
+            fill.style.width = (cumplidas / 4 * 100) + "%";
+            if (cumplidas <= 1)      { fill.style.background = "#ff4d4f"; label.textContent = "Muy débil";  label.style.color = "#ff4d4f"; }
+            else if (cumplidas === 2){ fill.style.background = "#ff9f43"; label.textContent = "Débil";      label.style.color = "#ff9f43"; }
+            else if (cumplidas === 3){ fill.style.background = "#f1c40f"; label.textContent = "Aceptable";  label.style.color = "#f1c40f"; }
+            else                     { fill.style.background = "#2ecc71"; label.textContent = "Fuerte";     label.style.color = "#2ecc71"; }
+        }
+
+        if (!valor.trim())    { renderEstado("password", "err_modal_password", false, "La contraseña es requerida."); return; }
+        if (!reglas.len)      { renderEstado("password", "err_modal_password", false, "Debe tener al menos 8 caracteres."); return; }
+        if (!reglas.upper)    { renderEstado("password", "err_modal_password", false, "Debe contener al menos una mayúscula."); return; }
+        if (!reglas.number)   { renderEstado("password", "err_modal_password", false, "Debe contener al menos un número."); return; }
+        if (!reglas.symbol)   { renderEstado("password", "err_modal_password", false, "Debe contener al menos un símbolo (!@#$%...)."); return; }
+        renderEstado("password", "err_modal_password", true, "");
+    });
+
+    // --- DOCUMENTO ---
+    on("documento", "input", function () {
+        const limpio = this.value.replace(/\D/g, "");
+        if (limpio !== this.value) this.value = limpio;
+        if (!this.value.trim())                              { renderEstado("documento", "err_modal_documento", false, "El documento es requerido."); return; }
+        if (!/^\d+$/.test(this.value))                      { renderEstado("documento", "err_modal_documento", false, "Solo se admiten números."); return; }
+        if (this.value.length < 7 || this.value.length > 10){ renderEstado("documento", "err_modal_documento", false, "Debe tener entre 7 y 10 dígitos."); return; }
+        validarBackend("documento", "err_modal_documento", "documento", this.value);
+    });
+
+    // --- CORREO ---
+    on("correo", "input", function () {
+        if (!this.value.trim()) { renderEstado("correo", "err_modal_correo", null, ""); return; }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(this.value)) { renderEstado("correo", "err_modal_correo", false, "Formato de correo inválido."); return; }
+        validarBackend("correo", "err_modal_correo", "correo", this.value);
+    });
+
+    // --- NOMBRE ---
+    on("nombre", "input", function () {
+        const valor = this.value.trim();
+        if (!valor)                                          { renderEstado("nombre", "err_modal_nombre", false, "El nombre es requerido."); return; }
+        if (!/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/.test(valor))     { renderEstado("nombre", "err_modal_nombre", false, "Solo se permiten letras y espacios."); return; }
+        if (valor.length < 2)                               { renderEstado("nombre", "err_modal_nombre", false, "El nombre es demasiado corto."); return; }
+        renderEstado("nombre", "err_modal_nombre", true, "");
+    });
+
+    // --- APELLIDO ---
+    on("apellido", "input", function () {
+        const valor = this.value.trim();
+        if (!valor)                                          { renderEstado("apellido", "err_modal_apellido", null, ""); return; }
+        if (!/^[A-Za-záéíóúÁÉÍÓÚñÑ\s]+$/.test(valor))     { renderEstado("apellido", "err_modal_apellido", false, "Solo se permiten letras y espacios."); return; }
+        if (valor.length < 2)                               { renderEstado("apellido", "err_modal_apellido", false, "El apellido es demasiado corto."); return; }
+        renderEstado("apellido", "err_modal_apellido", true, "");
+    });
+
+    // --- TELÉFONO ---
+    on("telefono", "input", function () {
+        const limpio = this.value.replace(/(?!^\+)[^\d]/g, "");
+        if (limpio !== this.value) this.value = limpio;
+        if (!this.value.trim())              { renderEstado("telefono", "err_modal_telefono", null, ""); return; }
+        if (!/^\+?\d{7,15}$/.test(this.value)){ renderEstado("telefono", "err_modal_telefono", false, "Número de teléfono inválido."); return; }
+        renderEstado("telefono", "err_modal_telefono", true, "");
+    });
+
+    // --- FECHA NACIMIENTO ---
+    on("fecha_nacimiento", "change", function () {
+        if (!this.value) { renderEstado("fecha_nacimiento", "err_modal_fecha_nacimiento", null, ""); return; }
+        const hoyStr = new Date().toLocaleDateString("en-CA");
+        if (this.value >= hoyStr) { renderEstado("fecha_nacimiento", "err_modal_fecha_nacimiento", false, "La fecha no puede ser hoy ni futura."); return; }
+        const edad = new Date().getFullYear() - new Date(this.value).getFullYear();
+        if (edad < 12 || edad > 90) { renderEstado("fecha_nacimiento", "err_modal_fecha_nacimiento", false, "Edad permitida entre 12 y 90 años."); return; }
+        renderEstado("fecha_nacimiento", "err_modal_fecha_nacimiento", true, "");
+    });
+
+    // --- GÉNERO ---
+    on("genero", "change", function () {
+        renderEstado("genero", "err_modal_genero", this.value ? true : null, "");
+    });
+
+    // --- ROL ---
+    on("rol", "change", function () {
+        renderEstado("rol", "err_modal_rol", this.value ? true : null, "");
+    });
+
+    // --- PESO (opcional) ---
+    on("peso", "input", function () {
+            if (!this.value.trim()) { renderEstado("peso", "err_modal_peso", null, ""); return; }
+        const p = parseFloat(this.value);
+        if (isNaN(p) || p < 30 || p > 150) { renderEstado("peso", "err_modal_peso", false, "El peso debe estar entre 30 kg y 150 kg."); return; }
+        renderEstado("peso", "err_modal_peso", true, "");
+    });
+
+    // --- ALTURA (opcional) ---
+    on("altura", "input", function () {
+        if (!this.value.trim()) { renderEstado("altura", "err_modal_altura", null, ""); return; }
+        const h = parseFloat(this.value);
+        if (isNaN(h) || h < 100 || h > 230) { renderEstado("altura", "err_modal_altura", false, "La altura debe estar entre 100 cm y 230 cm."); return; }
+        renderEstado("altura", "err_modal_altura", true, "");
+    });
+
+    // --- Toggle contraseña ---
+    const passwordInput    = document.getElementById("password");
+    const btnTogglePassword = document.getElementById("btnTogglePassword");
+    const iconPassword      = document.getElementById("iconPassword");
+    if (btnTogglePassword) {
+        btnTogglePassword.addEventListener("click", function () {
+            const isPassword = passwordInput.type === "password";
+            passwordInput.type = isPassword ? "text" : "password";
+            iconPassword.className  = isPassword ? "fas fa-eye-slash" : "fas fa-eye";
+            iconPassword.style.color = isPassword ? "#ffd700" : "#eeeef0";
+        });
+    }
+
+    // --- Validación completa antes de llamar al backend ---
+    function validarTodoModal() {
+        // Dispara input/change en cada campo para que los errores queden visibles
+        ["username", "password", "documento", "correo", "nombre", "apellido", "telefono"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.dispatchEvent(new Event("input"));
+        });
+        ["fecha_nacimiento", "genero", "rol"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.dispatchEvent(new Event("change"));
+        });
+        ["peso", "altura"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.value.trim()) el.dispatchEvent(new Event("input"));
+        });
+    }
+
+    // --- crearUsuario ---
+    window.crearUsuario = function () {
+        validarTodoModal();
+
+        // Dar un tick para que las validaciones async (backend) completen si ya tenían resultado
+        setTimeout(function () {
+            const modal = document.getElementById("modalUsuario");
+            const tieneErrores = modal.querySelectorAll(".is-invalid").length > 0;
+            const obligatoriosVacios = ["username", "password", "documento", "nombre"].some(id => {
+                const el = document.getElementById(id);
+                return el && !el.value.trim();
+            });
+
+            if (tieneErrores || obligatoriosVacios) {
+                Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "warning", title: "Faltan Datos", text: "Por favor completa y corrige los campos obligatorios.", confirmButtonColor: "#ffd700" });
+                return;
+            }
+
+            const data = {
+                username:         document.getElementById("username").value,
+                password:         document.getElementById("password").value,
+                documento:        document.getElementById("documento").value,
+                correo:           document.getElementById("correo").value,
+                nombre:           document.getElementById("nombre").value,
+                apellido:         document.getElementById("apellido").value,
+                telefono:         document.getElementById("telefono").value,
+                fecha_nacimiento: document.getElementById("fecha_nacimiento").value,
+                genero:           document.getElementById("genero").value,
+                peso:             document.getElementById("peso").value,
+                altura:           document.getElementById("altura").value,
+                rol:              document.getElementById("rol").value,
+            };
+
+            fetch("{% url 'gimnasio:crear_usuario_ajax' %}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": "{{csrf_token}}" },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "error", title: "Error", text: data.error, customClass: { popup: 'border border-danger' } });
+                    return;
+                }
+                let select = document.getElementById("id_fk_usuario");
+                select.add(new Option(data.nombre, data.id, true, true));
+                bootstrap.Modal.getInstance(document.getElementById('modalUsuario')).hide();
+                Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "success", title: "Atleta Creado", text: "El registro fue exitoso.", confirmButtonColor: "#ffd700", customClass: { popup: 'border border-warning' } });
+            })
+            .catch(() => {
+                Swal.fire({ background: "rgba(10,10,10,0.95)", color: "#fff", icon: "error", title: "Error de Servidor", text: "No se pudo comunicar con el sistema." });
+            });
+        }, 100);
+    };
+})();
+</script>
+{% endblock %}

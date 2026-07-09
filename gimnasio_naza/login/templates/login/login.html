@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+{% load static %}
+{% load widget_tweaks %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="form-section">
+
+            <!-- TITULOS -->
+            <h2>Bienvenido</h2>
+            <h1>Iniciar Sesión</h1>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- USUARIO -->
+                {{ form.username|add_class:"form-control"|attr:'autocomplete:off'|attr:'placeholder:Usuario' }}
+
+                <!-- PASSWORD -->
+                <div class="password-container">
+
+                    {{ form.password|add_class:"form-control"|attr:'autocomplete:off'|attr:'placeholder:Contraseña'|attr:'id:passwordLogin' }}
+
+                    <i class="fas fa-eye toggle-password"
+                        onclick="togglePassword('passwordLogin', this)">
+                    </i>
+
+                </div>
+
+                <!-- BOTON -->
+                <button type="submit" class="login-btn">
+                    Entrar
+                </button>
+
+                <!-- RECUPERAR CONTRASEÑA -->
+                <p class="reset_password">
+                    <a href="{% url 'login:password_reset' %}">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </p>
+
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        function togglePassword(id, icon) {
+
+            const input = document.getElementById(id);
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.replace("fa-eye", "fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.replace("fa-eye-slash", "fa-eye");
+            }
+        }
+    </script>
+
+    <!-- SWEET ALERT -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        {% if form.errors %}
+        var errors = '';
+
+        {% for field in form %}
+        {% for error in field.errors %}
+        errors += '{{ error }}\n';
+        {% endfor %}
+        {% endfor %}
+
+        {% for error in form.non_field_errors %}
+        errors += '{{ error }}\n';
+        {% endfor %}
+
+        Swal.fire({
+            title: 'Error!',
+            text: errors,
+            icon: 'error'
+        });
+
+        {% endif %}
+    </script>
+
+</body>
+
+</html>

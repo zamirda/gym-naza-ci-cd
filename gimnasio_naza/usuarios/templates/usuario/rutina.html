@@ -1,0 +1,150 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /*  animaciones y estilos base  */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    .stagger-3 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.3s; opacity: 0; }
+
+    @keyframes revealBounce { 
+        0% { opacity: 0; transform: translateY(30px) scale(0.97); } 
+        100% { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+
+    .card-dash { 
+        position: relative; background-color: var(--bg-surface); 
+        backdrop-filter: var(--card-backdrop); -webkit-backdrop-filter: var(--card-backdrop);
+        border-radius: var(--border-radius-card); padding: 25px; 
+        box-shadow: var(--shadow-main); border: var(--card-border); 
+        transition: var(--transition); overflow: hidden; height: 100%;
+        display: flex; flex-direction: column; justify-content: space-between;
+    }
+    
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        transform: skewX(-15deg); box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 0;
+    }
+
+    .card-dash.border-primary::before { background: #0d6efd; box-shadow: 0 0 15px rgba(13, 110, 253, 0.4); }
+    .card-dash.border-warning::before { background: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+    .card-dash.border-success::before { background: #28a745; box-shadow: 0 0 15px rgba(40, 167, 69, 0.4); }
+
+    .card-dash:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
+
+    .card-label { font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; position: relative; z-index: 2;}
+    .card-value { font-size: 28px; font-weight: 900; color: #fff; position: relative; z-index: 2; line-height: 1.2;}
+    .card-desc { font-size: 12px; color: var(--text-muted); font-weight: 600; position: relative; z-index: 2;}
+    .card-icon-bg { position: absolute; right: 15px; bottom: 15px; font-size: 40px; opacity: 0.1; z-index: 1; }
+
+    .table-neon { width: 100%; color: #fff; border-collapse: separate; border-spacing: 0; }
+    .table-neon th { background: rgba(0,0,0,0.4); padding: 15px; font-size: 12px; text-transform: uppercase; color: var(--primary-blue); border-bottom: 1px solid rgba(255,255,255,0.1); width: 30%;}
+    .table-neon td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+
+    .alert-dark-neon { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid var(--primary-blue); color: #fff; border-radius: 8px; padding: 15px; }
+</style>
+
+<div class="container-fluid mt-2">
+  <div class="row mb-4 stagger-1">
+    <div class="col-sm-12">
+      <h1 style="color: #fff; font-weight: 900; text-transform: uppercase; font-size: 28px;">
+        <i class="fas fa-dumbbell mr-2" style="color: var(--primary-blue);"></i> Mi Entrenamiento
+      </h1>
+      <p style="color: var(--text-muted); font-weight: 600;">Estructura y cargas de trabajo sugeridas</p>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4 stagger-2">
+    <!-- Enfoque -->
+    <div class="col-lg-4 col-12 mb-3">
+      <div class="card-dash border-primary">
+        <div>
+          <div class="card-label text-primary">Enfoque Principal</div>
+          <div class="card-value" style="font-size: 22px; padding-top: 5px;">{{ rutina.last.get_tipo_rutina_display|default:"Sin asignar" }}</div>
+        </div>
+        <div class="card-desc mt-2">Tipo de Rutina</div>
+        <i class="fas fa-heartbeat card-icon-bg text-primary"></i>
+      </div>
+    </div>
+
+    <!-- Frecuencia -->
+    <div class="col-lg-4 col-6 mb-3">
+      <div class="card-dash border-warning">
+        <div>
+          <div class="card-label text-warning">Frecuencia</div>
+          <div class="card-value">
+            {{ rutina.last.dias_disponibles|default:"0" }}
+            <span style="font-size: 14px; font-weight: normal;">días / sem</span>
+          </div>
+        </div>
+        <div class="card-desc mt-2">Volumen Semanal</div>
+        <i class="fas fa-calendar-alt card-icon-bg text-warning"></i>
+      </div>
+    </div>
+
+    <!-- Segmento -->
+    <div class="col-lg-4 col-6 mb-3">
+      <div class="card-dash border-success">
+        <div>
+          <div class="card-label text-success">Segmento de Trabajo</div>
+          <div class="card-value" style="font-size: 22px; padding-top: 5px;">{{ rutina.last.get_distribucion_rutina_display|default:"Sin asignar" }}</div>
+        </div>
+        <div class="card-desc mt-2">Distribución del Cuerpo</div>
+        <i class="fas fa-child card-icon-bg text-success"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="row stagger-3">
+      <div class="col-12">
+        <div class="card-dash mb-4">
+            <h4 style="color: #fff; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 20px;">
+                <i class="fas fa-clipboard-list text-primary mr-2"></i> Detalles del Plan de Entrenamiento
+            </h4>
+
+            {% if rutina %}
+            <div class="alert-dark-neon mb-4">
+                <i class="fas fa-info-circle mr-2 text-warning"></i> Tu rutina orientada a <strong style="color: var(--primary-blue);">{{ rutina.last.get_tipo_rutina_display|upper }}</strong> con enfoque en el segmento <strong style="color: #ffd700;">{{ rutina.last.get_distribucion_rutina_display|upper }}</strong> ha sido estructurada considerando tu último estado físico.
+            </div>
+
+            <div class="table-responsive">
+                <table class="table-neon">
+                    <tr>
+                    <th>Atleta</th>
+                    <td style="font-weight: 700;">{{ rutina.last.fk_imc.fk_Nutricion.fk_Usuario.nombre_usuario }} {{ rutina.last.fk_imc.fk_Nutricion.fk_Usuario.apellido_usuario }}</td>
+                    </tr>
+                    <tr>
+                    <th>Documento de Identidad</th>
+                    <td style="color: var(--text-muted);">{{ rutina.last.fk_imc.fk_Nutricion.fk_Usuario.documento }}</td>
+                    </tr>
+                    <tr>
+                    <th>Último IMC Evaluado</th>
+                    <td>
+                        <span style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 4px; font-weight: 800;">
+                        <span style="color: var(--primary-blue);">{{ rutina.last.fk_imc.imc }}</span> 
+                        <small style="color: var(--text-muted); text-transform: uppercase;">({{ rutina.last.fk_imc.estado_imc }})</small>
+                        </span>
+                    </td>
+                    </tr>
+                    <tr>
+                    <th>Peso de Control de Origen</th>
+                    <td style="font-weight: 700;">{{ rutina.last.fk_imc.peso_cliente }} <small>Kg</small></td>
+                    </tr>
+                    <tr>
+                    <th>Fecha de Control Físico</th>
+                    <td style="color: var(--text-muted);">{{ rutina.last.fk_imc.fecha_control }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            {% else %}
+            <div class="alert-dark-neon" style="border-left-color: #ff4d4f;">
+                <i class="fas fa-exclamation-triangle mr-2 text-danger"></i> Actualmente no tienes una rutina de entrenamiento asignada a tus controles físicos. Visita el Dashboard para generar un plan integral con IA.
+            </div>
+            {% endif %}
+        </div>
+      </div>
+  </div>
+</div>
+{% endblock %}

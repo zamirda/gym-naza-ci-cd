@@ -1,0 +1,273 @@
+{% extends "body.html" %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* ANIMACIONES */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* =======================================================
+       TARJETA DASHBOARD: FIX FRANJA Y FULL RESPONSIVE
+       ======================================================= */
+    .card-dash { 
+        position: relative; 
+        background: rgba(10, 10, 10, 0.95); 
+        backdrop-filter: blur(10px); 
+        border-radius: 15px; 
+        padding: 20px; /* Padding base móvil */
+        box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); 
+        margin-bottom: 25px;
+        overflow: hidden; /* FIX: Corta la franja para que no rompa el ancho en móviles */
+        width: 100%;
+    }
+    @media (min-width: 768px) {
+        .card-dash { padding: 25px 25px 25px 40px; }
+    }
+    
+    /* FIX: Capa de protección. Todo el contenido va aquí dentro */
+    .card-dash-content {
+        position: relative; 
+        z-index: 10; /* Texto y tablas siempre arriba */
+        width: 100%;
+    }
+
+    /* ENCABEZADOS Y BOTONES RESPONSIVOS */
+    .header-mobile-wrap { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+    @media (min-width: 992px) { .header-mobile-wrap { flex-direction: row; justify-content: space-between; align-items: center; } }
+    
+    .btn-mobile-wrap { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
+    .btn-mobile-wrap > * { flex: 1 1 auto; justify-content: center; text-align: center; }
+
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; text-decoration: none;}
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+
+    .btn-hero-outline { background: rgba(255,215,0,0.05); color: #ffd700; border: 1px solid #ffd700; font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; border-radius: 0;}
+    .btn-hero-outline span { transform: skewX(10deg); display: block; }
+    .btn-hero-outline:hover { background: #ffd700; color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+
+    /* TABLA DARK GOLD ESTRICTO */
+    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { color: #ffffff !important; font-weight: 600; font-size: 12px; text-transform: uppercase; margin-bottom: 10px;}
+    .dataTables_wrapper .dataTables_filter input { background: #000 !important; border: 1px solid rgba(255,215,0,0.3) !important; color: #fff !important; border-radius: 5px; padding: 4px 10px;}
+    .dataTables_wrapper .dataTables_filter input:focus { border-color: #ffd700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.3) !important; outline: none;}
+    
+    table.dataTable { width: 100% !important; border-collapse: separate !important; border-spacing: 0 5px !important; margin-top: 15px !important; border: none !important;}
+    table.dataTable thead th { background: #000 !important; color: #ffd700 !important; border-bottom: 2px solid #ffd700 !important; border-top: none !important; padding: 12px !important; text-transform: uppercase; font-size: 11px; font-weight: 900; letter-spacing: 1px; white-space: nowrap;}
+    table.dataTable tbody tr { background: rgba(0,0,0,0.5) !important; transition: 0.3s; }
+    table.dataTable tbody tr:hover { background-color: rgba(255, 215, 0, 0.05) !important; border-left: 3px solid #ffd700 !important;}
+    table.dataTable tbody td { padding: 12px !important; border: none !important; vertical-align: middle; color: #ffffff !important; font-size: 13px; white-space: nowrap;} /* Blanco Estricto */
+    
+    .page-item.active .page-link { background-color: #ffd700 !important; border-color: #ffd700 !important; color: #000 !important; font-weight: 900; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+    .page-item .page-link { background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #fff;}
+    .page-item .page-link:hover { background-color: rgba(255,215,0,0.2); color: #ffd700; }
+
+    /* MODAL QR */
+    .modal-dark .modal-content { background: #0a0a0a; border: 1px solid #ffd700; color: #fff; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+    /* 1. Evita que los menús se oculten tras el bloque de la tarjeta de abajo */
+.header-mobile-wrap {
+    position: relative;
+    z-index: 999;
+}
+
+/* 2. Corrige el comportamiento del contenedor del dropdown dentro de flexbox */
+.btn-mobile-wrap .dropdown {
+    position: relative;
+}
+
+/* 3. Fuerza a que la lista flote por encima del layout sin ser recortada */
+.btn-mobile-wrap .dropdown-menu {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    z-index: 99999 !important;
+    transform: none !important; /* Desactiva cálculos erráticos en móviles */
+}
+</style>
+
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/css/responsive.bootstrap4.min.css' %}">
+
+<div class="container-fluid mt-4">
+    <div class="header-mobile-wrap stagger-1">
+        <h3 class="text-white fw-bold m-0 text-uppercase" style="font-size: 1.4rem;">
+            <i class="fas fa-list-check" style="color: #ffd700; margin-right: 10px;"></i> Registro de Asistencias
+        </h3>
+        
+        <div class="btn-mobile-wrap">
+            <button type="button" class="btn-hero-outline" data-bs-toggle="modal" data-bs-target="#modalQR">
+                <span><i class="fas fa-qrcode"></i> Escanear QR</span>
+            </button>
+            <div class="dropdown" style="position: relative; z-index: 99999 !important;" id="export-dropdown">
+                <button class="btn-hero-outline dropdown-toggle" type="button" data-bs-toggle="dropdown" style="transform: skewX(0); border-radius: 4px;">
+                    <i class="fas fa-file-export me-2"></i> Exportar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark bg-dark border-warning w-100 text-center mt-2" style="z-index: 999999 !important;">
+                    <li><a class="dropdown-item fw-bold" href="{% url 'gimnasio:exportar_asistencia_excel' %}"><i class="fas fa-file-excel me-2 text-success"></i> Excel</a></li>
+                    <li><a class="dropdown-item fw-bold" href="{% url 'gimnasio:exportar_asistencia_pdf' %}"><i class="fas fa-file-pdf me-2 text-danger"></i> PDF</a></li>
+                </ul>
+            </div>
+            <a href="{% url 'gimnasio:crear_asistencia' %}" class="btn-hero-gold">
+                <span><i class="fas fa-plus"></i> Nueva Asistencía</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="card-dash stagger-2">
+        <div class="card-dash-content">
+            
+            <div class="row g-2 mb-4 align-items-end" style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <div class="col-12 col-md-4">
+                    <label style="color: #a0a0a0; font-size: 10px; font-weight: 800; text-transform: uppercase;">Fecha Desde:</label>
+                    <input type="date" id="min-date" class="form-control" style="background: #000; border: 1px solid rgba(255,215,0,0.3); color: #fff;">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label style="color: #a0a0a0; font-size: 10px; font-weight: 800; text-transform: uppercase;">Fecha Hasta:</label>
+                    <input type="date" id="max-date" class="form-control" style="background: #000; border: 1px solid rgba(255,215,0,0.3); color: #fff;">
+                </div>
+                <div class="col-12 col-md-4">
+                    <button id="clear-dates" class="btn w-100" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-weight: 800; text-transform: uppercase;">
+                        <i class="fas fa-eraser me-2" style="color: #ffd700;"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="tabla-asistencias" class="table display nowrap">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Atleta (Membresía)</th>
+                            <th>Documento</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in object_list %}
+                        <tr>
+                            <td class="fw-bold" style="color: #6c757d;">#{{ a.id }}</td>
+                            <td style="color: #ffffff; font-weight: bold;">{{ a.fecha_asistencia|date:"Y-m-d" }}</td>
+                            <td style="color: #ffffff; font-weight: bold;">{{ a.hora_asistencia|time:"H:i" }}</td>
+                            <td class="text-uppercase" style="color: #ffffff; font-weight: 900;">
+                                {{ a.fk_membresia.fk_usuario.nombre_usuario }} 
+                                <span style="background: rgba(255,215,0,0.1); color: #ffd700; padding: 2px 6px; border-radius: 4px; font-size: 9px; margin-left: 5px;">MEM. ID: {{ a.fk_membresia.id }}</span>
+                            </td>
+                            <td style="color: #ffffff; font-weight: bold;">{{ a.fk_membresia.fk_usuario.documento }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'gimnasio:editar_asistencia' a.id %}" class="btn btn-sm" style="background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid #ffd700; border-radius: 4px; padding: 6px 12px; margin-right: 5px;"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'gimnasio:eliminar_asistencia' a.id %}" class="btn btn-sm" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 6px 12px;"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade modal-dark" id="modalQR" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0" style="background: #000; border-bottom: 1px solid rgba(255,215,0,0.2)!important;">
+        <h5 class="fw-bold text-uppercase m-0" style="color:#ffd700; font-size:16px; letter-spacing:1px;">
+          <i class="fas fa-qrcode me-2"></i> Escáner de Acceso
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="qr-reader" style="width:100%;"></div>
+        <div id="resultado" class="mt-3 text-center fw-bold" style="color:#ffd700;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'lib/datatables-1.10.20/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    let table = $('#tabla-asistencias').DataTable({
+        responsive: true,
+        autoWidth: false,
+        language: { url: "{% static 'lib/datatables-1.10.20/spanish.txt' %}" },
+        columnDefs: [{ orderable: false, targets: 5 }]
+    });
+
+    $('#min-date, #max-date').on('change', function() { table.draw(); });
+    $('#clear-dates').on('click', function() { $('#min-date, #max-date').val(''); table.draw(); });
+
+    // Fix dropdown z-index
+    $('#export-dropdown').on('show.bs.dropdown', function() {
+        $(this).css('z-index', '999999');
+        $('.dropdown-menu').css('z-index', '999999');
+    });
+
+    {% if messages %}
+        {% for message in messages %}
+            Swal.fire({
+                title: "Notificación", text: "{{ message }}", icon: "success",
+                background: "rgba(10,10,10,0.95)", color: "#fff", confirmButtonColor: "#ffd700",
+                customClass: { popup: 'border border-warning' }
+            });
+        {% endfor %}
+    {% endif %}
+
+    // ---------- ESCÁNER QR ----------
+    let lista = [];
+    let html5QrcodeScanner = null;
+
+    function onScanSuccess(decodedText, decodedResult) {
+        if (lista.includes(decodedText)) return;
+        lista.push(decodedText);
+
+        fetch('/gimnasio/registrar_asistencia_qr/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ 'codigo': decodedText })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('resultado').innerText = data.mensaje;
+        })
+        .catch(() => {
+            document.getElementById('resultado').innerText = 'Error de conexión al registrar asistencia';
+        });
+    }
+
+    const modalQR = document.getElementById('modalQR');
+
+    modalQR.addEventListener('shown.bs.modal', function () {
+        lista = []; // reinicia la lista de escaneados al abrir
+        document.getElementById('resultado').innerText = '';
+        if (!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5QrcodeScanner('qr-reader', { fps: 10, qrbox: 250 });
+        }
+        html5QrcodeScanner.render(onScanSuccess);
+    });
+
+    modalQR.addEventListener('hidden.bs.modal', function () {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear()
+                .then(() => { html5QrcodeScanner = null; })
+                .catch((err) => console.error('Error al detener el escáner', err));
+        }
+        document.getElementById('resultado').innerText = '';
+    });
+});
+</script>
+{% endblock %}

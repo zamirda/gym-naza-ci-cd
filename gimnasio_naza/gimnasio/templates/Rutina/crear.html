@@ -1,0 +1,315 @@
+{% extends 'body.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETAS ESTILO DASHBOARD */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); transition: 0.3s; overflow: hidden; margin-bottom: 25px;
+    }
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: #ffd700; transform: skewX(-15deg); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); z-index: 0;
+    }
+
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;}
+    .header-neon h3 { margin: 0; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; color: #fff; letter-spacing: 1px;}
+    .header-neon h3 i { color: #ffd700; }
+
+    /* INPUTS OSCUROS */
+    .form-label-custom { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #a0a0a0; font-weight: 800; margin-bottom: 8px; position: relative; z-index: 2;}
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; transition: 0.3s; padding: 12px 15px; font-family: 'Poppins', sans-serif; position: relative; z-index: 2;}
+    .input-dark:focus { background: #000 !important; border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important; outline: none;}
+    .input-dark::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer;}
+    
+    /* BOTONES HERO SESGADOS */
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 12px 25px; font-size: 13px; text-transform: uppercase; box-shadow: 0 0 15px rgba(255,215,0,0.3); transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); position: relative; z-index: 2; text-decoration: none; cursor: pointer; }
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+
+    /* MODAL WIZARD OSCURO */
+    .modal-dark .modal-content { background: #0a0a0a; border: 1px solid #ffd700; color: #fff; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+    .wizard-step { font-weight: 900; text-transform: uppercase; padding: 8px 15px; letter-spacing: 1px; font-size: 10px; border-radius: 30px;}
+    .wizard-step.active { background: #ffd700; color: #000; box-shadow: 0 0 15px rgba(255,215,0,0.5); border: 1px solid #ffd700;}
+    .wizard-step.inactive { background: rgba(255,255,255,0.05); color: #6c757d; border: 1px solid rgba(255,255,255,0.1);}
+
+    .swal2-container { z-index: 20000 !important; }
+</style>
+
+<div class="container mt-4" style="max-width: 800px;">
+    <form method="post" action="." class="stagger-1">
+        {% csrf_token %}
+        <div class="card-dash">
+            <div class="header-neon">
+                <h3><i class="fas fa-dumbbell"></i> {{ titulo }}</h3>
+            </div>
+
+            <div class="card-body p-4 p-md-5" style="position: relative; z-index: 2;">
+                {% if form.errors %}
+                <div class="alert mb-4" style="background: rgba(255,77,79,0.1); border: 1px solid #ff4d4f; color: #fff; border-radius: 8px;">
+                    <h6 class="fw-bold" style="color: #ff4d4f;"><i class="fas fa-ban me-2"></i> Verifica los campos</h6>
+                    <ul class="mb-0">
+                        {% for field in form %} {% for error in field.errors %} <li style="font-size: 13px;">{{ field.label }}: {{ error }}</li> {% endfor %} {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% for field in form.visible_fields %}
+                <div class="form-group mb-4 stagger-2">
+                    <label class="form-label-custom">
+                        {% if field.name == 'fk_imc' %} Control Físico (IMC) del Atleta
+                        {% else %} {{ field.label }} {% endif %}
+                    </label>
+
+                    {% if field.name == 'fk_imc' %}
+                    <div class="d-flex align-items-center gap-2">
+                        {{ field|add_class:'form-control input-dark' }}
+                        <button type="button" class="btn" style="background: rgba(255, 215, 0, 0.1); color: #ffd700; border: 1px solid #ffd700; padding: 12px 18px; border-radius: 6px; transition: 0.3s;" onclick="abrirWizard()" title="Crear Plan Completo (Usuario + Nutrición + IMC)">
+                            <i class="fas fa-magic"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                        {{ field|add_class:'form-control input-dark' }}
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <div class="text-danger small mt-2 fw-bold" style="color: #ff4d4f !important;"><i class="fas fa-exclamation-triangle"></i> {{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="card-footer border-0 p-4 p-md-5 pt-0 d-flex gap-3" style="background: transparent; position: relative; z-index: 2;">
+                <button type="submit" class="btn-hero-gold">
+                    <span><i class="fas fa-save"></i> Guardar Rutina</span>
+                </button>
+                <a href="{% url 'gimnasio:listar_rutina' %}" class="btn-hero-outline" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); position: relative; z-index: 2; text-decoration: none;">
+                    <span style="transform: skewX(10deg);"><i class="fas fa-times me-2"></i> Cancelar</span>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ================= MODAL WIZARD COMPLETO OSCURO ================= -->
+<div class="modal fade modal-dark" id="modalWizard" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered"> 
+    <div class="modal-content">
+      <div class="modal-header border-0" style="background: #000; border-bottom: 1px solid rgba(255,215,0,0.2) !important; padding: 20px 30px;">
+        <h5 class="fw-bold text-uppercase m-0" style="color: #ffd700; font-size: 16px; letter-spacing: 1px;"><i class="fas fa-boxes me-2"></i> Creador Integral de Perfil</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-4 p-md-5">
+        {% csrf_token %}
+        <div class="d-flex justify-content-center align-items-center mb-5 gap-2">
+          <span class="wizard-step active" id="badge1">1. Atleta</span>
+          <i class="fas fa-arrow-right" style="color: #444; font-size: 10px;"></i>
+          <span class="wizard-step inactive" id="badge2">2. Nutrición</span>
+          <i class="fas fa-arrow-right" style="color: #444; font-size: 10px;"></i>
+          <span class="wizard-step inactive" id="badge3">3. Físico (IMC)</span>
+        </div>
+
+        <!-- PASO 1 (Usuario) -->
+        <div id="paso1">
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-lock me-2" style="color: #ffd700;"></i> Accesos</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6"><input type="text" id="username" name="fake_user" class="form-control input-dark" placeholder="Usuario (Login)"><small class="text-danger fw-bold" id="error_username" style="color: #ff4d4f !important;"></small></div>
+            <div class="col-md-6">
+              <div class="input-group">
+                <input type="password" id="password" class="form-control input-dark" placeholder="Contraseña" style="border-right: none !important;">
+                <button type="button" class="btn input-dark border-start-0" id="btnTogglePassword"><i class="fas fa-eye" id="iconPassword" style="color: #a0a0a0;"></i></button>
+              </div>
+              <small class="text-danger fw-bold" id="error_password" style="color: #ff4d4f !important;"></small>
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2 mt-4" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-id-badge me-2" style="color: #ffd700;"></i> Datos Personales</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6"><input type="text" id="documento" class="form-control input-dark" placeholder="N° Documento"><small class="text-danger fw-bold" id="error_documento"></small></div>
+            <div class="col-md-6"><input type="email" id="correo" class="form-control input-dark" placeholder="Correo"><small class="text-danger fw-bold" id="error_correo"></small></div>
+            <div class="col-md-6"><input type="text" id="nombre" class="form-control input-dark" placeholder="Nombres"><small class="text-danger fw-bold" id="error_nombre"></small></div>
+            <div class="col-md-6"><input type="text" id="apellido" class="form-control input-dark" placeholder="Apellidos"><small class="text-danger fw-bold" id="error_apellido"></small></div>
+            <div class="col-md-6"><input type="text" id="telefono" class="form-control input-dark" placeholder="Teléfono"><small class="text-danger fw-bold" id="error_telefono"></small></div>
+            <div class="col-md-6"><input id="fecha_nacimiento" type="text" class="form-control input-dark" placeholder="F. Nacimiento" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'"><small class="text-danger fw-bold" id="error_fecha_nacimiento"></small></div>
+            <div class="col-md-6">
+              <select id="genero" class="form-select input-dark">
+                <option value="">Género...</option><option value="M">Masculino</option><option value="F">Femenino</option>
+              </select>
+              <small class="text-danger fw-bold" id="error_genero"></small>
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-uppercase mb-3 border-bottom pb-2 mt-4" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-weight me-2" style="color: #ffd700;"></i> Base Física</h6>
+          <div class="row g-3">
+            <div class="col-md-6"><input type="number" id="peso_usuario" class="form-control input-dark" placeholder="Peso (kg)"><small class="text-danger fw-bold" id="error_peso_usuario"></small></div>
+            <div class="col-md-6"><input type="number" id="altura_usuario" class="form-control input-dark" placeholder="Altura (cm)"><small class="text-danger fw-bold" id="error_altura_usuario"></small></div>
+          </div>
+        </div>
+
+        <!-- PASO 2 (Nutrición) -->
+        <div id="paso2" style="display:none;">
+          <h6 class="fw-bold text-uppercase mb-4 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-apple-alt me-2" style="color: #ffd700;"></i> Perfil Nutricional</h6>
+          <div class="row g-4">
+              <div class="col-12">
+                  <select id="nivel_actividad" class="form-select input-dark"><option value="">Nivel Actividad Física</option><option value="bajo">Bajo</option><option value="medio">Medio</option><option value="alto">Alto</option></select>
+                  <small id="error_nivel_actividad" class="text-danger fw-bold"></small>
+              </div>
+              <div class="col-12">
+                  <select id="tipo_objetivo" class="form-select input-dark"><option value="">Objetivo Nutricional</option><option value="perder_peso">Perder Peso</option><option value="mantener">Mantener Peso</option><option value="ganar_masa">Ganar Masa</option></select>
+                  <small id="error_tipo_objetivo" class="text-danger fw-bold"></small>
+              </div>
+              <div class="col-12">
+                  <select id="tipo_dieta" class="form-select input-dark"><option value="">Tipo Plan Alimenticio</option><option value="keto">Keto</option><option value="balanceada">Balanceada</option></select>
+                  <small id="error_tipo_dieta" class="text-danger fw-bold"></small>
+              </div>
+          </div>
+        </div>
+
+        <!-- PASO 3 (Masa Corporal) -->
+        <div id="paso3" style="display:none;">
+          <h6 class="fw-bold text-uppercase mb-4 border-bottom pb-2" style="color: #fff; border-color: rgba(255,255,255,0.05) !important; font-size: 13px;"><i class="fas fa-heartbeat me-2" style="color: #ffd700;"></i> Control Físico (IMC)</h6>
+          <div class="row g-4">
+              <div class="col-md-6">
+                  <input id="peso_cliente" type="number" class="form-control input-dark" placeholder="Peso Control (kg)">
+                  <small id="error_peso_cliente" class="text-danger fw-bold"></small>
+              </div>
+              <div class="col-md-6">
+                  <input id="altura_cliente" type="number" class="form-control input-dark" placeholder="Altura Control (m)">
+                  <small id="error_altura_cliente" class="text-danger fw-bold"></small>
+              </div>
+              <div class="col-12">
+                  <label class="form-label-custom">Fecha del Control</label>
+                  <input id="fecha_control" type="date" class="form-control input-dark">
+                  <small id="error_fecha_control" class="text-danger fw-bold"></small>
+              </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 p-4" style="background: rgba(0,0,0,0.5);">
+        <button type="button" class="btn fw-bold px-4" style="background: rgba(255,255,255,0.05); color: #fff; text-transform: uppercase; font-size: 12px; border: 1px solid rgba(255,255,255,0.1);" onclick="prevPaso()">Volver</button>
+        <button type="button" class="btn btn-hero-gold px-4" onclick="nextPaso()" id="Siguiente" style="transform: skewX(0);"><span>Siguiente <i class="fas fa-arrow-right"></i></span></button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    /* (Se mantiene íntegra tu lógica original de JS) */
+    const nombreUsuario = document.getElementById("username"); const password = document.getElementById("password");
+    const documento = document.getElementById("documento"); const nombre = document.getElementById("nombre");
+    const apellido = document.getElementById("apellido"); const correo = document.getElementById("correo");
+    const telefono = document.getElementById("telefono"); const fecha_nacimiento = document.getElementById("fecha_nacimiento");
+    const peso_usuario = document.getElementById("peso_usuario"); const altura_usuario = document.getElementById("altura_usuario");
+    const genero = document.getElementById("genero"); const nivel_actividad = document.getElementById("nivel_actividad");
+    const tipo_objetivo = document.getElementById("tipo_objetivo"); const tipo_dieta = document.getElementById("tipo_dieta");
+    const peso_cliente = document.getElementById("peso_cliente"); const altura_cliente = document.getElementById("altura_cliente");
+    const fecha_control = document.getElementById("fecha_control"); const Siguiente = document.getElementById("Siguiente");
+    const passwordInput = document.getElementById("password"); const btnTogglePassword = document.getElementById("btnTogglePassword");
+    const iconPassword = document.getElementById("iconPassword");
+
+    let paso = 1;
+
+    function mostrarError(id, msg) { const el = document.getElementById("error_" + id); if (el) { el.innerText = msg; el.style.color = "#ff4d4f"; } }
+    function limpiarError(id) { const el = document.getElementById("error_" + id); if (el) el.innerText = ""; }
+    function hayErroresPaso(p) { return [...document.querySelectorAll(`#paso${p} small`)].some(e => e.innerText !== ""); }
+    function validarVaciosPaso(p) {
+        const campos = document.querySelectorAll(`#paso${p} input, #paso${p} select`);
+        for (const campo of campos) {
+            if (campo.type !== "button" && !campo.value.trim()) {
+                Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "warning", title: "Campo obligatorio", text: "Completa todos los campos del paso.", confirmButtonColor: "#ffd700"});
+                campo.focus(); return false;
+            }
+        } return true;
+    }
+
+    if (nombreUsuario) nombreUsuario.addEventListener("input", () => { nombreUsuario.value.length < 4 ? mostrarError("username", "Mínimo 4 caracteres") : limpiarError("username"); });
+    if (password) password.addEventListener("input", () => { password.value.length < 6 ? mostrarError("password", "Mínimo 6 caracteres") : limpiarError("password"); });
+    if (documento) documento.addEventListener("input", () => { /^\d{7,10}$/.test(documento.value) ? limpiarError("documento") : mostrarError("documento", "7 a 10 dígitos numéricos"); });
+    [nombre, apellido].forEach(c => { if (c) c.addEventListener("input", () => { /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(c.value) ? limpiarError(c.id) : mostrarError(c.id, "Solo letras"); }); });
+    if (correo) correo.addEventListener("input", () => { /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.value) ? limpiarError("correo") : mostrarError("correo", "Correo inválido"); });
+    if (telefono) telefono.addEventListener("input", () => { /^3\d{9}$/.test(telefono.value) ? limpiarError("telefono") : mostrarError("telefono", "Inicia en 3"); });
+    if (fecha_nacimiento) fecha_nacimiento.addEventListener("change", () => { const f = new Date(fecha_nacimiento.value); f >= new Date() ? mostrarError("fecha_nacimiento", "Fecha inválida") : limpiarError("fecha_nacimiento"); });
+    if (peso_usuario) peso_usuario.addEventListener("input", () => { (peso_usuario.value < 30 || peso_usuario.value > 200) ? mostrarError("peso_usuario", "Inválido") : limpiarError("peso_usuario"); });
+    if (altura_usuario) altura_usuario.addEventListener("input", () => { (altura_usuario.value < 100 || altura_usuario.value > 250) ? mostrarError("altura_usuario", "Inválido") : limpiarError("altura_usuario"); });
+    if (genero) genero.addEventListener("change", () => { !genero.value ? mostrarError("genero", "Selecciona uno") : limpiarError("genero"); });
+    [nivel_actividad, tipo_objetivo, tipo_dieta].forEach(c => { if (c) c.addEventListener("change", () => { !c.value ? mostrarError(c.id, "Obligatorio") : limpiarError(c.id); }); });
+    if (peso_cliente) peso_cliente.addEventListener("input", () => { (peso_cliente.value < 30 || peso_cliente.value > 200) ? mostrarError("peso_cliente", "Inválido") : limpiarError("peso_cliente"); });
+    if (altura_cliente) altura_cliente.addEventListener("input", () => { (altura_cliente.value < 100 || altura_cliente.value > 250) ? mostrarError("altura_cliente", "Inválido") : limpiarError("altura_cliente"); });
+    if (fecha_control) fecha_control.addEventListener("change", () => { !fecha_control.value ? mostrarError("fecha_control", "Obligatorio") : limpiarError("fecha_control"); });
+
+    window.abrirWizard = function() { paso = 1; mostrarPaso(); const modalEl = document.getElementById("modalWizard"); if (modalEl) new bootstrap.Modal(modalEl).show(); };
+
+    function mostrarPaso() {
+        for (let i = 1; i <= 3; i++) {
+            const pasoEl = document.getElementById("paso" + i);
+            if (pasoEl) pasoEl.style.display = i === paso ? "block" : "none";
+            const badge = document.getElementById("badge" + i);
+            if (badge) { badge.className = i === paso ? "wizard-step active" : "wizard-step inactive"; }
+        }
+        if (Siguiente) Siguiente.innerHTML = paso === 3 ? "<span><i class='fas fa-save'></i> Guardar</span>" : "<span>Siguiente <i class='fas fa-arrow-right'></i></span>";
+    }
+
+    window.nextPaso = function() {
+        if (!validarVaciosPaso(paso)) return;
+        if (hayErroresPaso(paso)) { Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "error", title: "Error", text: "Corrige los errores antes de seguir.", confirmButtonColor: "#ffd700"}); return; }
+        if (paso === 3) { guardar(); return; }
+        paso++; mostrarPaso();
+    };
+
+    window.prevPaso = function() { if (paso > 1) { paso--; mostrarPaso(); } };
+
+    function getCookie(name) { let valor = null; document.cookie.split(";").forEach(c => { if (c.trim().startsWith(name + "=")) { valor = decodeURIComponent(c.split("=")[1]); } }); return valor; }
+
+    function guardar() {
+        document.getElementById("Siguiente").disabled = true;
+        const data = {
+            username: nombreUsuario?.value || "", password: password?.value || "", documento: documento?.value || "",
+            nombre: nombre?.value || "", apellido: apellido?.value || "", correo: correo?.value || "",
+            telefono: telefono?.value || "", fecha_nacimiento: fecha_nacimiento?.value || "",
+            peso_usuario: peso_usuario?.value || "", altura_usuario: altura_usuario?.value || "",
+            genero: genero?.value || "", nivel_actividad: nivel_actividad?.value || "",
+            tipo_objetivo: tipo_objetivo?.value || "", tipo_dieta: tipo_dieta?.value || "",
+            peso_cliente: peso_cliente?.value || "", altura_cliente: altura_cliente?.value || "", fecha_control: fecha_control?.value || ""
+        };
+
+        Swal.fire({ title: "Guardando...", background: "rgba(10,10,10,0.95)", color: "#ffd700", allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+        fetch("/gimnasio/wizard/crear-todo/", {
+            method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") }, body: JSON.stringify(data)
+        }).then(r => r.json()).then(r => {
+            if (r.error) { Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "error", title: "Error", text: r.error}); document.getElementById("Siguiente").disabled = false; return; }
+            const selectImc = document.querySelector("[name='fk_imc']");
+            if (selectImc) {
+                if (!selectImc.querySelector(`option[value="${r.id}"]`)) { selectImc.add(new Option(r.nombre || "Registro creado", r.id, true, true)); }
+                selectImc.value = r.id;
+            }
+            const modalElement = document.getElementById("modalWizard");
+            if (modalElement) { const modalInstance = bootstrap.Modal.getInstance(modalElement); if (modalInstance) modalInstance.hide(); }
+            Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "success", title: "Completado", text: "Proceso Integral creado exitosamente", confirmButtonColor: "#ffd700"});
+        }).catch(e => { console.error(e); Swal.fire({background: "rgba(10,10,10,0.95)", color: "#fff", icon: "error", title: "Error", text: "Ocurrió un error en el servidor"}); document.getElementById("Siguiente").disabled = false; });
+    }
+
+    if (btnTogglePassword && passwordInput && iconPassword) {
+        btnTogglePassword.addEventListener("click", function() {
+            const esPassword = passwordInput.type === "password";
+            passwordInput.type = esPassword ? "text" : "password";
+            iconPassword.className = esPassword ? "fas fa-eye-slash" : "fas fa-eye";
+            iconPassword.style.color = esPassword ? "#ffd700" : "#a0a0a0";
+        });
+    }
+});
+</script>
+{% endblock %}

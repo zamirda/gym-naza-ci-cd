@@ -1,0 +1,193 @@
+{% extends 'body.html' %}
+{% load widget_tweaks %}
+
+{% block contenido %}
+<style>
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETAS ESTILO DASHBOARD */
+    .card-dash { 
+        position: relative; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); 
+        border-radius: 15px; padding: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.9); 
+        border: 1px solid rgba(255,215,0,0.1); transition: 0.3s; overflow: hidden; margin-bottom: 25px;
+    }
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        background: #ffd700; transform: skewX(-15deg); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); z-index: 0;
+    }
+
+    .header-neon { background: rgba(0,0,0,0.5); padding: 25px 35px; border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;}
+    .header-neon h3 { margin: 0; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; color: #fff; letter-spacing: 1px;}
+    .header-neon h3 i { color: #ffd700; }
+
+    /* INPUTS OSCUROS */
+    .form-label-custom { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #a0a0a0; font-weight: 800; margin-bottom: 8px; position: relative; z-index: 2;}
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px; transition: 0.3s; padding: 12px 15px; font-family: 'Poppins', sans-serif; position: relative; z-index: 2;}
+    .input-dark:focus { background: #000 !important; border-color: #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3) !important; outline: none;}
+    .input-dark::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer;}
+    
+    /* ESTILO CHECKBOX OSCURO */
+    .form-check-input { background-color: #111; border-color: #555; }
+    .form-check-input:checked { background-color: #ffd700; border-color: #ffd700; }
+    .form-check-label { color: #fff; font-weight: 600; }
+
+    /* BOTONES HERO SESGADOS */
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 12px 25px; font-size: 13px; text-transform: uppercase; box-shadow: 0 0 15px rgba(255,215,0,0.3); transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); position: relative; z-index: 2; text-decoration: none; cursor: pointer; }
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+</style>
+
+<div class="container mt-4" style="max-width: 800px;">
+    <form method="post" action="." class="stagger-1 needs-validation" id="certificacionForm" novalidate>
+        {% csrf_token %}
+        <div class="card-dash">
+            <div class="header-neon">
+                <h3><i class="fas fa-award me-2" style="color: #ffd700;"></i> {{ titulo }}</h3>
+            </div>
+
+            <div class="card-body p-4 p-md-5" style="position: relative; z-index: 2;">
+                
+                <!-- ERRORES DJANGO GLOBALES -->
+                {% if form.errors %}
+                <div class="alert mb-4" style="background: rgba(255,77,79,0.1); border: 1px solid #ff4d4f; color: #fff; border-radius: 8px;">
+                    <h6 class="fw-bold" style="color: #ff4d4f;"><i class="fas fa-ban me-2"></i> Error de Validación</h6>
+                    <ul class="mb-0">
+                        {% for field in form %} 
+                            {% for error in field.errors %} <li style="font-size: 13px;">{{ field.label }}: {{ error }}</li> {% endfor %} 
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- CAMPOS DEL FORMULARIO -->
+                {% for field in form.visible_fields %}
+                <div class="form-group mb-4 stagger-2">
+                    
+                    {% if field.name == "descargado" %}
+                        <div class="form-check d-flex align-items-center mt-3 p-3" style="background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                            {{ field|add_class:'form-check-input' }}
+                            <label class="form-check-label ms-2" style="text-transform: uppercase; font-size: 13px; letter-spacing: 1px;">
+                                {{ field.label }} (Habilitar Visualización)
+                            </label>
+                        </div>
+                    {% else %}
+                        <label class="form-label-custom">
+                            {% if field.name == "fk_membresia" %} Atleta / Membresía Asociada
+                            {% else %} {{ field.label }} {% endif %}
+                        </label>
+                        
+                        {{ field|add_class:'form-control input-dark' }}
+                        
+                        <!-- Contenedor para errores JS -->
+                        <div class="invalid-feedback fw-bold" style="color: #ff4d4f; font-size: 12px; margin-top: 5px;"></div>
+                    {% endif %}
+
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="card-footer border-0 p-4 p-md-5 pt-0 d-flex gap-3" style="background: transparent; position: relative; z-index: 2;">
+                <button type="submit" class="btn-hero-gold">
+                    <span><i class="fas fa-save me-1"></i> Generar Certificado</span>
+                </button>
+                <a href="{% url 'gimnasio:listar_certificacioninterna' %}" class="btn fw-bold px-4 py-2" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase; font-size: 13px; transform: skewX(-10deg); display: inline-flex; text-decoration: none;">
+                    <span style="transform: skewX(10deg);"><i class="fas fa-times me-2"></i> Cancelar</span>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// ============================================
+// VALIDACIONES JAVASCRIPT (ADAPTADO A MODO OSCURO)
+// ============================================
+function mostrarError(input, mensaje){
+    input.classList.remove('is-valid');
+    input.classList.add('is-invalid');
+    input.style.borderColor = '#ff4d4f';
+    input.style.boxShadow = '0 0 10px rgba(255,77,79,0.3)';
+
+    let feedback = input.parentNode.querySelector('.invalid-feedback');
+    if(!feedback){
+        feedback = document.createElement('div');
+        feedback.classList.add('invalid-feedback', 'fw-bold');
+        feedback.style.color = '#ff4d4f';
+        input.parentNode.appendChild(feedback);
+    }
+    feedback.innerText = mensaje;
+}
+
+function limpiarError(input){
+    input.classList.remove('is-invalid');
+    input.classList.add('is-valid');
+    input.style.borderColor = '#28a745'; // Verde para éxito
+    input.style.boxShadow = '0 0 10px rgba(40,167,69,0.3)';
+
+    let feedback = input.parentNode.querySelector('.invalid-feedback');
+    if(feedback){ feedback.innerText = ''; }
+}
+
+function validarCampo(input){
+    // Validar membresía
+    if(input.name === 'fk_membresia'){
+        if(!input.value){ mostrarError(input, 'Seleccione un Atleta / Membresía.'); return false; }
+        limpiarError(input);
+    }
+
+    // Validar fecha
+    if(input.name === 'fecha_certificacion'){
+        if(!input.value){ mostrarError(input, 'La fecha es obligatoria.'); return false; }
+
+        let fecha = new Date(input.value + "T00:00:00"); // Forzar timezone local a medianoche
+        let hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+
+        if(fecha < hoy){
+            mostrarError(input, 'La fecha no puede ser en el pasado.');
+            return false;
+        }
+        limpiarError(input);
+    }
+
+    // Validar descripción
+    if (input.name === 'descripcion_certificacion') {
+        if (!input.value.trim()) { mostrarError(input, 'Describe el logro alcanzado.'); return false; }
+        if(input.value.length > 200){ mostrarError(input, 'Máximo 200 caracteres.'); return false; }
+        if(input.value.length < 10){ mostrarError(input, 'Mínimo 10 caracteres (Detalla más el logro).'); return false; }
+        limpiarError(input);
+    }
+
+    return true;
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+    const form = document.getElementById('certificacionForm');
+    const campos = form.querySelectorAll('[name="descripcion_certificacion"], [name="fk_membresia"], [name="fecha_certificacion"]');
+    
+    campos.forEach(campo => {
+        campo.addEventListener('input', () => validarCampo(campo));
+        campo.addEventListener('change', () => validarCampo(campo));
+    });
+
+    form.addEventListener('submit', function(event){
+        let valido = true;
+        campos.forEach(campo => { if(!validarCampo(campo)){ valido = false; } });
+
+        if(!valido){
+            event.preventDefault();
+            Swal.fire({
+                title: "Formulario Incompleto", text: "Corrige los errores marcados en rojo.", icon: "warning",
+                background: "rgba(10,10,10,0.95)", color: "#fff", confirmButtonColor: "#ffd700"
+            });
+            const primerError = form.querySelector('.is-invalid');
+            if(primerError) primerError.focus();
+        }
+    });
+});
+</script>
+{% endblock %}

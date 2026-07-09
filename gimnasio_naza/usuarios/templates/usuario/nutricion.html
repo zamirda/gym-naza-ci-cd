@@ -1,0 +1,192 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* Animaciones y Efectos base */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    .stagger-3 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.3s; opacity: 0; }
+
+    @keyframes revealBounce { 
+        0% { opacity: 0; transform: translateY(30px) scale(0.97); } 
+        100% { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+
+    /* Tarjetas  */
+    .card-dash { 
+        position: relative; background-color: var(--bg-surface); 
+        backdrop-filter: var(--card-backdrop); -webkit-backdrop-filter: var(--card-backdrop);
+        border-radius: var(--border-radius-card); padding: 25px; 
+        box-shadow: var(--shadow-main); border: var(--card-border); 
+        transition: var(--transition); overflow: hidden; height: 100%;
+        display: flex; flex-direction: column; justify-content: space-between;
+    }
+    
+    .card-dash::before {
+        content: ''; position: absolute; top: 0; left: -15px; width: 20px; height: 100%;
+        transform: skewX(-15deg); box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 0;
+    }
+    
+    .card-dash.border-info::before { background: #17a2b8; box-shadow: 0 0 15px rgba(23, 162, 184, 0.4); }
+    .card-dash.border-success::before { background: #28a745; box-shadow: 0 0 15px rgba(40, 167, 69, 0.4); }
+    .card-dash.border-warning::before { background: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+    .card-dash.border-danger::before { background: #ff4d4f; box-shadow: 0 0 15px rgba(255, 77, 79, 0.4); }
+
+    .card-dash:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
+
+    .card-label { font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; position: relative; z-index: 2;}
+    .card-value { font-size: 28px; font-weight: 900; color: #fff; position: relative; z-index: 2; line-height: 1.2;}
+    .card-desc { font-size: 12px; color: var(--text-muted); font-weight: 600; position: relative; z-index: 2;}
+    .card-icon-bg { position: absolute; right: 15px; bottom: 15px; font-size: 40px; opacity: 0.1; z-index: 1; }
+
+    /* Tablas  */
+    .table-neon { width: 100%; color: #fff; border-collapse: separate; border-spacing: 0; }
+    .table-neon th { background: rgba(0,0,0,0.4); padding: 15px; font-size: 12px; text-transform: uppercase; color: var(--primary-blue); border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .table-neon td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+    .table-neon tr:hover td { background: rgba(255,215,0,0.02); }
+
+    /* Alertas oscuras */
+    .alert-dark-neon { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid var(--primary-blue); color: #fff; border-radius: 8px; padding: 15px; }
+</style>
+
+<div class="container-fluid mt-2">
+  <div class="row mb-4 stagger-1">
+    <div class="col-sm-12">
+      <h1 style="color: #fff; font-weight: 900; text-transform: uppercase; font-size: 28px;">
+        <i class="fas fa-utensils mr-2" style="color: var(--primary-blue);"></i> Mi Nutrición
+      </h1>
+      <p style="color: var(--text-muted); font-weight: 600;">Panel de control y composición corporal</p>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4 stagger-2">
+    <!-- Peso -->
+    <div class="col-lg-3 col-6 mb-3">
+      <div class="card-dash border-info">
+        <div>
+          <div class="card-label text-info">Peso Actual</div>
+          <div class="card-value">{{ nutricion.nutricion.last.peso_cliente|default:"0" }} <span style="font-size: 14px; font-weight: normal;">Kg</span></div>
+        </div>
+        <div class="card-desc mt-2">Último registro</div>
+        <i class="fas fa-weight card-icon-bg"></i>
+      </div>
+    </div>
+
+    <!-- IMC -->
+    <div class="col-lg-3 col-6 mb-3">
+      <div class="card-dash border-success">
+        <div>
+          <div class="card-label" style="color: #28a745;">Estado IMC</div>
+          <div class="card-value">{{ nutricion.nutricion.last.imc|default:"0" }}</div>
+        </div>
+        <div class="card-desc mt-2">
+            <span style="color: {% if nutricion.nutricion.last.estado_imc == 'Normal' %}#28a745{% elif nutricion.nutricion.last.estado_imc == 'Sobrepeso' %}#ffc107{% else %}#ff4d4f{% endif %}; font-weight: 800;">
+                {{ nutricion.nutricion.last.estado_imc|default:"Sin evaluar" }}
+            </span>
+        </div>
+        <i class="fas fa-heartbeat card-icon-bg"></i>
+      </div>
+    </div>
+
+    <!-- Meta -->
+    <div class="col-lg-3 col-6 mb-3">
+      <div class="card-dash border-warning">
+        <div>
+          <div class="card-label" style="color: #ffd700;">Objetivo Establecido</div>
+          <div class="card-value" style="font-size: 20px; padding-top: 8px;">{{ nutricion.get_objetivo_nutricional_display|default:"No definido" }}</div>
+        </div>
+        <div class="card-desc mt-2">Perfil Base</div>
+        <i class="fas fa-bullseye card-icon-bg text-warning"></i>
+      </div>
+    </div>
+
+    <!-- Rendimiento -->
+    <div class="col-lg-3 col-6 mb-3">
+      <div class="card-dash border-danger">
+        <div>
+          <div class="card-label text-danger">Actividad Física</div>
+          <div class="card-value" style="font-size: 22px; padding-top: 8px;">{{ nutricion.get_nivel_actividad_fisica_display|default:"No definido" }}</div>
+        </div>
+        <div class="card-desc mt-2">Nivel de Rendimiento</div>
+        <i class="fas fa-running card-icon-bg text-danger"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="row stagger-3">
+      <div class="col-lg-12">
+          <!-- Detalles del Plan -->
+          <div class="card-dash mb-4">
+            <h4 style="color: #fff; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 20px;">
+                <i class="fas fa-apple-alt text-warning mr-2"></i> Detalles del Plan Alimenticio
+            </h4>
+            
+            {% if nutricion %}
+            <div class="alert-dark-neon mb-4">
+                Su perfil está configurado para llevar una dieta de tipo <strong style="color: var(--primary-blue);">{{ nutricion.get_tipo_plan_alimenticio_display|upper }}</strong> enfocada en el objetivo de <strong style="color: #ffd700;">{{ nutricion.get_objetivo_nutricional_display|upper }}</strong>.
+            </div>
+
+            <table class="table-neon mb-4">
+                <tr>
+                <th width="30%">Usuario Asociado</th>
+                <td style="font-weight: 700;">{{ nutricion.fk_Usuario.nombre_usuario }} {{ nutricion.fk_Usuario.apellido_usuario }}</td>
+                </tr>
+                <tr>
+                <th>Recomendación del Motor</th>
+                <td style="color: var(--text-muted);">Mantenga su nivel de actividad física en un rango <strong style="color: #fff;">{{ nutricion.get_nivel_actividad_fisica_display|lower }}</strong> para maximizar los resultados.</td>
+                </tr>
+            </table>
+            {% else %}
+            <div class="alert-dark-neon" style="border-left-color: #ff4d4f;">
+                <i class="fas fa-exclamation-triangle mr-2 text-danger"></i> Actualmente no tienes un perfil nutricional configurado. Visita el Dashboard para generar tu plan con IA.
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Historial -->
+          <div class="card-dash" style="justify-content: flex-start;">
+            <h4 style="color: #fff; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 0;">
+                <i class="fas fa-history text-info mr-2"></i> Historial de Composición Corporal
+            </h4>
+            
+            <div class="table-responsive mt-3">
+              <table class="table-neon">
+                <thead>
+                  <tr>
+                    <th>Fecha Control</th>
+                    <th>Peso Registrado</th>
+                    <th>Altura</th>
+                    <th>IMC</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in nutricion.nutricion.all %}
+                  <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">{{ item.fecha_control }}</td>
+                    <td style="font-weight: 800;">{{ item.peso_cliente }} <small>Kg</small></td>
+                    <td>{{ item.altura_cliente }} <small>m</small></td>
+                    <td style="color: var(--primary-blue); font-weight: 800;">{{ item.imc }}</td>
+                    <td>
+                      <span style="padding: 5px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; background: rgba(255,255,255,0.1); color: {% if item.estado_imc == 'Normal' %}#28a745{% elif item.estado_imc == 'Sobrepeso' %}#ffc107{% else %}#ff4d4f{% endif %};">
+                        {{ item.estado_imc }}
+                      </span>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                      <i class="fas fa-folder-open d-block mb-3 fa-2x" style="opacity: 0.2;"></i>
+                      Aún no hay registros de masa corporal en tu historial.
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock %}

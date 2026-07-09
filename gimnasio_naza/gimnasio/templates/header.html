@@ -1,0 +1,358 @@
+{% load static %}
+<header class="topbar">
+  <style>
+    .topbar {
+      background-color: var(--bg-white) !important;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      color: white;
+      z-index: 1000;
+      box-shadow: var(--shadow-main);
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      border-bottom: 1px solid var(--border-color);
+      transition: var(--transition);
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      width: var(--sidebar-width);
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      margin-left: 20px;
+    }
+    .logo-img {
+      width: 70px;
+      height: 70px;
+      border-radius: 100%;
+      border: 2px solid var(--primary-blue);
+      overflow: hidden;
+    }
+    .logo-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .logo-text {
+      color: var(--primary-blue) !important;
+      font-weight: 800;
+      font-size: 16px;
+      line-height: 1.1;
+      letter-spacing: 0.5px;
+    }
+    .main-container {
+      display: flex;
+      flex-grow: 1;
+      overflow: hidden;
+      margin-top: 70px;
+      height: calc(100vh - 70px);
+    }
+    .sidebar {
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      top: auto;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-grow: 1;
+      justify-content: flex-end;
+    }
+    .top-icons {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: relative;
+    }
+    .avatar-img {
+      width: 38px !important;
+      height: 38px !important;
+      border-radius: 50% !important;
+      object-fit: cover !important;
+      display: block !important;
+      flex-shrink: 0 !important;
+      border: 1px solid var(--primary-blue);
+    }
+    .user-trigger {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      color: #ffffff !important;
+      text-decoration: none !important;
+      max-height: 70px !important;
+      cursor: pointer;
+    }
+    .top-icons .dropdown-menu.user-dropdown {
+      position: absolute !important;
+      top: calc(100% + 10px) !important;
+      right: 0 !important;
+      left: auto !important;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      min-width: 220px;
+      z-index: 1050;
+      border-radius: var(--border-radius-card);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+    .user-dropdown-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .user-dropdown-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--primary-blue);
+    }
+    .search-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-btn);
+      padding: 6px 14px;
+      gap: 8px;
+      max-width: 240px;
+      width: 240px;
+      transition: var(--transition);
+    }
+    .search-container:focus-within {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--primary-blue);
+    }
+    .search-container i {
+      color: var(--primary-blue);
+      font-size: 0.85rem;
+    }
+    #input-buscar {
+      background: transparent !important;
+      border: none !important;
+      outline: none !important;
+      color: #ffffff !important;
+      font-size: 0.85rem !important;
+      width: 100% !important;
+    }
+    #resultados-buscar {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: var(--bg-surface);
+      border-radius: var(--border-radius-card);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 9999;
+      overflow: hidden;
+      min-width: 260px;
+      border: 1px solid var(--border-color);
+    }
+    .resultado-item {
+      display: flex;
+      align-items: center;
+      padding: 11px 16px;
+      color: var(--text-dark);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: var(--transition);
+      gap: 10px;
+    }
+    .resultado-item:hover {
+      background: var(--bg-surface-hover);
+      color: var(--primary-blue);
+    }
+    .resultado-badge {
+      margin-left: auto;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-admin { background: rgba(255, 0, 0, 0.15); color: #ff4d4f; }
+    .badge-todos { background: rgba(255, 215, 0, 0.1); color: var(--primary-blue); }
+    .menu-toggle { color: var(--primary-blue); cursor: pointer; font-size: 1.2rem; transition: var(--transition); }
+    .menu-toggle:hover { transform: scale(1.1); }
+  </style>
+
+  <div class="topbar-left">
+     <i class="fa fa-bars menu-toggle" id="menuToggle"></i>
+    <a href="{% url 'gimnasio:dashboard' %}" class="logo-link">
+      <img src="{% static 'assets/img/avatars/logo.png' %}" class="logo-img" />
+      <span class="logo-text">GYM<br />NAZARETH</span>
+    </a>
+  </div>
+
+  <div class="topbar-right">
+    {% if user.usuario.rol == 'Administrador' or user.usuario.rol == 'admin' or user.is_superuser %}
+      <div class="btn-group">
+        <button class="btn btn-primary dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" style="background: var(--primary-blue) !important; color: #000 !important; border:none; font-weight:700; border-radius: var(--border-radius-btn);">
+            <i class="fa-solid fa-database"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+          <li>
+            <a class="dropdown-item waves-effect" href="/gimnasio/backup/" style="color: var(--text-dark);"><i class="fa-solid fa-folder-open me-2" style="color:var(--primary-blue);"></i>Ir a respaldo</a>
+          </li>
+          <li>
+            <form action="/gimnasio/backup/" method="post">
+              {% csrf_token %}
+              <input type="hidden" name="accion" value="backup_completo" />
+              <button type="submit" class="dropdown-item waves-effect" style="color: var(--text-dark); background:transparent; border:none; text-align:left; width:100%;"><i class="fa-solid fa-download me-2" style="color:var(--primary-blue);"></i>Respaldo completo</button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="search-container d-none d-lg-flex">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="search" id="input-buscar" placeholder="Buscar módulo..." autocomplete="off" spellcheck="false" />
+      <div id="resultados-buscar" class="d-none"></div>
+    </div>
+
+    <div class="top-icons">
+      <a href="{% url 'gimnasio:listar_notificacion' %}" style="color: var(--primary-blue);"><i class="fas fa-bell icon-btn"></i></a>
+
+      <div class="dropdown">
+        <a class="user-trigger dropdown-toggle" data-bs-toggle="dropdown">
+          <span class="username-topbar d-none d-md-inline" style="color: #ffffff; font-weight: 500; font-size: 0.9rem;">{{ user.username }}</span>
+          {% if user.usuario.foto %}
+            <img src="{{ user.usuario.foto.url }}" class="avatar-img" />
+          {% else %}
+            <img src="{% static 'assets/img/avatars/1.png' %}" class="avatar-img" />
+          {% endif %}
+        </a>
+
+        <div class="dropdown-menu dropdown-menu-end user-dropdown">
+          <div class="user-dropdown-header">
+            {% if user.usuario.foto %}
+              <img src="{{ user.usuario.foto.url }}" class="user-dropdown-avatar" />
+            {% else %}
+              <img src="{% static 'assets/img/avatars/1.png' %}" class="user-dropdown-avatar" />
+            {% endif %}
+            <div>
+              <span class="small text-muted" style="display:block; font-size:0.75rem;">{{ user.usuario.rol|default:'Usuario'|capfirst }}</span>
+              <h6 class="m-0" style="color:#ffffff; font-weight:600;">{{ user.username }}</h6>
+            </div>
+          </div>
+          <div class="dropdown-divider" style="border-color: var(--border-color);"></div>
+          <div class="px-3 py-2">
+            <form method="post" action="{% url 'login:logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary w-100" style="background: linear-gradient(135deg, #ffd700, #b8860b) !important; color:#000000 !important; font-weight:700; border:none; border-radius: var(--border-radius-btn);">Cerrar Sesión</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var _rolDjango   = "{{ user.usuario.rol|default:'Cliente' }}";
+    var _esSuperuser = {{ user.is_superuser|yesno:"true,false" }};
+  </script>
+
+  <script>
+  (function () {
+    var esAdmin = (_rolDjango === "Administrador" || _rolDjango === "admin" || _esSuperuser);
+
+    var modulosTodos = [
+      { nombre: "Nutrición",       url: "{% url 'gimnasio:listar_nutriciones' %}",           icono: "fa-solid fa-utensils",      tipoRol: "" },
+      { nombre: "Rutinas",         url: "{% url 'gimnasio:listar_rutinas' %}",               icono: "fa-solid fa-dumbbell",      tipoRol: "" },
+      { nombre: "Masa Corporal",   url: "{% url 'gimnasio:listar_masa_corporal_clas' %}",    icono: "fa-solid fa-weight-scale",  tipoRol: "" },
+      { nombre: "Encuestas",       url: "{% url 'gimnasio:listar_encuestas' %}",             icono: "fa-solid fa-poll",          tipoRol: "" },
+      { nombre: "Soporte PQRS",    url: "{% url 'gimnasio:listar_Soporte_PQRS' %}",         icono: "fa-solid fa-headset",       tipoRol: "" },
+      { nombre: "Sanciones",       url: "{% url 'gimnasio:listar_sanciones_clas' %}",       icono: "fa-solid fa-gavel",         tipoRol: "" },
+      { nombre: "Certificaciones", url: "{% url 'gimnasio:listar_certificacioninterna' %}", icono: "fa-solid fa-award",         tipoRol: "" },
+      { nombre: "Reportes",        url: "{% url 'gimnasio:listar_Reportes_estadisticas' %}", icono: "fa-solid fa-chart-line",   tipoRol: "" }
+    ];
+ 
+    var modulosAdmin = [
+      { nombre: "Asistencia",          url: "{% url 'gimnasio:listar_asistencia' %}",        icono: "fa-solid fa-calendar-check",  tipoRol: "admin" },
+      { nombre: "Membresía",           url: "{% url 'gimnasio:listar_membresia' %}",         icono: "fa-solid fa-crown",           tipoRol: "admin" },
+      { nombre: "Notificaciones",      url: "{% url 'gimnasio:listar_notificacion' %}",      icono: "fa-solid fa-bell",            tipoRol: "admin" },
+      { nombre: "Usuarios",            url: "{% url 'gimnasio:listar_usuario' %}",           icono: "fa-solid fa-users",           tipoRol: "admin" },
+      { nombre: "Registro Visitantes", url: "{% url 'gimnasio:listar_registrovisitante' %}", icono: "fa-solid fa-person-walking",  tipoRol: "admin" },
+      { nombre: "Elementos",           url: "{% url 'gimnasio:listar_elementos' %}",         icono: "fa-solid fa-cogs",            tipoRol: "admin" },
+      { nombre: "Mantenimiento",       url: "{% url 'gimnasio:listar_mantenimiento' %}",     icono: "fa-solid fa-wrench",          tipoRol: "admin" },
+      { nombre: "Categorías",          url: "{% url 'gimnasio:listar_categorias' %}",        icono: "fa-solid fa-tags",            tipoRol: "admin" },
+      { nombre: "Turnos Entrenadores", url: "{% url 'gimnasio:listar_turnodeentrenador' %}", icono: "fa-solid fa-calendar-days",   tipoRol: "admin" }
+    ];
+
+    var modulos = modulosTodos.slice();
+    if (esAdmin) {
+      for (var i = 0; i < modulosAdmin.length; i++) {
+        modulos.push(modulosAdmin[i]);
+      }
+    }
+
+    var inputBuscar  = document.getElementById('input-buscar');
+    var resultadosEl = document.getElementById('resultados-buscar');
+
+    if (!inputBuscar || !resultadosEl) return;
+
+    function renderBadge(m) {
+      if (m.tipoRol === 'admin') return '<span class="resultado-badge badge-admin">Admin</span>';
+      return '<span class="resultado-badge badge-todos">General</span>';
+    }
+
+    inputBuscar.addEventListener('input', function () {
+      var query = this.value.trim().toLowerCase();
+      resultadosEl.innerHTML = '';
+
+      if (query.length === 0) {
+        resultadosEl.classList.add('d-none');
+        return;
+      }
+
+      var filtrados = [];
+      for (var i = 0; i < modulos.length; i++) {
+        if (modulos[i].nombre.toLowerCase().indexOf(query) !== -1) {
+          filtrados.push(modulos[i]);
+        }
+      }
+
+      if (filtrados.length === 0) {
+        resultadosEl.innerHTML = '<div class="resultado-item text-muted"><i class="fa-solid fa-circle-xmark"></i> Sin resultados</div>';
+      } else {
+        for (var j = 0; j < filtrados.length; j++) {
+          var m = filtrados[j];
+          resultadosEl.innerHTML +=
+            '<a href="' + m.url + '" class="resultado-item">' +
+              '<i class="' + m.icono + '"></i> ' +
+              m.nombre + ' ' +
+              renderBadge(m) +
+            '</a>';
+        }
+      }
+      resultadosEl.classList.remove('d-none');
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!inputBuscar.contains(e.target) && !resultadosEl.contains(e.target)) {
+        resultadosEl.classList.add('d-none');
+      }
+    });
+  })();
+  </script>
+</header>

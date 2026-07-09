@@ -1,0 +1,103 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 60px;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        color: #000;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      /* ENCABEZADO */
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+      }
+
+      .logo-izq img {
+        height: 60px;
+      }
+
+      .logo-der {
+        font-weight: bold;
+        font-size: 18px;
+        text-align: right;
+      }
+
+      /* TITULO */
+
+      .titulo {
+        text-align: center;
+        font-weight: bold;
+        font-size: 22px;
+        margin-bottom: 40px;
+        letter-spacing: 1px;
+      }
+
+      /* CONTENIDO */
+
+      .contenido {
+        text-align: justify;
+        max-width: 950px;
+        margin: auto;
+      }
+
+      .negrita {
+        font-weight: bold;
+      }
+
+      /* FECHA */
+
+      .fecha {
+        text-align: right;
+        margin-top: 40px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="header">
+      <div class="logo-izq">
+        <img src="{% static 'assets/img/favicon/Icono.png' %}" />
+      </div>
+
+      <div class="logo-der">
+        GYM NAZARETH<br />
+        Centro de Entrenamiento Físico
+      </div>
+    </div>
+
+    <div class="titulo">CONSTANCIA DE ASISTENCIA AL GIMNASIO</div>
+
+    <div class="contenido">
+      <p>
+        <span class="negrita">CERTIFICA:</span> Que el/la participante
+        <span class="negrita">{{nombre}} {{apellido}}</span>, identificado/a con
+        documento Nº <span class="negrita">{{documento}}</span>, ha asistido
+        regularmente al <span class="negrita">GYM NAZARETH</span> desde la fecha
+        <span class="negrita">{{fecha}}</span>, cumpliendo con las normas y
+        horarios establecidos para la práctica de actividades físicas y
+        deportivas.
+      </p>
+
+      <p>
+        Esta constancia se expide a solicitud del interesado como comprobante de
+        su participación activa en el gimnasio.
+      </p>
+
+      <div class="fecha">Expedido el {{fecha_hoy|date:"d \d\e F \d\e Y"}}</div>
+    </div>
+  </body>
+</html>

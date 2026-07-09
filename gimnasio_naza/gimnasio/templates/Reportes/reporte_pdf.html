@@ -1,0 +1,218 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ titulo }} | Reporte GYM Nazareth</title>
+    <style>
+        /* ====== CONFIGURACIÓN ESTRICTA PARA MOTOR PDF ====== */
+        @page {
+            size: A4 landscape; /* Formato horizontal para tablas con muchas columnas */
+            margin: 1.5cm;
+            background-color: #ffffff;
+            
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: 'Helvetica', 'Arial', sans-serif;
+                font-size: 10px;
+                color: #267ca7; /* Azul del dashboard */
+            }
+            
+            @bottom-left {
+                content: "GYM NAZARETH - Documento Generado por Sistema";
+                font-family: 'Helvetica', 'Arial', sans-serif;
+                font-size: 10px;
+                color: #6c757d;
+            }
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11px;
+            color: #495057; /* Gris oscuro para el texto (fácil lectura) */
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ====== ENCABEZADO ====== */
+        table.header-table {
+            width: 100%;
+            border-bottom: 3px solid #267ca7; /* Línea separadora azul */
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .header-logo {
+            width: 100px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .header-logo img {
+            max-height: 80px;
+            max-width: 80px;
+            object-fit: contain;
+        }
+
+        .header-text {
+            text-align: right;
+            vertical-align: middle;
+        }
+
+        .header-text h1 {
+            color: #267ca7; /* Azul corporativo */
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 5px 0;
+        }
+
+        .header-text p {
+            color: #6c757d; /* Gris claro */
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        /* ====== TABLA DE DATOS ====== */
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table.data-table th {
+            background-color: #267ca7; /* Fondo azul para la cabecera */
+            color: #ffffff;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            border: 1px solid #1f6386; /* Borde azul un poco más oscuro */
+        }
+
+        table.data-table td {
+            color: #495057;
+            padding: 10px;
+            font-size: 10px;
+            border: 1px solid #dee2e6; /* Borde gris suave */
+            vertical-align: middle;
+        }
+
+        /* Efecto Zebra (Filas alternadas para mejor lectura) */
+        table.data-table tr:nth-child(even) td {
+            background-color: #f8f9fa; /* Gris muy clarito */
+        }
+        
+        table.data-table tr:nth-child(odd) td {
+            background-color: #ffffff;
+        }
+
+        /* Fila de Totales o cierre de tabla */
+        table.data-table tr.total-row td {
+            background-color: #e9ecef;
+            color: #267ca7;
+            font-weight: bold;
+            border-top: 2px solid #267ca7;
+            font-size: 11px;
+        }
+
+        /* ====== PIE DE REPORTE ====== */
+        .footer-summary {
+            margin-top: 25px;
+            width: 100%;
+            border-top: 1px dashed #dee2e6;
+            padding-top: 15px;
+        }
+
+        .footer-summary td {
+            font-size: 10px;
+            color: #6c757d;
+        }
+
+        .footer-summary .total-records {
+            text-align: left;
+            color: #495057;
+        }
+
+        .footer-summary .total-records span {
+            font-weight: bold;
+            color: #267ca7; /* Azul corporativo */
+            font-size: 12px;
+        }
+
+        .footer-summary .timestamp {
+            text-align: right;
+            color: #6c757d;
+        }
+        
+    </style>
+</head>
+
+<body>
+
+    <table class="header-table">
+        <tr>
+            <td class="header-logo">
+                {% if logo_url %}
+                    <img src="{{ logo_url }}" alt="Logo GYM Nazareth">
+                {% endif %}
+            </td>
+            <td class="header-text">
+                <h1>{{ titulo }}</h1>
+                <p>Reporte Oficial • GYM Nazareth</p>
+            </td>
+        </tr>
+    </table>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                {% for columna in columnas %}
+                    <th>{{ columna }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for fila in datos %}
+                <tr>
+                    {% for valor in fila %}
+                        <td>{{ valor }}</td>
+                    {% endfor %}
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="{{ columnas|length }}" style="text-align: center; font-style: italic;">
+                        No se encontraron registros para generar este reporte.
+                    </td>
+                </tr>
+            {% endfor %}
+            
+            {% if datos %}
+            <tr class="total-row">
+                <td colspan="{{ columnas|length }}" style="text-align: right;">
+                    FIN DEL DOCUMENTO
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <table class="footer-summary">
+        <tr>
+            <td class="total-records">
+                Total de registros exportados: <span>{{ datos|length }}</span>
+            </td>
+            <td class="timestamp">
+                {% load tz %}
+                Generado el: {% now "d/m/Y H:i:s" %} | ID: {% now "YmdHis" %}
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

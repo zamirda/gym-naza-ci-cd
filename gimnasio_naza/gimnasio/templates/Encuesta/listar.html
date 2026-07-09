@@ -1,0 +1,293 @@
+{% extends 'body.html' %}
+{% load static %}
+
+{% block contenido %}
+<style>
+    /* ANIMACIONES DASHBOARD */
+    .stagger-1 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation: revealBounce 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.2s; opacity: 0; }
+    @keyframes revealBounce { 0% { opacity: 0; transform: translateY(30px) scale(0.97); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* TARJETAS CONTENEDORAS */
+    .card-dash{
+        position:relative;
+        overflow:hidden;
+        z-index:1;
+    }
+    .card-dash > *{
+        position:relative;
+        z-index:2;
+    } 
+    .header-title { color: #fff; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin: 0;}
+
+    /* BOTONES DORADOS */
+    .btn-hero-gold { background: #ffd700; color: #000; border: none; font-weight: 900; padding: 10px 20px; font-size: 13px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; transform: skewX(-10deg); transition: 0.3s; text-decoration: none; cursor: pointer;}
+    .btn-hero-gold span { transform: skewX(10deg); display: block; }
+    .btn-hero-gold:hover { transform: skewX(-10deg) scale(1.05); box-shadow: 0 0 25px #ffd700; background: #fff; color: #000;}
+
+    /* DATATABLES OVERRIDES */
+    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { color: #a0a0a0 !important; font-weight: 600; font-size: 12px; text-transform: uppercase;}
+    .dataTables_wrapper .dataTables_filter input { background: #000 !important; border: 1px solid rgba(255,215,0,0.3) !important; color: #fff !important; border-radius: 5px;}
+    .dataTables_wrapper .dataTables_filter input:focus { border-color: #ffd700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.3) !important; outline: none;}
+    
+    table.dataTable, .table-dark-gold { width: 100% !important; border-collapse: separate !important; border-spacing: 0 5px !important; margin-top: 15px !important; border: none !important;}
+    table.dataTable thead th, .table-dark-gold thead th { background: #000 !important; color: #ffd700 !important; border-bottom: 2px solid #ffd700 !important; border-top: none !important; padding: 15px !important; text-transform: uppercase; font-size: 11px; font-weight: 900; letter-spacing: 1px;}
+    table.dataTable tbody tr.main-row { background: rgba(0,0,0,0.5) !important; transition: 0.3s; cursor: pointer; }
+    table.dataTable tbody tr.main-row:hover { background-color: rgba(255, 215, 0, 0.05) !important; border-left: 3px solid #ffd700 !important;}
+    table.dataTable tbody td { padding: 15px !important; border: none !important; vertical-align: middle; color: #fff !important; font-size: 13px;}
+    
+    /* Paginación */
+    .page-item.active .page-link { background-color: #ffd700 !important; border-color: #ffd700 !important; color: #000 !important; font-weight: 900; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+    .page-item .page-link { background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #fff;}
+
+    /* COLLAPSE CONTENT (EXPANDIBLE) */
+    .expandable-content { background: #0a0a0a; border-left: 3px solid #ffd700; padding: 25px; box-shadow: inset 0 5px 15px rgba(0,0,0,0.5); border-radius: 0 0 10px 10px; }
+    .input-dark { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 6px;}
+    .input-dark:focus { border-color: #ffd700 !important; box-shadow: 0 0 10px rgba(255,215,0,0.3) !important;}
+    /* ===== ELIMINAR ESPACIOS ENTRE FILAS ===== */
+
+    .collapse-row td{
+        padding:0 !important;
+        border:none !important;
+        height:0 !important;
+    }
+
+    .collapse-row{
+        background:transparent !important;
+    }
+
+    .collapse-row:not(.show-row){
+        display:none;
+    }
+    .scroll-dark::-webkit-scrollbar { width: 8px; }
+    .scroll-dark::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 4px; }
+    .scroll-dark::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 4px; }
+    .scroll-dark::-webkit-scrollbar-thumb:hover { background: #ffd700; }
+</style>
+
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/css/dataTables.bootstrap4.min.css' %}" />
+<link rel="stylesheet" href="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/css/responsive.bootstrap4.min.css' %}" />
+
+<div style="position: fixed; top: 20%; right: 5%; width: 300px; height: 800px; background: #ffd700; opacity: 0.02; transform: skewX(-30deg); z-index: -1; pointer-events: none;"></div>
+
+<div class="container-fluid mt-4">
+  <!-- HEADER -->
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4 gap-3 stagger-1" style="position: relative; z-index: 100;">
+    <h3 class="header-title"><i class="fas fa-clipboard-list" style="color: #ffd700; margin-right: 10px;"></i> Gestión de Encuestas</h3>
+    <a href="{% url 'gimnasio:crear_encuesta' %}" class="btn-hero-gold">
+      <span><i class="ri-add-line me-1"></i> Nueva Encuesta</span>
+    </a>
+  </div>
+
+  <div class="card-dash stagger-2">
+    
+    <!-- TABLA DE ENCUESTAS -->
+    <div class="table-responsive mb-5">
+      <table id="tabla-encuestas" class="table-dark-gold display nowrap w-100">
+        <thead>
+          <tr>
+            <th style="width: 50px;">ID</th>
+            <th>Nombre Encuesta</th>
+            <th class="text-center">Estado</th>
+            <th class="d-none d-md-table-cell">Creador</th>
+            <th class="text-center">Fecha Envío</th>
+            <th class="text-end">Gestionar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for encuesta in object_list %}
+            <tr class="main-row" data-bs-toggle="collapse" data-bs-target="#collapseSurvey{{ encuesta.id }}">
+              <td class="fw-bold" style="color: #6c757d;">#{{ encuesta.id }}</td>
+              <td>
+                <span class="fw-bold text-white text-uppercase d-block">{{ encuesta.nombre }}</span>
+                <small class="d-md-none" style="color: #a0a0a0;">Por: {{ encuesta.usuario.nombre_usuario }}</small>
+              </td>
+              <td class="text-center">
+                {% if encuesta.estado == 'activa' %}
+                  <span style="background: rgba(40,167,69,0.1); color: #28a745; border: 1px solid #28a745; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">Activa</span>
+                {% else %}
+                  <span style="background: rgba(220,53,69,0.1); color: #dc3545; border: 1px solid #dc3545; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase;">Inactiva</span>
+                {% endif %}
+              </td>
+              <td class="d-none d-md-table-cell text-muted text-uppercase" style="font-size: 11px;">
+                {{ encuesta.fk_usuario.nombre_usuario }} {{ encuesta.fk_usuario.apellido_usuario }}
+              </td>
+              <td class="text-center fw-bold">
+                {% if encuesta.fecha_envio %}
+                  <span style="color: #28a745;"><i class="ri-checkbox-circle-line"></i> {{ encuesta.fecha_envio|date:'d/m/Y' }}</span>
+                {% else %}
+                  <span style="color: #ffd700;"><i class="ri-time-line"></i> Pendiente</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <button class="btn btn-sm" style="color: #ffd700; background: transparent; border: none;"><i class="ri-arrow-down-s-line fs-4"></i></button>
+              </td>
+            </tr>
+
+            <!-- CONTENIDO EXPANDIBLE -->
+            <tr class="collapse-row">
+              <td colspan="6" class="p-0 border-0">
+                <div class="collapse survey-collapse" id="collapseSurvey{{ encuesta.id }}">
+                  <div class="expandable-content">
+                    <div class="row g-4 align-items-center">
+                      
+                      <!-- Columna de Envío Rápido -->
+                      <div class="col-12 col-lg-7" style="border-right: 1px solid rgba(255,255,255,0.1);">
+                        {% if not encuesta.fecha_envio %}
+                          <h6 class="fw-bold mb-3 text-uppercase" style="color: #ffd700; font-size: 12px; letter-spacing: 1px;"><i class="ri-send-plane-fill me-2"></i> Enviar Individual</h6>
+                          <form method="post" action="{% url 'gimnasio:enviar_encuesta' encuesta.id %}" class="d-flex flex-column flex-sm-row gap-2">
+                            {% csrf_token %}
+                            <select name="usuario_id" class="form-select input-dark" required>
+                              <option value="">Seleccionar destinatario...</option>
+                              {% if encuesta.miembros.exists %}
+                                {% for usuario in encuesta.miembros.all %}
+                                  <option value="{{ usuario.id }}">{{ usuario.nombre_usuario }} {{ usuario.apellido_usuario }}</option>
+                                {% endfor %}
+                              {% else %}
+                                {% for usuario in usuarios_activos %}
+                                  <option value="{{ usuario.id }}">{{ usuario.nombre_usuario }} {{ usuario.apellido_usuario }}</option>
+                                {% endfor %}
+                              {% endif %}
+                            </select>
+                            <button type="submit" class="btn btn-hero-gold" style="transform: skewX(0); padding: 8px 20px;"><span>Enviar</span></button>
+                          </form>
+                        {% else %}
+                          <div style="background: rgba(40,167,69,0.1); border-left: 4px solid #28a745; padding: 15px; border-radius: 4px; color: #fff;">
+                            <i class="ri-checkbox-circle-line me-2 fs-5" style="color: #28a745;"></i>
+                            <span class="fw-bold text-uppercase" style="font-size: 12px;">Completada y enviada el {{ encuesta.fecha_envio|date:'d/m/Y H:i' }}</span>
+                          </div>
+                        {% endif %}
+                      </div>
+
+                      <!-- Columna de Gestión -->
+                      <div class="col-12 col-lg-5">
+                        <div class="ps-lg-3 text-center text-lg-start">
+                          <h6 class="fw-bold mb-3 text-uppercase" style="color: #a0a0a0; font-size: 12px; letter-spacing: 1px;"><i class="ri-settings-3-line me-2"></i> Gestión de Registro</h6>
+                          <div class="d-flex flex-column flex-sm-row gap-2">
+                            <a href="{% url 'gimnasio:editar_encuesta' encuesta.id %}" class="btn btn-sm w-100 fw-bold" style="background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid #ffd700; text-transform: uppercase;"><i class="ri-edit-box-line me-1"></i> Editar</a>
+                            <a href="{% url 'gimnasio:eliminar_encuesta' encuesta.id %}" class="btn btn-sm w-100 fw-bold" style="background: rgba(220,53,69,0.1); color: #ff4d4f; border: 1px solid #ff4d4f; text-transform: uppercase;"><i class="ri-delete-bin-line me-1"></i> Eliminar</a>
+                          </div>
+                          <div class="mt-3 text-muted text-uppercase fw-bold" style="font-size: 10px;">
+                            <i class="ri-calendar-event-line text-warning"></i> Creado: {{ encuesta.fecha_creacion|date:'d/m/Y H:i' }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-5"><i class="fas fa-file-alt fa-3x mb-3" style="color: #ffd700; opacity: 0.2;"></i><br><span class="text-muted fw-bold text-uppercase">No hay encuestas registradas.</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECCIÓN ENVÍO MASIVO -->
+    <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;" class="stagger-2">
+      <h5 class="fw-bold text-uppercase mb-4" style="color: #ffd700; letter-spacing: 1px;"><i class="fas fa-users-cog me-2"></i> Envío Masivo de Encuestas</h5>
+      
+      <form method="post" action="{% url 'gimnasio:enviar_encuesta_usuarios' %}">
+        {% csrf_token %}
+        <div class="row g-4">
+          <div class="col-md-4">
+            <label class="fw-bold text-muted text-uppercase mb-2" style="font-size: 11px;">1. Seleccionar Encuesta:</label>
+            <select name="encuesta_id" class="form-select input-dark" required>
+              <option value="">-- Seleccionar --</option>
+              {% for encuesta in object_list %}
+                <option value="{{ encuesta.id }}">{{ encuesta.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <div class="col-md-8">
+            <label class="fw-bold text-muted text-uppercase mb-2" style="font-size: 11px;">2. Seleccionar Destinatarios:</label>
+            <div class="p-3 scroll-dark" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+              {% for usuario in usuarios_activos %}
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="usuarios" value="{{ usuario.id }}" id="usuario_{{ usuario.id }}" style="background-color: #111; border-color: #555;">
+                  <label class="form-check-label text-white fw-bold" for="usuario_{{ usuario.id }}" style="font-size: 12px; cursor: pointer;">
+                    {{ usuario.nombre_usuario }} {{ usuario.apellido_usuario }} <span style="color: #ffd700;">({{ usuario.correo_usuario }})</span>
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-4 text-end">
+            <button type="submit" class="btn-hero-gold" style="transform: skewX(0);"><span><i class="fas fa-paper-plane me-2"></i> Ejecutar Envío Masivo</span></button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    // Evita cerrar al interactuar con el contenido
+    document.querySelectorAll('.expandable-content select, .expandable-content button, .expandable-content a').forEach((el) => {
+        el.addEventListener('click', (e) => e.stopPropagation());
+    });
+
+    // Mostrar/ocultar fila del collapse
+    document.querySelectorAll('.main-row').forEach(function(row){
+
+        row.addEventListener('click', function(){
+
+            let target = row.getAttribute('data-bs-target');
+            let collapse = document.querySelector(target);
+
+            if(!collapse) return;
+
+            let collapseRow = collapse.closest('tr');
+
+            if(collapse.classList.contains('show')){
+                collapseRow.classList.remove('show-row');
+            }else{
+                collapseRow.classList.add('show-row');
+            }
+
+        });
+
+    });
+
+});
+</script>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'lib/datatables-1.10.20/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/datatables-1.10.20/plugins/responsive-2.2.3/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+$(function () {
+    $('#tabla-encuestas').DataTable({
+        responsive: true,
+        autoWidth: false,
+        language: { url: "{% static 'lib/datatables-1.10.20/spanish.txt' %}" },
+        columnDefs: [ { orderable: false, targets: 5 } ]
+    });
+});
+
+{% if messages %}
+  {% for message in messages %}
+      Swal.fire({
+          title: "{% if message.tags == 'success' %}Correcto{% elif message.tags == 'error' %}Error{% else %}Aviso{% endif %}",
+          text: "{{ message|safe }}",
+          icon: "{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% else %}warning{% endif %}",
+          background: "rgba(10,10,10,0.95)", color: "#fff", confirmButtonColor: "#ffd700",
+          customClass: { popup: 'border border-warning' }
+      });
+  {% endfor %}
+{% endif %}
+</script>
+{% endblock %}

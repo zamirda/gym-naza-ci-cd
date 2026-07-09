@@ -1,0 +1,42 @@
+{% extends 'body.html' %}
+{% block contenido %}
+<style>
+    /* Reutilizamos los estilos premium definidos arriba */
+    .card-dash { position: relative; background: rgba(10,10,10,0.95); border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.9); border: 1px solid rgba(255,215,0,0.1); margin-bottom: 25px; overflow: hidden; }
+    .header-neon { background: rgba(0,0,0,0.5); padding: 20px 25px; border-bottom: 1px solid rgba(255,215,0,0.1); color: #ffd700; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+    .table-neon { width: 100%; color: #fff; border-collapse: separate; border-spacing: 0; }
+    .table-neon th { background: rgba(255,255,255,0.03); padding: 15px; font-size: 11px; text-transform: uppercase; color: #ffd700; border-bottom: 1px solid rgba(255,215,0,0.2); }
+    .table-neon td { padding: 15px; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.05); }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="card-dash">
+        <div class="header-neon">
+            <i class="fas fa-gavel me-2"></i> Historial de Penalizaciones
+        </div>
+        <div class="table-responsive">
+            <table class="table-neon">
+                <thead><tr><th>Motivo</th><th>Gravedad</th><th>Vigencia</th><th>Estado</th></tr></thead>
+                <tbody>
+                    {% for sancion in sanciones %}
+                    <tr>
+                        <td class="fw-bold">{{ sancion.motivo_sancion }}</td>
+                        <td style="color: {% if sancion.tipo_sancion == 'leve' %}#4ecdc4{% else %}#ff4d4f{% endif %}; font-weight: 800;">{{ sancion.tipo_sancion|upper }}</td>
+                        <td style="color: #a0a0a0;">{{ sancion.fecha_inicio|date:"d/m/Y" }} - {{ sancion.fecha_fin|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if sancion.estado == 'activa' %}
+                                <span style="color: #ff4d4f; font-weight: 800; font-size: 11px; text-transform: uppercase;">Activa</span>
+                            {% else %}
+                                <span style="color: #28a745; font-weight: 800; font-size: 11px; text-transform: uppercase;">Inactiva</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center py-4 text-muted">No registras ninguna sanción.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
