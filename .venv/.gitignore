@@ -1,0 +1,24 @@
+# Entorno virtual
+.venv/
+
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+**/migrations/__pycache__/
+
+# Archivos de log
+*.log
+
+# Archivos de base de datos SQLite (se genera en runtime, no se sube)
+*.sqlite3
+data/
+
+# Variables de entorno reales (nunca subir, sí subir .env.example)
+.env
+
+# Archivos de configuración de IDE
+.vscode/
+.idea/
+credentials.json
+token.json

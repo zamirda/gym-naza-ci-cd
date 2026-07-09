@@ -4,9 +4,6 @@ set -e
 echo "==> Aplicando migraciones..."
 python manage.py migrate --noinput
 
-echo "==> Recolectando estáticos (por si acaso)..."
-python manage.py collectstatic --noinput
-
 # ------------------------------------------------------------------
 # Crea el superusuario "Samir" automáticamente si no existe todavía.
 # Un superusuario (is_superuser=True) entra directo al Dashboard sin
@@ -17,9 +14,9 @@ python manage.py collectstatic --noinput
 # variables en el Dashboard de Render (Environment). Se recomienda
 # definirlas ahí para no dejar la contraseña real en el código/git.
 # ------------------------------------------------------------------
-DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME:zamir}"
-DJANGO_SUPERUSER_EMAIL="${DJANGO_SUPERUSER_EMAIL:zamirdavida242@gmail.com}"
-DJANGO_SUPERUSER_PASSWORD="${DJANGO_SUPERUSER_PASSWORD:-zamyr2580}"
+DJANGO_SUPERUSER_USERNAME="${DJANGO_SUPERUSER_USERNAME:-Samir}"
+DJANGO_SUPERUSER_EMAIL="${DJANGO_SUPERUSER_EMAIL:-samirdavid@gmail.com}"
+DJANGO_SUPERUSER_PASSWORD="${DJANGO_SUPERUSER_PASSWORD:-Samyr2580}"
 export DJANGO_SUPERUSER_USERNAME DJANGO_SUPERUSER_EMAIL DJANGO_SUPERUSER_PASSWORD
 
 echo "==> Verificando/creando superusuario ${DJANGO_SUPERUSER_USERNAME}..."
