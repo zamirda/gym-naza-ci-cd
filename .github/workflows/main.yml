@@ -1,1 +1,46 @@
+name: Integración Continua
 
+on:
+  push:
+    branches: ["Zamir", "main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+
+    env:
+      SECRET_KEY: clave-de-prueba-solo-para-ci
+      DEBUG: "False"
+
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: |
+          cd gimnasio_naza
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Revisar el proyecto (manage.py check)
+        run: |
+          cd gimnasio_naza
+          python manage.py check
+
+      - name: Aplicar migraciones de prueba
+        run: |
+          cd gimnasio_naza
+          python manage.py migrate --noinput
+
+      - name: Recolectar estáticos (verifica que carguen los estilos)
+        run: |
+          cd gimnasio_naza
+          python manage.py collectstatic --noinput
